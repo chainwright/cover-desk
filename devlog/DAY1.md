@@ -59,6 +59,13 @@ Screenshots:
 - `03_xr_finger_on_bead.png`: hand on rod 3, digits reading 0 4 8 4 0
 - `04_xr_close_contact.png`: closer view of the same state
 - `05_xr_fallback_no_desk.png`: no desk in reach, fallback spot
+- `06_public_url_preview.png`, `07_public_url_in_xr.png`: the deployed GitHub
+  Pages build in headless Chromium, before and after Enter (emulator panels visible)
+
+Public URL check (headless Chromium): HTTP 200, no console errors, Enter is
+enabled through the injected emulator, entering XR hides the intro card, and
+placement resolves (`fallback` at the emulator's default standing pose). The CI
+workflow runs typecheck, tests and build before every deploy.
 
 ## Not tested on hardware yet (no Quest 3 available today)
 
