@@ -6,7 +6,8 @@ don't post your footage publicly before 18 Nov 2026, and send it only by
 email (below), never through the public GitHub form.**
 
 You need a Meta Quest 3 or 3S, a desk and a chair; for the optional step 7,
-a plain mug or a book about 8–15 cm tall. Nothing to install. This
+a book or a closed box (or a mug turned upside down) about 8–15 cm tall, with
+a flat top. Nothing to install. This
 build has not run on a Quest before you: if something is broken, that is
 exactly what we need to know.
 
@@ -39,10 +40,10 @@ Press **Enter**.
 | 1 | Read the first line of the small panel above the board | Does it say **native**? If it says EMULATOR, stop and tell us. |
 | 2 | Wait 5 s. If the board floats in the air, tap the desk **beside you** (not on the board) with one finger and hold still for a second | Seconds until the board sat on your desk; did you have to tap? |
 | 3 | Stand your hand on the desk like "stop" **where the pale ghost hand shows** (between the lantern and the dotted path) | Did the creature dash into your shadow? |
-| 4 | Hold the hand still for 5 s, then slide it sideways toward the trinket, slowly: **about a hand's width every 2 seconds**. After each win, **put your hand back where the ghost stood** (the ghost and a card show you where). Do five crossings | With the hand still, did the creature stop at the edge of your shadow? **Did you need to slide to get it home?** How many of 5 reached the trinket? Was it ever "spotted" (it flashes and runs back) while your hand stood still? Did you notice each win (what told you)? |
-| 5 | With the creature waiting in your shadow, **keep that hand still** and hide it from the headset for 5 s: hold a book between your eyes and the hand, or look up at the ceiling. Then look back | Was the creature still where it was ("It waits for your hand" may show), or back in its nook (spotted)? Write "It waits" or "spotted". |
+| 4 | Hold the hand still for 5 s, then slide it sideways toward the trinket, slowly: **about a hand's width every 2 seconds**. After each win, **put your hand back where the ghost first stood** (left of the lantern's middle, between the lantern and the path); the ghost and a card may show you where for a few seconds. After the first win a card about level 2 and a pale wedge appear: **ignore them until step 7** and keep crossing. Do five crossings | With the hand still, did the creature stop at the edge of your shadow? **Did you need to slide to get it home?** How many of 5 reached the trinket? Was it ever "spotted" (it flashes and runs back) while your hand stood still? Did you notice each win (what told you)? |
+| 5 | With the creature waiting in your shadow, **keep that hand still** and hide it from the headset for 5 s: hold a book between your eyes and the hand (if you have no book at hand, look up at the ceiling instead and say so). Then look back | Was the creature still where it was ("It waits for your hand" may show), or back in its nook (spotted)? Write "It waits" or "spotted". |
 | 6 | Play freely for a minute. Optional, once: cup your hand right around the lantern | Does the shadow edge shimmer? Anything odd? What happened when you cupped the lantern? (We expect the keeper to wake up.) |
-| 7 | **Optional, 2 min: level 2.** After your wins a pale wedge (the keeper's gaze) and a ghost mug appear. Stand your mug on the ghost mug, point down onto its top with one finger and hold still about a second. Then: hand at the ghost on the left, edge it toward the mug; when the creature waits in the mug's shadow, lift your hand over the wedge to the ghost on the right. Try once to slide your hand straight into the wedge, too | Did the mug register (a click, a ring on top)? Did the creature cross with mug + hand? What happened when your hand went into the wedge (we expect the keeper to wake)? Mug height, roughly |
+| 7 | **Optional, 2 min: level 2.** After your wins a pale wedge (the keeper's gaze) and a ghost mug appear. **First, with nothing there:** point one finger down in mid-air above the ghost mug, about 10 cm above the desk, lower it a few cm and hold it still for a second (this checks whether a finger alone can fake an object). **Then** stand the book or box on the ghost mug, point down at the **middle** of its top and hold still about a second. Then: hand at the ghost on the left, edge it toward the box; when the creature waits in the box's shadow, **lift your hand high, about a hand's length, then move it over the wedge** to the ghost on the right and put it down there (if the creature still waits, slide the hand along). Try once to slide your hand straight into the wedge, too | Did the mid-air finger register (a click and a ring)? Did the box register, and on which try? Did the creature cross with box + hand? Did the keeper wake while your hand went over? What happened when your hand slid into the wedge (we expect the keeper to wake)? Box height, roughly |
 
 ## 3. Send it (3 min)
 
@@ -51,17 +52,23 @@ Press **Enter**.
    let go. That takes you out of the immersive view, back to the page. (The
    same pinch on the right hand opens the Meta menu instead.)
 2. **Right away**, before any reload, press **Download log**. The file
-   `cover-tester-log-….json` goes to your Downloads. If the page or the
-   panel ever said **NOT kept**, tell us in your email: the log was not being
-   saved on the headset.
+   `cover-tester-log-….json` goes to your Downloads. Then press **Copy
+   summary** too and paste it into your email (neither button has been tried
+   in Quest Browser before you, so we'd like to know whether each one worked).
+   If the page or the panel ever said **NOT kept**, tell us in your email: the
+   log was not being saved on the headset.
 3. Email it as an attachment to **contact@automate-ai.live**, with your notes
-   from the table above, your Horizon OS and Browser versions (and the
-   casting video, if you made one, as an attachment or a private link).
+   from the table above and your Horizon OS and Browser versions.
    If you can't attach the file from the headset:
-   - copy it to a computer over USB: plug the Quest in, allow file access
-     when the headset asks, and take the file from its Download folder; or
-   - press **Copy summary** on Cover's page and paste it into the email (the
-     summary only, not the full log, but much better than nothing).
+   - copy it to a computer over USB: plug the Quest in with a USB-C cable,
+     allow file access when the headset asks, and take the file from the
+     headset's Download folder; or
+   - send just the copied summary from step 2 (not the full log, but much
+     better than nothing).
+4. Optional: if you can cast the headset view to a phone or computer while
+   you play, a private recording helps us a lot (your hands and the desk
+   only, no faces, people or logos), as an attachment or a private link.
+   Not needed for the test.
 
 Optional, if you prefer GitHub: the tester report form,
 https://github.com/chainwright/cover-desk/issues/new?template=tester-report.yml
