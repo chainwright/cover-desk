@@ -245,3 +245,29 @@ Results, gated by exit code: typecheck 0; `npm test` 108/108, exit 0
 emulator and `__cover` absent; `/emu/` 6,167 KB, both present); wiring check
 on the clean local build twice in a row, 40/40 both, exit 0
 (`day7b_emu_wiring_local_run1.json`, `…run2.json`; load average 13–15).
+
+Deploy: `dist/` built from `83fa065` (stamp `83fa06560abf`, `GITHUB_SHA`
+set; dist check 0), pushed to `gh-pages` as `2ec6d6d`, fast-forward
+(`3baf3c3..2ec6d6d`; `main` `3ab5601..83fa065`). gitleaks 8.30.1 on both
+ranges before the push: no leaks, exit 0 (`day7b_gitleaks_output.txt`).
+(Found while deploying: `rsync -a` into the gh-pages worktree skipped
+`emu/index.html`, same size and same second as the checkout, so it still
+named a removed bundle; caught before the push by reading it back, re-synced
+with `--checksum`, `diff -r` identical, the unpushed commit amended.)
+
+Public URL: `public_check.mjs` (`day7b_public_check.json`): `/` and `/emu/`
+200, stamp `83fa06560abf` on both, no emulator and no `__cover` in the main
+bundle (and `'__cover' in window` false on `/`), both present in `/emu/`,
+no console errors. `replay.mjs` on the live URL (`day7b_live_replay.json`),
+13 of 13, no console errors: level 1 as before (a win in 10.8 s,
+unspotted; 6.1 s later still home with the "again" card and the ghost);
+after the next round 3 s sampled: the gaze never drawn, the ghost mug and the
+"unlocked" card shown; level 2: no object no win (keeper woke at the gaze),
+O + H → waits in the mug's shadow, R → home, and R's trace: 16 frames, 7
+across at 10 cm, down at x 0.08.
+
+### Still open (after day 7b)
+
+- Everything on a Quest (as above).
+- A phantom registration also gets a depth-only column.
+- The video.
