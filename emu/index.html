@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="Cover: a tiny felt creature crosses your real desk. Your hand is its shadow." />
+    <link rel="icon" href="data:," />
+    <title>Cover</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #17110c; color: #f4ead8;
+        font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      #scene-container { position: fixed; inset: 0; }
+      #intro { position: fixed; left: 50%; bottom: 6vh; transform: translateX(-50%);
+        width: min(420px, calc(100vw - 32px)); box-sizing: border-box; padding: 20px 22px;
+        background: rgba(23, 17, 12, 0.82); border: 1px solid rgba(244, 234, 216, 0.18);
+        border-radius: 16px; text-align: center; backdrop-filter: blur(6px);
+        max-height: calc(100vh - 6vh - 16px); overflow-y: auto; }
+      #intro[hidden] { display: none; }
+      h1 { margin: 0 0 6px; font-size: 30px; letter-spacing: 0.04em; font-weight: 650; }
+      p { margin: 0 0 14px; line-height: 1.4; color: #dccfb8; }
+      button { font: inherit; font-size: 18px; font-weight: 600; padding: 12px 34px;
+        border-radius: 999px; border: 0; background: #c78c52; color: #1d130c; cursor: pointer; }
+      button:disabled { opacity: 0.45; cursor: default; }
+      #note { margin: 12px 0 0; font-size: 14px; color: #b7a990; }
+      #note a { color: #f0c58f; }
+      #tester { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(244, 234, 216, 0.18);
+        text-align: left; font-size: 14px; }
+      #tester[hidden] { display: none; }
+      #tester ol { margin: 0 0 12px; padding-left: 20px; line-height: 1.45; color: #dccfb8; }
+      #tester .row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+      button.small { font-size: 15px; padding: 9px 18px; }
+      button.ghost { background: transparent; color: #f4ead8; border: 1px solid rgba(244, 234, 216, 0.4); }
+      #log-info { margin: 10px 0 0; font-size: 13px; color: #b7a990; text-align: center;
+        overflow-wrap: anywhere; max-height: 30vh; overflow: auto; }
+      @media (max-height: 600px) {
+        #intro { bottom: 8px; padding: 14px 18px; max-height: calc(100vh - 16px); }
+        h1 { font-size: 24px; }
+        p { margin-bottom: 10px; }
+        #tester { margin-top: 10px; padding-top: 10px; }
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/index-BeZacDyf.js"></script>
+  </head>
+  <body>
+    <div id="scene-container"></div>
+    <div id="intro">
+      <h1>Cover</h1>
+      <p>A sleepy keeper's lantern lights your desk. Hold your hand up in the light, like 'stop', and a tiny felt creature dashes through your shadow.</p>
+      <button id="enter" type="button" disabled>Enter</button>
+      <p id="note">Checking for a headset…</p>
+      <div id="tester" hidden>
+        <ol>
+          <li>Press Enter, then tap the desk with one finger where you want the board, and hold still.</li>
+          <li>Follow the short steps on the panel: three hand poses, then one object (about 1.5 minutes). Then play.</li>
+          <li>Leave the immersive view and press Download log.</li>
+        </ol>
+        <div class="row">
+          <button id="download" type="button" class="small" disabled>Download log</button>
+          <button id="copy" type="button" class="small ghost" disabled>Copy summary</button>
+        </div>
+        <p id="log-info">No log yet.</p>
+      </div>
+    </div>
+  </body>
+</html>
