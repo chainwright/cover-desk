@@ -1,7 +1,10 @@
 # Where this code comes from, and how to check the dates
 
-The competition's new-experience window opened on 24 Sep 2026. Everything
-here was written after that, on 10 and 11 Nov 2026.
+The competition's new-experience window opened on 24 Sep 2026. The author
+states that everything here was written after that, on 10 and 11 Nov 2026.
+GitHub's timestamps below show when the repositories were created and each
+build was deployed; they prove when code was pushed, not when it was
+written.
 
 ## Commit dates are not proof
 
@@ -33,6 +36,7 @@ https://github.com/chainwright/fade-abacus.
 ## What "day 1, day 2, day 3" means
 
 The devlogs count build sessions, not calendar days. Each session ends with
-a deploy and an outside review; the next session fixes what the review
+a deploy (listed above) and an outside review (the reviews are not in this
+repository); the next session fixes what the review
 found. That is why Cover's "day 1" and "day 2" commits are 54 minutes apart
 and the prototype's two days about 45 minutes apart.

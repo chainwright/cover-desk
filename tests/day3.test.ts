@@ -4,7 +4,7 @@ import { REGISTER, TIP_PAD, distanceToPolyline, judgeRegistration } from '../src
 import { CoverWatch } from '../src/creature.ts';
 import { addHandCapsules, POSE_STOP } from '../src/hand-proxy.ts';
 import { BOARD, CREATURE_Y, LEVEL_1 } from '../src/level.ts';
-import { LogCursor, STORE_VERSION, assemble, metaOf, type LogChunk } from '../src/log-store.ts';
+import { LogCursor, STORE_VERSION, assemble, metaOf, storedChunk, type LogChunk } from '../src/log-store.ts';
 import { PROMPT_LINES } from '../src/onboarding.ts';
 import {
   DESK_WAIT_S,
@@ -135,11 +135,15 @@ test('log store: chunks written every few seconds rebuild the whole log after a 
   a.startSession(0, false, true);
   a.event(0, 'session', { emulator: false });
   sampleSession(a, 0, 40);
-  chunks.push(...cursor.take(a.log));
+  let taken = cursor.take(a.log);
+  cursor.commit(taken);
+  chunks.push(...taken.map(storedChunk));
   assert.deepEqual(cursor.take(a.log), [], 'nothing new, nothing written');
   a.event(2, 'home', { wins: 1 });
   sampleSession(a, 2, 25);
-  chunks.push(...cursor.take(a.log));
+  taken = cursor.take(a.log);
+  cursor.commit(taken);
+  chunks.push(...taken.map(storedChunk));
   assert.equal(chunks.length, 2);
   assert.equal(chunks[1].samples.length, 25, 'only the new part is written');
   let meta = metaOf(a.log);
@@ -159,7 +163,7 @@ test('log store: chunks written every few seconds rebuild the whole log after a 
   cursor2.markAll(restored!);
   b.startSession(100, false);
   sampleSession(b, 100, 10);
-  const more = cursor2.take(b.log);
+  const more = cursor2.take(b.log).map(storedChunk);
   assert.deepEqual(more.map((c) => [c.session, c.samples.length]), [[1, 10]], 'only the new session is written');
   meta = metaOf(b.log);
   const again = assemble(meta, [...chunks, ...more])!;
@@ -174,7 +178,7 @@ test('log store: a stored log of another version is never mixed in; a chunk with
   const a = new TesterLogger({}, 'ua', 'x');
   a.startSession(0);
   sampleSession(a, 0, 5);
-  const chunks = new LogCursor().take(a.log);
+  const chunks = new LogCursor().take(a.log).map(storedChunk);
   const meta = metaOf(a.log);
   assert.equal(assemble({ ...meta, storeVersion: STORE_VERSION + 1 }, chunks), null);
   assert.equal(assemble({ ...meta, header: { ...meta.header, version: LOG_VERSION + 1 } }, chunks), null);

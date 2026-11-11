@@ -14,8 +14,10 @@ on a Quest yet.
 1. **A tester session now returns its data.**
    - The log is kept on the headset (`src/log-store.ts`): IndexedDB, written
      in small append-only chunks every 5 s, at every session end and when
-     the page is hidden or unloaded. A reload, a new URL, a new build or a
-     power cycle no longer loses it; the next `?test=1` page continues the
+     the page is hidden or unloaded. It is meant to survive a reload, a new
+     URL, a new build and a power cycle (corrected day 4: the emulator run
+     below shows a new URL; a reload only in a unit test; a power cycle not
+     yet); the next `?test=1` page continues the
      same log, and each session records its build. Versioned twice (database
      name `cover-tester-log-v2`, `storeVersion` 1); a stored log of another
      version is never mixed in. If storage fails, the page and the panel say
@@ -26,9 +28,11 @@ on a Quest yet.
      `.github/ISSUE_TEMPLATE/tester-report.yml`
      (https://github.com/chainwright/cover-desk/issues/new?template=tester-report.yml),
      linked from the tester page, the "Copy summary" message and both
-     protocols. It can be filled in on the headset, attaching the log from
-     Downloads; it opens with the no-faces/no-people/no-logos rule and says
-     what the log holds.
+     protocols. It was meant to be filled in on the headset, attaching the
+     log from Downloads (corrected day 4: not tried yet; and the issue is
+     public, which the form now says; email is now the main channel); it
+     opens with the no-faces/no-people/no-logos rule and says what the log
+     holds.
    - **Three false protocol steps fixed:**
      - the guided poses no longer start by themselves 3 s after the board
        lands (they ran during the frame-rate and crossing steps and labelled
@@ -54,8 +58,11 @@ on a Quest yet.
 2. **The instruction matches the light.** "Hold your hand up in the light"
    sent hands where they do nothing: the lit fan reaches past the path toward
    the player, and a hand there shades nothing on the path; and near the
-   lantern the wrist must stay below about 7 cm (measured on the model: 7.5
-   cm at z −8 cm, 7.0 at −6, 5.75 at −3, 4.75 at 0, 3.5 at +3 cm). Now:
+   lantern the wrist must stay below about 7 cm (in the model). A test
+   checks that at z −6 cm a wrist 6.5 cm up still covers and one 9 cm up
+   does not (same model, 7 mm minimum joint radius; real joint radii may
+   shift this). (Corrected day 4: a finer table quoted here had no test
+   behind it; day 4 adds a bisection test, see DAY4.md.) Now:
    - card on the board: "Stand your hand like 'stop' / between the lantern
      and the path" (the card is 0.34 m wide, was 0.3, so it fits at the same
      letter size);
@@ -66,8 +73,9 @@ on a Quest yet.
      between the lantern and the path covers (z −8 … +3 cm), a wrist at 9 cm
      or a hand in the lit area in front of the path does not.
 
-3. **The desktop path reaches the game** (`src/emu-seat.ts`, `/emu/` build
-   only). On Enter the emulated headset sits at the emulated desk, looking
+3. **The desktop path reaches the game** (`src/emu-seat.ts`; it only runs
+   in the `/emu/` build, its code ships in both and is inert without the
+   emulator). On Enter the emulated headset sits at the emulated desk, looking
    down, with hands; the board lands on the desk by itself. Keys: **H**
    stands the right hand like "stop" between the lantern and the path,
    holding **→ / ←** slides it at 3 cm/s (the shadow then moves a little
@@ -127,8 +135,9 @@ few frames per second; not a headset number):
 - H → the creature dashes into the hand's shadow; → held → a win; a new
   round; L with the creature in the light → spotted; no console errors;
 - `?test=1`: a plain Enter logs no guided labels; "Enter: guided poses"
-  logs `prep`, `stop`; after leaving, a new URL and a reload the page still
-  says "278 samples in 2 sessions"; "Start a new log" empties it;
+  logs `prep`, `stop`; after leaving and a new URL the page still says "278
+  samples in 2 sessions"; after "Start a new log", a reload shows the log
+  empty (corrected day 4: no reload with data kept was recorded);
 - the second session in the same page came back on the saved anchor.
 
 Screenshot: `day3_01_emu_seat_hand_stop.png` (emulator, simulated room;
@@ -151,9 +160,7 @@ today; its copy check was updated to the new wording.
   (P1-10).
 - The rest of `cover-system.ts` (plane choice, the anchor flow, registration
   gating, the desk tap) still has no unit test.
-- The `tester-report` label used by the form doesn't exist in the repository
-  yet (GitHub then files the issue without it); the form needs a GitHub
-  account.
+- The form needs a GitHub account.
 - `day2_01_first_run_ghost_prompt.png` still shows the day-2 card wording.
 
 ## Deploy

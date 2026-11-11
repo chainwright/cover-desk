@@ -3,8 +3,10 @@
  * reused for footsteps and the trinket's lock, plus the keeper's hum.
  * The context must be created or resumed from a user gesture.
  *
- * Three-sound palette: hum (muffles while your hand shades the creature),
- * footsteps (soft clicks while it dashes), lock (a low double click at home).
+ * Palette: hum (muffles while your hand shades the creature), footsteps
+ * (soft clicks while it dashes), lock (a low double click at home), and since
+ * day 4 a rising three-note chime for a win and the keeper's falling "hm?"
+ * when it wakes and spots the creature.
  */
 let ctx: AudioContext | null = null;
 let buffer: AudioBuffer | null = null;
@@ -54,6 +56,35 @@ export function step(): void {
 export function lock(): void {
   click(0.55, 0.6);
   setTimeout(() => click(0.75, 0.5), 110);
+}
+
+/** One soft tone: `type` oscillator at `freq` Hz, starting `delay` s from now, decaying over `decay` s. */
+function tone(freq: number, delay: number, decay: number, gain: number, type: OscillatorType): void {
+  if (!ctx || ctx.state !== 'running') return;
+  const t = ctx.currentTime + delay;
+  const o = ctx.createOscillator();
+  o.type = type;
+  o.frequency.value = freq;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(gain, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+  o.connect(g).connect(ctx.destination);
+  o.start(t);
+  o.stop(t + decay + 0.05);
+}
+
+/** A win: three rising notes (C5, E5, G5), 120 ms apart. */
+export function chime(): void {
+  tone(523.25, 0, 0.35, 0.12, 'triangle');
+  tone(659.25, 0.12, 0.35, 0.12, 'triangle');
+  tone(783.99, 0.24, 0.6, 0.14, 'triangle');
+}
+
+/** The keeper wakes: a low "hm?", two falling notes. */
+export function hm(): void {
+  tone(220, 0, 0.18, 0.1, 'sine');
+  tone(165, 0.16, 0.3, 0.1, 'sine');
 }
 
 function ensureHum(): boolean {

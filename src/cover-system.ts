@@ -32,9 +32,9 @@ import {
   type Object3D,
 } from '@iwsdk/core';
 import { PLACE, TapCalibrator, spotFromTouch, type CalibResult, type PlaceParams } from './calibration.ts';
-import { click, lock, setHum, step } from './click-sound.ts';
+import { chime, click, hm, lock, setHum, step } from './click-sound.ts';
 import { REGISTER, REGISTER_HOLD, TIP_PAD, distanceToPolyline, judgeRegistration } from './contact.ts';
-import { KNOB, MAX_OBJECT_MARKERS, PATH_DOTS, buildCover, setInstance, type CoverModel } from './cover-model.ts';
+import { KNOB, MAX_OBJECT_MARKERS, PATH_DOTS, WIN_BEADS, buildCover, setInstance, type CoverModel } from './cover-model.ts';
 import {
   CREATURE,
   CoverWatch,
@@ -50,6 +50,7 @@ import {
   MODE_PAUSED,
   MODE_RETREAT,
   MODE_SPOTTED,
+  MODE_WAIT,
   newCreature,
   stepCreature,
   type CreatureState,
@@ -72,7 +73,7 @@ import {
 } from './hand-proxy.ts';
 import { BOARD, CREATURE_Y, LEVEL_1, Route } from './level.ts';
 import { LightMap } from './light-map.ts';
-import { LogCursor, LogStore, metaOf, type StoreStatus } from './log-store.ts';
+import { FlushTimer, LogCursor, LogFlusher, LogStore, type StoreStatus } from './log-store.ts';
 import { KNOB_LINES, PROMPT_LINES, firstRunCues, newCues, type CueInput } from './onboarding.ts';
 import { placementStep, type PlacementClock, type PlacementState, type PlacementWorld } from './placement.ts';
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightResult } from './sightline.ts';
@@ -94,8 +95,6 @@ const NEXT_ROUND_S = 3.5;
 const PANEL_REDRAW_S = 0.5;
 /** Per-frame update() timings kept for the once-a-second p95 (more than any refresh rate). */
 const UPD_BUF = 256;
-/** Tester log: write the new part to storage every this many seconds (and at every session end). */
-const LOG_FLUSH_S = 5;
 
 export type Placement = PlacementState;
 
@@ -126,6 +125,8 @@ export interface CoverDebug {
   cues: { ghost: boolean; prompt: string; knobLabel: boolean; canRegister: boolean; ghostVisible: boolean; promptVisible: boolean; promptText: string };
   /** The hand play is waiting for after a cover-hand loss (-1 none). */
   coverWaitingFor: number;
+  /** Win and spotted feedback: keeper eye opening (1 closed), stare line, trinket on the creature's back, win beads shown. */
+  payoff: { eyes: number; stare: boolean; trinketCarried: boolean; beads: number };
   /** True when the Immersive Web Emulator replaced WebXR in this page. */
   emulator: boolean;
   /** Tester mode: the log's storage ('off' outside tester mode) and how many sessions the log holds. */
@@ -174,10 +175,11 @@ export class CoverSystem extends createSystem({
   private wins = 0;
   private homeAt = -1;
   private everDashed = false;
+  private leadSeen = false;
   private coverWatch = new CoverWatch();
   private moveRequested = false;
   private cues = newCues();
-  private cueIn: CueInput = { placement: 'preview', placed: false, listening: false, moveRequested: false, everDashed: false, paused: false };
+  private cueIn: CueInput = { placement: 'preview', placed: false, listening: false, moveRequested: false, everDashed: false, paused: false, leading: false };
   private promptKey = '';
   private knobCard!: TextCard;
   private stepAt = 0;
@@ -221,8 +223,9 @@ export class CoverSystem extends createSystem({
   private guideActive = false;
   private logStore: LogStore | null = null;
   private logCursor = new LogCursor();
+  private logFlusher = new LogFlusher(this.logCursor, (meta, chunks) => this.logStore?.write(meta, chunks) ?? Promise.resolve(false));
   private storeReady = false;
-  private flushAt = 0;
+  private flushTimer = new FlushTimer();
   private placeClock: PlacementClock = { placement: 'preview', time: 0, restoreStart: 0, searchStart: 0, placedAt: 0 };
   private placeWorld!: PlacementWorld;
   private panelAt = 0;
@@ -261,6 +264,7 @@ export class CoverSystem extends createSystem({
 
   init(): void {
     this.model = buildCover(this.level, this.lightMap.data);
+    this.trinketHome.copy(this.model.trinket.position);
     const entity = this.world.createTransformEntity(this.model.root, { persistent: true });
     if (flags.depth) entity.addComponent(DepthOccludable);
 
@@ -369,6 +373,7 @@ export class CoverSystem extends createSystem({
     }
     if (this.placement === 'preview') this.startSession(time);
     this.countFrame(delta, time);
+    if (this.logger && this.flushTimer.due(time)) void this.flushLog();
 
     this.player.head.getWorldPosition(this.head);
     this.updateForward();
@@ -408,6 +413,11 @@ export class CoverSystem extends createSystem({
     i.moveRequested = this.moveRequested;
     i.everDashed = this.everDashed;
     i.paused = this.creature.mode === MODE_PAUSED;
+    // The slide card: from the first time the creature waits in a hand's
+    // shadow out on the path until its first win (latched, so it doesn't blink
+    // on and off while the creature follows the lane).
+    if (this.creature.mode === MODE_WAIT && this.lineState === SHADOW && this.lineBy < OBJECT_OWNER) this.leadSeen = true;
+    i.leading = this.wins === 0 && this.leadSeen;
     firstRunCues(i, this.cues);
   }
 
@@ -895,6 +905,11 @@ export class CoverSystem extends createSystem({
     this.coverWatch.reset();
   }
 
+  /** Where the trinket waits on the board (it is carried after a win). */
+  private trinketHome = new Vector3();
+  private eyeOpen = 1;
+  private beamDir = new Vector3();
+
   private runGame(dt: number, time: number): void {
     const c = this.creature;
     const m = this.model;
@@ -920,12 +935,15 @@ export class CoverSystem extends createSystem({
       case EV_SPOTTED:
         this.logger?.event(time, 'spotted', { sMm: Math.round(s * 1000) });
         click(0.45, 0.7);
+        hm(); // the keeper wakes (its eyes open and it stares, below)
         break;
       case EV_HOME:
         this.wins++;
         this.homeAt = time;
         this.logger?.event(time, 'home', { wins: this.wins, spotted: c.spottedCount });
         lock();
+        chime();
+        m.winBeads.count = Math.min(this.wins, WIN_BEADS);
         break;
       case EV_PAUSE:
         this.logger?.event(time, 'pause', { reason: this.coverWatch.waitingFor >= 0 ? 'cover-hand-lost' : 'no-hands' });
@@ -984,9 +1002,32 @@ export class CoverSystem extends createSystem({
     const flash = c.mode === MODE_SPOTTED ? 0.5 + 0.5 * Math.sin(time * 30) : 0;
     cr.bodyMat.emissive.setRGB(flash * 0.6, flash * 0.12, 0);
 
-    // Trinket: turns slowly; carried after a win.
+    // Trinket: turns slowly in its spot; after a win the creature carries it
+    // on its back, bobbing with it, until the next round starts.
     m.trinket.rotation.y = time * 0.8;
     m.trinket.visible = true;
+    if (c.mode === MODE_HOME) {
+      m.trinket.position.set(cx, 0.021 + bob, cz);
+      m.trinket.scale.setScalar(0.7);
+    } else {
+      m.trinket.position.copy(this.trinketHome);
+      m.trinket.scale.setScalar(1);
+    }
+
+    // The keeper wakes when it spots the creature: its eyes open and a thin
+    // line of light stares at the creature while it freezes; they close again
+    // once it is back in its nook.
+    const awake = c.mode === MODE_SPOTTED || c.mode === MODE_RETREAT;
+    this.eyeOpen += ((awake ? 4.5 : 1) - this.eyeOpen) * Math.min(1, dt * 20);
+    for (const eye of m.keeperEyes) eye.scale.y = this.eyeOpen;
+    m.beam.visible = c.mode === MODE_SPOTTED;
+    if (m.beam.visible) {
+      const l = this.lantern;
+      this.beamDir.set(cx - l.x, CREATURE_Y + 0.004 - l.y, cz - l.z);
+      const len = this.beamDir.length();
+      m.beam.quaternion.setFromUnitVectors(this.yAxis, this.beamDir.multiplyScalar(1 / len));
+      m.beam.scale.set(1, len, 1);
+    }
 
     // Lantern: brighter while the keeper stares at the creature.
     const staring = this.sight.state === SEEN;
@@ -1110,10 +1151,6 @@ export class CoverSystem extends createSystem({
           redraws: this.panelRedraws,
         });
       }
-      if (this.logger && time - this.flushAt >= LOG_FLUSH_S) {
-        this.flushAt = time;
-        void this.flushLog();
-      }
       this.fpsStart = time;
       this.fpsFrames = 0;
       this.fpsWorst = 0;
@@ -1141,7 +1178,9 @@ export class CoverSystem extends createSystem({
     if (!this.guideActive) {
       stepLine = placed
         ? ['Free play. Guided poses: leave the view,', '!then press "Enter: guided poses".']
-        : ['!Tap the desk beside you with one finger', 'and hold it still'];
+        : this.placement === 'searching' || this.placement === 'restoring'
+          ? ['!Looking for your desk...', '']
+          : ['!Tap the desk beside you with one finger', 'and hold it still'];
     } else if (this.guideStart >= 0 && time >= this.guideStart) {
       let t = time - this.guideStart;
       let i = 0;
@@ -1162,7 +1201,9 @@ export class CoverSystem extends createSystem({
         stepLine = [`!Step ${i + 1}/${GUIDE.length} (${left}s): ${GUIDE[i].text[0]}`, GUIDE[i].text[1]];
       }
     } else if (!placed) {
-      stepLine = ['!Tap the desk with one finger', 'and hold it still'];
+      stepLine = this.placement === 'searching' || this.placement === 'restoring'
+        ? ['!Looking for your desk...', '']
+        : ['!Tap the desk with one finger', 'and hold it still'];
     } else {
       stepLine = ['!Get ready: a short guided test starts soon', ''];
     }
@@ -1211,9 +1252,7 @@ export class CoverSystem extends createSystem({
   /** Writes what the log gained since the last write. */
   private async flushLog(): Promise<boolean> {
     if (!this.logger || !this.logStore || !this.storeReady) return false;
-    const chunks = this.logCursor.take(this.logger.log);
-    if (!chunks.length) return true;
-    const ok = await this.logStore.write(metaOf(this.logger.log), chunks);
+    const ok = await this.logFlusher.flush(this.logger.log);
     if (!ok) this.storeReady = false;
     return ok;
   }
@@ -1288,6 +1327,10 @@ export class CoverSystem extends createSystem({
       },
       get coverWaitingFor() {
         return self.coverWatch.waitingFor;
+      },
+      get payoff() {
+        const m = self.model;
+        return { eyes: +self.eyeOpen.toFixed(2), stare: m.beam.visible, trinketCarried: m.trinket.scale.x < 1, beads: m.winBeads.count };
       },
       get emulator() {
         return self.emulator;

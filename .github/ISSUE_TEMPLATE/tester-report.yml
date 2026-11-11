@@ -6,13 +6,15 @@ body:
   - type: markdown
     attributes:
       value: |
+        **This issue is public.** Anyone can read it and download what you attach. If you'd rather not, email the log file and your notes to contact@automate-ai.live instead (that is the main way back; this form is optional).
+
         Thank you for testing Cover.
 
-        **Before you attach anything:** no faces, no other people and no brand logos in any screenshot or video (plain mug, book titles hidden, only your hands). This is a contest rule for us.
+        **Before you attach anything:** no faces, no other people and no brand logos. Please attach **no video or screenshots here**: send footage by email only, and don't post it publicly before 18 Nov 2026.
 
         The log holds hand motion (wrist and index fingertip positions), game and frame-rate events, timestamps, the build id and your browser's user agent. No images, no audio, no account data.
 
-        You can fill this in on the headset itself: open this page in Quest Browser, and attach the log from Downloads with the attach link under the "Log file" box.
+        Filling this in on the headset and attaching from Quest Browser's Downloads has not been tried yet; if it fails, use email.
   - type: dropdown
     id: protocol
     attributes:
@@ -44,9 +46,12 @@ body:
       label: Step results
       description: Pass / fail per step and anything you noted (times in seconds).
       placeholder: |
-        1 no emulator: pass
-        2 board on the desk: pass, 3 s
-        3 frame rate: ...
+        1 native: yes
+        2 board on the desk: 3 s, no tap
+        3 dashed into my shadow: yes
+        4 needed to slide: yes; 4 of 5 home; spotted while still: 0
+        5 hand hidden 5 s: It waits / spotted
+        6 shimmer: ...
     validations:
       required: true
   - type: textarea
@@ -60,4 +65,6 @@ body:
       label: Before sending
       options:
         - label: Nothing I attached shows a face, another person or a brand logo.
+          required: true
+        - label: I understand this issue and its attachments are public.
           required: true

@@ -2,21 +2,30 @@
 
 **Keep people and brands out of everything you send: no faces, no other
 people, no logos (a plain mug, book titles hidden, only your hands). Please
-don't post your footage publicly before 18 Nov 2026.**
+don't post your footage publicly before 18 Nov 2026, and send it only by
+email (below), never through the public GitHub form.**
 
 You need a Meta Quest 3 or 3S, a desk and a chair. Nothing to install. This
 build has not run on a Quest before you: if something is broken, that is
 exactly what we need to know.
 
-## 1. Open it (1 min)
+## 1. Before you start (1 min)
+
+- Clear a patch of desk in front of you, about 45 × 30 cm (a sheet of A3
+  paper): the board lands there.
+- Use a normal Quest Browser tab, **not private browsing** (a private tab
+  keeps neither the log nor the saved desk spot).
+- If the headset asks whether this page may use spatial data (your room's
+  surfaces), **allow it**, and note that it asked.
 
 In Quest Browser open
 **https://chainwright.github.io/cover-desk/?test=1**
 (not the `/emu/` link: that one is the desktop emulator). Sit at your desk and
 put the controllers down.
 
-The log of your session is kept on the headset, through reloads and
-restarts, until you send it.
+The log of your session is kept on the headset until you press **Start a new
+log** (sending it doesn't delete it). It is written every few seconds; to be
+safe, download it right after you leave the immersive view (step 3 below).
 
 ## 2. Play and measure (6 min)
 
@@ -26,27 +35,32 @@ Press **Enter**.
 |---|---|---|
 | 1 | Read the first line of the small panel above the board | Does it say **native**? If it says EMULATOR, stop and tell us. |
 | 2 | Wait 5 s. If the board floats in the air, tap the desk **beside you** (not on the board) with one finger and hold still for a second | Seconds until the board sat on your desk; did you have to tap? |
-| 3 | Stand your hand on the desk like "stop", **between the lantern and the dotted path** (the pale ghost hand shows where) | Did the creature dash into your shadow? |
-| 4 | Keep the hand standing and slide it slowly sideways to lead the creature to its trinket. Do five crossings | How many of 5 reached the trinket? Was it ever "spotted" (it flashes and runs back) while your hand stood still? |
-| 5 | With the creature waiting in your shadow, move that hand behind your back for 5 s, then bring it back | Did it wait ("It waits for your hand"), or was it spotted? |
+| 3 | Stand your hand on the desk like "stop" **where the pale ghost hand shows** (between the lantern and the dotted path) | Did the creature dash into your shadow? |
+| 4 | Hold the hand still for 5 s, then slide it slowly sideways toward the trinket. Do five crossings | With the hand still, did the creature stop at the edge of your shadow? **Did you need to slide to get it home?** How many of 5 reached the trinket? Was it ever "spotted" (it flashes and runs back) while your hand stood still? |
+| 5 | With the creature waiting in your shadow, **keep that hand still** and hide it from the headset for 5 s: hold a book between your eyes and the hand, or look up at the ceiling. Then look back | Was the creature still where it was ("It waits for your hand" may show), or back in its nook (spotted)? Write "It waits" or "spotted". |
 | 6 | Play freely for a minute | Does the shadow edge shimmer? Anything odd? |
 
 ## 3. Send it (3 min)
 
-1. Leave the immersive view (press the Meta button, then Exit or Back to the page).
-2. Press **Download log**. The file `cover-tester-log-….json` goes to your
-   Downloads.
-3. Open the tester report form, on the headset itself if you like:
-   **https://github.com/chainwright/cover-desk/issues/new?template=tester-report.yml**
-   (a free GitHub account is needed). Attach the log file from Downloads in
-   the "Log file" box (if GitHub refuses `.json`, rename it to `.txt`), and
-   fill in your notes from the table. If attaching fails, press **Copy
-   summary** on Cover's page and paste it into the form instead.
+1. Leave the immersive view: turn your right palm toward your face and pinch
+   thumb and index finger (the hand version of the Meta button), then choose
+   Exit or go back to the page.
+2. **Right away**, before any reload, press **Download log**. The file
+   `cover-tester-log-….json` goes to your Downloads.
+3. Email it as an attachment to **contact@automate-ai.live**, with your notes
+   from the table above (and the casting video, if you made one, as an
+   attachment or a private link). If you can't get the file, press **Copy
+   summary** on Cover's page and paste it into the email instead.
+
+Optional, if you prefer GitHub: the tester report form,
+https://github.com/chainwright/cover-desk/issues/new?template=tester-report.yml
+(a free GitHub account is needed). **This issue is public**: anyone can read
+it and download what you attach. Attach the log only, never a video.
 
 What the log holds: hand motion (wrist and index fingertip positions), game
 and frame-rate events, timestamps, the build id and your browser's user
-agent. No images, no audio, no account data. It stays on your headset until
-you send it; **Start a new log** on the page deletes it.
+agent. No images, no audio, no account data. **Start a new log** on the page
+deletes it.
 
 The full first session, with frame-rate tools and more steps, is
 [TESTER_PROTOCOL.md](TESTER_PROTOCOL.md).

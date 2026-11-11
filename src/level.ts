@@ -38,6 +38,20 @@ export const LEVEL_1: Level = {
   needsObject: false,
 };
 
+/**
+ * Where the first-run ghost hand stands (and the /emu/ seat's 'stop' hand):
+ * the wrist on the desk, halfway between the lantern (z −10.5 cm) and the
+ * path (z ≈ 6.5 cm), a little left of centre so its shadow starts at the
+ * creature's waiting spot.
+ *
+ * Day 4: the ghost stood 7 cm in front of the lantern and the /emu/ hand 4.5
+ * cm; so close, one hand shades (nearly) the whole light and the creature
+ * runs home without a slide. Here a standing hand shades a lane about 10 cm
+ * wide on the path: the creature dashes into it and waits at its far edge,
+ * and only sliding the hand along gets it home (tests/day4.test.ts).
+ */
+export const TEACH_SPOT = { x: -0.065, z: -0.025 } as const;
+
 /** Route helper: cumulative lengths and point lookup by arc length (no allocation per call). */
 export class Route {
   readonly xz: Float32Array;

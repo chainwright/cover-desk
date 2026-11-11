@@ -1,4 +1,4 @@
-"""Mutation check (days 2-3): applies each mutation to the source, runs `npm test`,
+"""Mutation check (days 2-4): applies each mutation to the source, runs `npm test`,
 restores the file, and prints which tests failed. Run: python3 tools/mutations.py
 A mutation that no test catches is printed with 0 failing."""
 import subprocess, shutil, re, sys
@@ -26,10 +26,20 @@ M=[
  ('O3 object shade no longer clears the wait (branch body removed)','src/creature.ts','this.waitingFor = -1; // shaded by an object','// shaded by an object'),
  ('O4 late-desk window off (LATE_DESK_S 10 -> 0)','src/placement.ts','export const LATE_DESK_S = 10;','export const LATE_DESK_S = 0;'),
  ('3a anchor restore gives up at 4 s again','src/placement.ts','export const RESTORE_WAIT_S = 8;','export const RESTORE_WAIT_S = 4;'),
- ('3b log cursor never advances (every flush rewrites the session)','src/log-store.ts','      d.s = s.samples.length;\n',''),
+ ('3b log cursor never advances (every flush rewrites the session)','src/log-store.ts','    for (const c of chunks) this.done.set(c.from, { s: c.toS, e: c.toE });\n',''),
  ('3c a restored log of another store version is mixed in','src/log-store.ts','if (!meta || meta.storeVersion !== STORE_VERSION) return null;','if (!meta) return null;'),
  ('3d teaching copy back to day 2','src/onboarding.ts',"""teach: ["Stand your hand like 'stop'", '!between the lantern and the path'],""","""teach: ['Hold your hand up in the light,', "!like 'stop'"],"""),
  ('3e searching floats the board at once (no desk wait)','src/placement.ts',"return c.time - c.searchStart > DESK_WAIT_S ? 'fallback' : 'none';","return 'fallback';"),
+ # day-4: the three outside mutations that survived day 3 (O9, O10, O12), plus new code
+ ('O9 no log flush on page hide','src/log-store.ts',"  win.addEventListener('pagehide', flush);\n",''),
+ ('O10 the 5 s log flush never fires','src/log-store.ts','    if (time - this.last < this.every) return false;','    return false;'),
+ ('O12 /emu/ seat slides 10x faster','src/emu-seat.ts','export const SLIDE_SPEED = 0.03;','export const SLIDE_SPEED = 0.3;'),
+ ('5a log cursor advances even when the write failed','src/log-store.ts','    if (ok) this.cursor.commit(chunks);','    this.cursor.commit(chunks);'),
+ ('5b overlapping flushes not serialised','src/log-store.ts','    this.chain = this.chain.then(run, run);\n    return this.chain;','    return run();'),
+ ('5c teaching spot back by the lantern (day-3 /emu/ spot)','src/level.ts','export const TEACH_SPOT = { x: -0.065, z: -0.025 } as const;','export const TEACH_SPOT = { x: -0.035, z: -0.06 } as const;'),
+ ('5d teaching spot centred on the light (the lane misses the creature)','src/level.ts','export const TEACH_SPOT = { x: -0.065, z: -0.025 } as const;','export const TEACH_SPOT = { x: 0, z: -0.025 } as const;'),
+ ('5e "tap your desk" card back during the desk search','src/onboarding.ts',"if (i.listening && i.placement === 'fallback') {","if (i.listening && i.placement !== 'restoring' && i.placement !== 'preview') {"),
+ ('5f slide card never shown','src/onboarding.ts',"  else if (i.leading) cues.prompt = 'slide';\n",''),
 ]
 for name, f, a, b in M:
     p=f'{ROOT}/{f}'; src=open(p).read()

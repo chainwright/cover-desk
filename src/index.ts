@@ -4,6 +4,7 @@ import { unlockAudio } from './click-sound.ts';
 import { CoverSystem, type CoverDebug } from './cover-system.ts';
 import { installEmuSeat } from './emu-seat.ts';
 import { flags } from './flags.ts';
+import { flushOnPageHide } from './log-store.ts';
 
 const intro = document.getElementById('intro') as HTMLDivElement;
 const enter = document.getElementById('enter') as HTMLButtonElement;
@@ -42,7 +43,7 @@ World.create(document.getElementById('scene-container') as HTMLDivElement, proje
   if (supported && emulator) {
     enter.disabled = false;
     note.textContent =
-      'Desktop emulator: a simulated room and hands. Enter seats you at its desk with hands; then H stands your hand between the lantern and the path, holding → slides it. On a Quest, open the main link instead.';
+      'Desktop emulator: a simulated room and hands. Enter seats you at its desk with hands; then H stands your hand where the ghost hand shows, between the lantern and the path, and holding → slides it to lead the creature. On a Quest, open the main link instead.';
     installEmuSeat(cover);
   } else if (supported) {
     enter.disabled = false;
@@ -92,7 +93,7 @@ function setUpTester(): void {
     newLog.disabled = sessions === 0;
     const kept =
       store?.status === 'ready'
-        ? 'Kept on this headset through reloads and restarts.'
+        ? 'Kept on this headset until you start a new log; download it right after leaving the immersive view.'
         : store?.status === 'failed'
           ? `NOT kept on this headset (${store.error}): download it before you reload or restart.`
           : '';
@@ -105,11 +106,7 @@ function setUpTester(): void {
   window.addEventListener('cover:session-end', refresh);
   window.addEventListener('cover:log-store', refresh);
   // Write the log's last seconds when the page goes away (reload, new URL, headset sleep).
-  const flush = () => void cover()?.flushLog();
-  window.addEventListener('pagehide', flush);
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') flush();
-  });
+  flushOnPageHide(window, document, () => void cover()?.flushLog());
 
   newLog.addEventListener('click', async () => {
     if (!confirm('Delete the log kept on this headset and start a new one? Download it first if you still need it.')) return;
@@ -134,7 +131,7 @@ function setUpTester(): void {
     const summary = JSON.stringify(cover()?.summary());
     try {
       await navigator.clipboard.writeText(summary);
-      logInfo.textContent = 'Summary copied. Paste it into the tester report (link above) and attach the downloaded log file.';
+      logInfo.textContent = 'Summary copied. Paste it into your email with the downloaded log file attached (or into the public tester form above).';
     } catch {
       logInfo.textContent = summary;
     }

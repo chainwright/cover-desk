@@ -16,6 +16,7 @@
  * (`window.IWER_DEVICE`), and the main build never contains the emulator.
  */
 import type { CoverDebug } from './cover-system.ts';
+import { TEACH_SPOT } from './level.ts';
 
 interface V3 { x: number; y: number; z: number; set(x: number, y: number, z: number): unknown }
 interface Q4 { set(x: number, y: number, z: number, w: number): unknown }
@@ -31,14 +32,28 @@ interface EmuDevice {
 
 /** Where to sit in the emulator's home office (the desk top is at y ≈ 0.725 m, centred at z ≈ −1.93 m). */
 export const SEAT = { x: 0, y: 1.18, z: -1.48, pitchDeg: -52 };
-/** The 'stop' hand: wrist 2 cm above the desk, 6 cm in front of the lantern (board frame, metres). */
-export const STOP = { x: -0.035, z: -0.06, y: 0.02, lift: 0.2, minX: -0.08, maxX: 0.08 };
 /**
- * Slide speed of the hand, m/s. Near the lantern the shadow on the path moves
- * about 3.8× faster than the hand (lantern to hand 4.5 cm, to path 17 cm), and
- * the creature runs at 13 cm/s: 3 cm/s keeps the shadow just slower than it.
- * Time steps are clamped like the game's (0.05 s), so it also holds when the
- * emulator renders slowly.
+ * The 'stop' hand: the wrist 2 cm above the desk where the first-run ghost
+ * hand stands (TEACH_SPOT: halfway between the lantern and the path), board
+ * frame, metres. Day 4: it stood 4.5 cm in front of the lantern, upside down
+ * (see GRIP_TO_WRIST), and blacked out the whole light.
+ */
+export const STOP = { x: TEACH_SPOT.x, z: TEACH_SPOT.z, y: 0.02, lift: 0.2, minX: -0.12, maxX: 0.1 };
+/**
+ * Where the emulator puts the wrist relative to the hand position we set, in
+ * the board frame, for the pose used here (its 'flat' hand turned fingers-up,
+ * back of the hand toward the player). Measured in the emulator on day 4: the
+ * position is the grip, inside the hand, so setting it to the wrist spot put
+ * the wrist 11.7 cm under the desk. Day 1-3 also turned the hand the wrong
+ * way (fingertips down into the lantern).
+ */
+export const GRIP_TO_WRIST = { x: 0.049, y: -0.117, z: 0.002 };
+/**
+ * Slide speed of the hand, m/s. From the teaching spot the shadow on the path
+ * moves about 2× faster than the hand (lantern to hand 8 cm, to path 17 cm),
+ * and the creature runs at 13 cm/s: 3 cm/s keeps the shadow (about 6.4 cm/s)
+ * slower than it, so it follows. Time steps are clamped like the game's
+ * (0.05 s), so it also holds when the emulator renders slowly.
  */
 export const SLIDE_SPEED = 0.03;
 
@@ -64,7 +79,7 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
   let seated = false;
   let raised = false;
   let lifted = false;
-  let x = STOP.x;
+  let x: number = STOP.x;
   let dir = 0;
   let last = 0;
   const slide = (now: number) => {
@@ -89,15 +104,16 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
     if (!f) return;
     const r = device.hands.right;
     const y = STOP.y + (lifted ? STOP.lift : 0);
-    const [wx, wy, wz] = f.boardPoint(x, STOP.z, y);
+    // Set the grip so that the wrist lands on (x, y, STOP.z).
+    const [wx, wy, wz] = f.boardPoint(x - GRIP_TO_WRIST.x, STOP.z - GRIP_TO_WRIST.z, y - GRIP_TO_WRIST.y);
     // Board axes in the world: across (+x) and toward the player (+z).
     const o = f.boardPoint(0, 0, 0);
     const ax = f.boardPoint(1, 0, 0);
     const yaw = Math.atan2(ax[2] - o[2], ax[0] - o[0]); // rotation of board +x about world up
     // Hand joint frame (WebXR): −Z toward the fingertips, +Y out of the back of the hand.
     // 'stop': fingertips up (−Z = world up), back of the hand toward the player (+Y = board +z).
-    // That is a −90° turn about x, then the board's own turn about y.
-    const qx = rotX(-Math.PI / 2);
+    // That is a +90° turn about x (day 1-3 had −90°: fingertips down), then the board's own turn about y.
+    const qx = rotX(Math.PI / 2);
     const qy = rotY(-yaw);
     const q = mul(qy, qx);
     r.poseId = 'flat';

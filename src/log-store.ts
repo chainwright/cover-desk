@@ -1,6 +1,6 @@
 /**
- * Keeps the tester log on the headset across reloads, a power cycle and a
- * new URL, so a tester session returns all of its data (day-3 fix: the log
+ * Keeps the tester log on the headset, meant to survive a reload, a power
+ * cycle and a new URL (a new URL is shown in the emulator; the rest not yet on a Quest), so a tester session returns all of its data (day-3 fix: the log
  * lived in memory only, and three protocol steps reloaded the page before
  * the export).
  *
@@ -47,7 +47,21 @@ export function metaOf(log: TesterLog): LogMeta {
   };
 }
 
-/** Remembers how much of each session is already stored. */
+/** New samples and events of one session, plus where the cursor goes once they are stored. */
+export interface PendingChunk extends LogChunk {
+  /** The session object these rows came from, and its lengths when taken. */
+  readonly from: LogSession;
+  readonly toS: number;
+  readonly toE: number;
+}
+
+/**
+ * Remembers how much of each session is already stored.
+ *
+ * Day 4: `take` no longer advances the cursor; `commit` does, after the write
+ * succeeded. Before, a failed write lost its chunk for good (the next flush
+ * started after it).
+ */
 export class LogCursor {
   private done = new Map<LogSession, { s: number; e: number }>();
 
@@ -60,19 +74,100 @@ export class LogCursor {
     this.done.clear();
   }
 
-  /** The samples and events added since the last call, per session; advances the cursor. */
-  take(log: TesterLog): LogChunk[] {
-    const out: LogChunk[] = [];
+  /** The samples and events added since the last commit, per session. Does not advance the cursor. */
+  take(log: TesterLog): PendingChunk[] {
+    const out: PendingChunk[] = [];
     for (const s of log.sessions) {
-      let d = this.done.get(s);
-      if (!d) this.done.set(s, (d = { s: 0, e: 0 }));
+      const d = this.done.get(s) ?? { s: 0, e: 0 };
       if (s.samples.length === d.s && s.events.length === d.e) continue;
-      out.push({ session: s.index, samples: s.samples.slice(d.s), events: s.events.slice(d.e) });
-      d.s = s.samples.length;
-      d.e = s.events.length;
+      out.push({
+        session: s.index,
+        samples: s.samples.slice(d.s),
+        events: s.events.slice(d.e),
+        from: s,
+        toS: s.samples.length,
+        toE: s.events.length,
+      });
     }
     return out;
   }
+
+  /** These chunks are stored now: advance past them. */
+  commit(chunks: readonly PendingChunk[]): void {
+    for (const c of chunks) this.done.set(c.from, { s: c.toS, e: c.toE });
+  }
+}
+
+/** What goes into storage: the chunk without the cursor bookkeeping. */
+export function storedChunk(c: PendingChunk): LogChunk {
+  return { session: c.session, samples: c.samples, events: c.events };
+}
+
+/**
+ * Writes the log's new part to storage, one write at a time, and advances the
+ * cursor only when the write succeeded (a failed write is retried, whole, by
+ * the next flush). Pure apart from the `write` it is given, so it is tested
+ * with a fake store.
+ */
+export class LogFlusher {
+  private chain: Promise<boolean> = Promise.resolve(true);
+  readonly cursor: LogCursor;
+  private write: (meta: LogMeta, chunks: LogChunk[]) => Promise<boolean>;
+
+  constructor(cursor: LogCursor, write: (meta: LogMeta, chunks: LogChunk[]) => Promise<boolean>) {
+    this.cursor = cursor;
+    this.write = write;
+  }
+
+  /** Queues a flush after any running one (two overlapping flushes would write the same rows twice). */
+  flush(log: TesterLog): Promise<boolean> {
+    const run = () => this.flushNow(log);
+    this.chain = this.chain.then(run, run);
+    return this.chain;
+  }
+
+  private async flushNow(log: TesterLog): Promise<boolean> {
+    const chunks = this.cursor.take(log);
+    if (!chunks.length) return true;
+    const ok = await this.write(metaOf(log), chunks.map(storedChunk));
+    if (ok) this.cursor.commit(chunks);
+    return ok;
+  }
+}
+
+/** Tester log: write the new part to storage every this many seconds (and at every session end). */
+export const LOG_FLUSH_S = 5;
+
+/** Says when the periodic flush is due (called every frame with the frame time in seconds). */
+export class FlushTimer {
+  private last = Number.NaN;
+  readonly every: number;
+
+  constructor(every = LOG_FLUSH_S) {
+    this.every = every;
+  }
+
+  due(time: number): boolean {
+    if (Number.isNaN(this.last) || time < this.last) {
+      this.last = time; // first frame, or the clock restarted
+      return false;
+    }
+    if (time - this.last < this.every) return false;
+    this.last = time;
+    return true;
+  }
+}
+
+interface Listenable {
+  addEventListener(type: string, fn: () => void): void;
+}
+
+/** Writes the log when the page goes away: pagehide (reload, new URL) and a hidden tab (headset sleep, app switch). */
+export function flushOnPageHide(win: Listenable, doc: Listenable & { visibilityState: string }, flush: () => void): void {
+  win.addEventListener('pagehide', flush);
+  doc.addEventListener('visibilitychange', () => {
+    if (doc.visibilityState === 'hidden') flush();
+  });
 }
 
 /** Rebuilds a log from its meta record and chunks (in write order); null when the versions don't match. */

@@ -19,7 +19,7 @@ const DT = 1 / 72;
 
 // ------------------------------------------------------------- first-run cues (fix 2)
 
-const base: CueInput = { placement: 'desk', placed: true, listening: true, moveRequested: false, everDashed: false, paused: false };
+const base: CueInput = { placement: 'desk', placed: true, listening: true, moveRequested: false, everDashed: false, paused: false, leading: false };
 
 test('first run on the auto-desk path (still listening for a tap): ghost, teaching prompt, knob label, registration allowed', () => {
   const c = firstRunCues(base);
@@ -61,9 +61,9 @@ test('paused (no hand): "it waits for your hand" wins over teaching, the ghost s
   assert.deepEqual([c.prompt, c.ghost], ['waits', true]);
 });
 
-test('no desk yet: searching or a board floating in the air asks for a desk tap, in front of the viewer', () => {
+test('no desk yet: a board floating in the air asks for a desk tap, in front of the viewer (day 4: not while still searching)', () => {
   const s = firstRunCues({ ...base, placement: 'searching', placed: false });
-  assert.deepEqual([s.prompt, s.promptOnBoard, s.ghost, s.canRegister], ['tap-desk', false, false, false]);
+  assert.deepEqual([s.prompt, s.ghost, s.canRegister], ['none', false, false]);
   const f = firstRunCues({ ...base, placement: 'fallback' });
   assert.deepEqual([f.prompt, f.promptOnBoard, f.ghost, f.canRegister, f.knobLabel], ['tap-desk', false, true, false, false]);
   const r = firstRunCues({ ...base, placement: 'restoring', placed: false });

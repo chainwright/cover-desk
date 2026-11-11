@@ -34,13 +34,14 @@ import {
   UnsignedByteType,
   BoxGeometry,
 } from '@iwsdk/core';
-import { BOARD, type Level } from './level.ts';
+import { BOARD, TEACH_SPOT, type Level } from './level.ts';
 import { MAP_COLS, MAP_MIN_D, MAP_ROWS } from './light-map.ts';
 import { REGISTER } from './contact.ts';
 import type { Lantern } from './sightline.ts';
 
 export const PATH_DOTS = 26;
 export const MAX_OBJECT_MARKERS = 4;
+export const WIN_BEADS = 10;
 export const KNOB = { x: -(BOARD.halfX + 0.02), z: BOARD.zMax - 0.02, r: 0.014 } as const;
 
 const FELT = (color: number) => new MeshStandardMaterial({ color, roughness: 1, metalness: 0 });
@@ -60,12 +61,18 @@ export interface CoverModel {
   poolMat: ShaderMaterial;
   shadowTex: DataTexture;
   keeper: Group;
+  /** The keeper's eyes: thin closed slits; scaled up in y when it wakes. */
+  keeperEyes: Mesh[];
+  /** A thin line of light from the lantern to the creature while the keeper stares at it (spotted). */
+  beam: Mesh;
   lanternGlow: MeshStandardMaterial;
   creature: Creature;
   trinket: Group;
   nook: Mesh;
   pathDots: InstancedMesh;
   objectMarkers: Group[];
+  /** One brass bead per win along the near edge (up to WIN_BEADS). */
+  winBeads: InstancedMesh;
   knob: Mesh;
   ghostHand: Group;
   ghostMat: MeshBasicMaterial;
@@ -150,10 +157,12 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
   const pom = new Mesh(new SphereGeometry(0.005, 12, 8), FELT(0xefe6d2));
   pom.position.set(0.016, 0.097, 0);
   const eyeMat = new MeshBasicMaterial({ color: 0x2a1d14 });
+  const keeperEyes: Mesh[] = [];
   for (const sx of [-1, 1]) {
     const eye = new Mesh(new BoxGeometry(0.006, 0.0012, 0.001), eyeMat); // sleepy, closed
     eye.position.set(sx * 0.006, 0.066, 0.0158);
     keeper.add(eye);
+    keeperEyes.push(eye);
   }
   keeper.add(body, collar, head, cap, pom);
   root.add(keeper);
@@ -166,6 +175,15 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
   const lid = new Mesh(new ConeGeometry(0.012, 0.008, 16), darkWood);
   lid.position.set(lantern.x, lantern.y + 0.012, lantern.z);
   root.add(post, lamp, lid);
+
+  // The keeper's stare: a 1.2 mm line of warm light, unit length along +y, stretched and aimed by the system.
+  const beamGeo = new CylinderGeometry(0.0006, 0.0006, 1, 6);
+  beamGeo.translate(0, 0.5, 0);
+  const beam = new Mesh(beamGeo, new MeshBasicMaterial({ color: 0xffc46b, transparent: true, opacity: 0.85, depthWrite: false }));
+  beam.name = 'keeper-stare';
+  beam.position.set(lantern.x, lantern.y, lantern.z);
+  beam.visible = false;
+  root.add(beam);
 
   // ------------------------------------------------------------ path, nook, trinket
   const r = level.route;
@@ -226,6 +244,15 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
     objectMarkers.push(g);
   }
 
+  // ------------------------------------------------------------ win tally
+  const winBeads = new InstancedMesh(new SphereGeometry(0.0045, 12, 8), new MeshStandardMaterial({ color: 0xd9a441, roughness: 0.35, metalness: 0.6 }), WIN_BEADS);
+  winBeads.name = 'win-beads';
+  winBeads.count = 0;
+  winBeads.frustumCulled = false;
+  const bead = new Matrix4();
+  for (let i = 0; i < WIN_BEADS; i++) setInstance(winBeads, i, r[0] + 0.004 + i * 0.013, 0.0045, BOARD.zMax - 0.02, 1, bead);
+  root.add(winBeads);
+
   // ------------------------------------------------------------ move knob
   const knob = new Mesh(new CylinderGeometry(KNOB.r, KNOB.r, 0.01, 20), darkWood);
   knob.name = 'move-knob';
@@ -235,7 +262,7 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
   // ------------------------------------------------------------ ghost hand (teaches the "stop" palm)
   const ghostMat = new MeshBasicMaterial({ color: 0xfff4e0, transparent: true, opacity: 0.35, depthWrite: false, side: DoubleSide });
   const ghostHand = buildGhostHand(ghostMat);
-  ghostHand.position.set(lantern.x, 0, lantern.z + 0.07);
+  ghostHand.position.set(TEACH_SPOT.x, 0, TEACH_SPOT.z);
   root.add(ghostHand);
 
   // ------------------------------------------------------------ cover proxy (debug)
@@ -250,8 +277,8 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
   root.add(proxyDots);
 
   return {
-    root, pool, poolMat, shadowTex, keeper, lanternGlow, creature, trinket, nook, pathDots,
-    objectMarkers, knob, ghostHand, ghostMat, proxyDots,
+    root, pool, poolMat, shadowTex, keeper, keeperEyes, beam, lanternGlow, creature, trinket, nook, pathDots,
+    objectMarkers, winBeads, knob, ghostHand, ghostMat, proxyDots,
   };
 }
 
@@ -285,7 +312,9 @@ function buildCreature(): Creature {
 }
 
 function buildGhostHand(mat: MeshBasicMaterial): Group {
-  // An upright open hand, palm toward the lantern (−z), wrist on the desk.
+  // An upright open right hand seen from behind, palm toward the lantern (−z),
+  // wrist on the desk: its thumb is on the left (−x). (Day 4: the thumb was on
+  // the right, a left hand, while the docs and the /emu/ seat use the right.)
   const g = new Group();
   g.name = 'ghost-hand';
   const palm = new Mesh(new BoxGeometry(0.075, 0.08, 0.018), mat);
@@ -300,8 +329,8 @@ function buildGhostHand(mat: MeshBasicMaterial): Group {
     g.add(f);
   }
   const thumb = new Mesh(new CapsuleGeometry(0.009, 0.035, 4, 10), mat);
-  thumb.position.set(0.05, 0.062, 0.004);
-  thumb.rotation.z = -0.7;
+  thumb.position.set(-0.05, 0.062, 0.004);
+  thumb.rotation.z = 0.7;
   g.add(thumb);
   return g;
 }

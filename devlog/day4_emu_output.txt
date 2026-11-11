@@ -1,0 +1,8 @@
+status 200
+during search (placement:prompt): preview:none searching:none desk:teach after 5.5 s
+desk {"placement":"desk","creature":{"s":0.026,"mode":"dash","spotted":0,"dashes":1,"wins":0,"length":0.38019222021102905},"lit":1,"line":{"state":"dark","by":-1},"cue":"teach","promptText":"Stand your hand like 'stop' between the lantern and the path","ghost":true,"payoff":{"eyes":1,"stare":false,"trinketCarried":false,"beads":0}}
+H+4s {"placement":"desk","creature":{"s":0.104,"mode":"wait","spotted":0,"dashes":1,"wins":0,"length":0.38019222021102905},"lit":0.826,"line":{"state":"shadow","by":1},"cue":"slide","promptText":"Slide your hand along, slowly: it follows your shadow","ghost":false,"payoff":{"eyes":1,"stare":false,"trinketCarried":false,"beads":0}}
+H+30s still {"placement":"desk","creature":{"s":0.104,"mode":"wait","spotted":0,"dashes":1,"wins":0,"length":0.38019222021102905},"lit":0.826,"line":{"state":"shadow","by":1},"cue":"slide","promptText":"Slide your hand along, slowly: it follows your shadow","ghost":false,"payoff":{"eyes":1,"stare":false,"trinketCarried":false,"beads":0}} NO WIN (ok)
+slide → win after 12.6 s {"placement":"desk","creature":{"s":0.3802,"mode":"home","spotted":0,"dashes":30,"wins":1,"length":0.38019222021102905},"lit":0.557,"line":{"state":"dark","by":-1},"cue":"none","promptText":"","ghost":false,"payoff":{"eyes":1,"stare":false,"trinketCarried":true,"beads":1}}
+L → spotted {"placement":"desk","creature":{"s":0.182,"mode":"spotted","spotted":1,"dashes":32,"wins":1,"length":0.38019222021102905},"lit":1,"line":{"state":"seen","by":-1},"cue":"none","promptText":"","ghost":false,"payoff":{"eyes":4.5,"stare":true,"trinketCarried":false,"beads":1}}
+errors []
