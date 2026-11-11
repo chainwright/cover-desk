@@ -113,3 +113,56 @@ All gated by exit code:
   (O: the gaze, the mug, the ghost on the left), `day6_02_emu_l2_mug_holds_it.png`
   (the creature in the mug's shadow, the swap card),
   `day6_03_emu_l2_win.png`.
+
+## Deploy
+
+Typecheck, tests and the full build (with the dist check) ran first, gated
+by exit code; `dist/` and `dist/emu/` were built from `512a672` (stamp
+`512a67213204`) and pushed to `gh-pages` as `a9613e1`, fast-forward only
+(`c1955a8..a9613e1`; `main` `43c5fc5..512a672`). gitleaks 8.30.1 found no
+leaks in either commit (`day6_gitleaks_output.txt`). GitHub records the
+deploy at 2026-11-11 13:04:43 UTC.
+
+## Public URL
+
+- Main (Quest): https://chainwright.github.io/cover-desk/
+- Desktop emulator: https://chainwright.github.io/cover-desk/emu/
+  (level 2 directly: https://chainwright.github.io/cover-desk/emu/?level=2)
+
+After the deploy, against the live URLs (headless Chromium):
+- `tools/emu/public_check.mjs` (`day6_public_check.json`): both 200, stamp
+  `512a67213204` on both; the main bundle has no emulator code, `/emu/` has
+  it; no console errors on either; `/emu/?test=1&reset=1` → board on the
+  emulated desk, log store `ready`.
+- `tools/emu/replay.mjs` (`day6_live_replay.json`), every step passed, no
+  console errors:
+  - level 1: H → litFraction 0.826, the slide card; **30 s still → no win**
+    (the creature waits at s = 0.104); → held → a win in 10.8 s, unspotted;
+    level 2 unlocked;
+  - level 2 (`?level=2`): the "needs a real mug or book" card with the gaze
+    and the ghost mug; H then → held for 30 s → **no win** (the keeper woke
+    at the gaze); O → the emulated mug covers the gaze, the ghost at −8 cm;
+    H → the creature waits in the mug's shadow past the gaze (s = 0.267,
+    keeper asleep); R → **home** (a level-2 win).
+
+The emulator page's own intro note still lists only the level-1 keys (the
+in-game key bar lists O and R); not changed today.
+
+## Still open
+
+- **A Quest run**, now with a mug: TESTER_10MIN's optional step 7.
+- The ghost spots' margin to the gaze is about 1 cm in the model at 7–11 mm
+  joint radii; at 14 mm the corner 1 cm inward and 1 cm toward the lantern
+  touches it. Real joint radii will tell (the `keeper-woke` events now say
+  `reason: gaze` or `lantern`).
+- With the fixture's 7 mm radius floor, a still hand at each ghost leaves a
+  gap to the mug's shadow; the player has to edge the hand toward the mug
+  (the card says so). With 11 mm radii (the emulator's) it doesn't.
+- The wiring check's hop reading is weak at 3–6 fps (failed once today in
+  the mutation run, during G3).
+- A hand on its edge along the path still crosses level 1 without a slide;
+  in level 2 the day-5 test's wall (edge hand, wrist at −9, 2, 2 cm) trips
+  the gaze rule (checked once with a scratch script, not a test).
+- Not checked by any test or the wiring check: plane choice, the anchor
+  flow, registration gating, the desk tap and the knob gate.
+- The video.

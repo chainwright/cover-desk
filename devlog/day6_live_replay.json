@@ -1,0 +1,128 @@
+{
+ "base": "https://chainwright.github.io/cover-desk/",
+ "steps": [
+  {
+   "name": "l1-open",
+   "pass": true,
+   "info": {
+    "status": 200
+   }
+  },
+  {
+   "name": "l1-still-30s-no-win",
+   "pass": true,
+   "info": {
+    "afterH": {
+     "lit": 0.826,
+     "cue": "slide"
+    },
+    "after30s": {
+     "s": 0.104,
+     "mode": "wait",
+     "spotted": 0,
+     "dashes": 1,
+     "wins": 0,
+     "length": 0.38019222021102905
+    }
+   }
+  },
+  {
+   "name": "l1-slide-wins",
+   "pass": true,
+   "info": {
+    "afterS": 10.787,
+    "spotted": 0,
+    "unlocked": true
+   }
+  },
+  {
+   "name": "l2-open",
+   "pass": true,
+   "info": {
+    "status": 200,
+    "level": {
+     "id": 2,
+     "unlocked": true,
+     "gazeWake": false,
+     "mugCovers": false,
+     "ghostSpot": "teach",
+     "gazeShown": true,
+     "mugGhostShown": true,
+     "ghostAt": [
+      -0.065,
+      -0.025
+     ]
+    },
+    "cue": "need-object"
+   }
+  },
+  {
+   "name": "l2-no-object-no-win",
+   "pass": true,
+   "info": {
+    "creature": {
+     "s": 0.0325,
+     "mode": "wait",
+     "spotted": 1,
+     "dashes": 10,
+     "wins": 0,
+     "length": 0.38019222021102905
+    },
+    "gazeWoke": true
+   }
+  },
+  {
+   "name": "l2-o-registers",
+   "pass": true,
+   "info": {
+    "cue": "l2-teach",
+    "level": {
+     "id": 2,
+     "unlocked": true,
+     "gazeWake": false,
+     "mugCovers": true,
+     "ghostSpot": "left",
+     "gazeShown": true,
+     "mugGhostShown": false,
+     "ghostAt": [
+      -0.08,
+      -0.025
+     ]
+    }
+   }
+  },
+  {
+   "name": "l2-waits-in-mug-shadow",
+   "pass": true,
+   "info": {
+    "s": 0.2665,
+    "mode": "wait",
+    "spotted": 1,
+    "dashes": 11,
+    "wins": 0,
+    "length": 0.38019222021102905
+   }
+  },
+  {
+   "name": "l2-mug-plus-hand-wins",
+   "pass": true,
+   "info": {
+    "creature": {
+     "s": 0.3802,
+     "mode": "home",
+     "spotted": 1,
+     "dashes": 12,
+     "wins": 1,
+     "length": 0.38019222021102905
+    },
+    "level": 2
+   }
+  },
+  {
+   "name": "no-console-errors",
+   "pass": true,
+   "info": []
+  }
+ ],
+ "failed": []
+}
