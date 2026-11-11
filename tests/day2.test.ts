@@ -37,12 +37,12 @@ test('first run after a touch or anchor placement: the same cues', () => {
   }
 });
 
-test('the main prompt never carries the move instruction; the teaching copy is "hold your hand up … like stop"', () => {
+test('the main prompt never carries the move instruction; the teaching copy is "stand your hand like stop between the lantern and the path"', () => {
   for (const lines of Object.values(PROMPT_LINES)) {
     assert.ok(!lines.join(' ').toLowerCase().includes('to move it'), lines.join(' '));
   }
   const teach = PROMPT_LINES.teach.join(' ').replace(/!/g, '');
-  assert.equal(teach, "Hold your hand up in the light, like 'stop'");
+  assert.equal(teach, "Stand your hand like 'stop' between the lantern and the path");
   assert.ok(!teach.toLowerCase().includes('rest'), 'no "rest your hand"');
 });
 

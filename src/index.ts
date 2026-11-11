@@ -2,6 +2,7 @@ import { DepthSensingSystem, VisibilityState, World } from '@iwsdk/core';
 import projectOptions from 'virtual:iwsdk-project';
 import { unlockAudio } from './click-sound.ts';
 import { CoverSystem, type CoverDebug } from './cover-system.ts';
+import { installEmuSeat } from './emu-seat.ts';
 import { flags } from './flags.ts';
 
 const intro = document.getElementById('intro') as HTMLDivElement;
@@ -11,6 +12,8 @@ const tester = document.getElementById('tester') as HTMLDivElement;
 const download = document.getElementById('download') as HTMLButtonElement;
 const copy = document.getElementById('copy') as HTMLButtonElement;
 const logInfo = document.getElementById('log-info') as HTMLParagraphElement;
+const guided = document.getElementById('guided') as HTMLButtonElement;
+const newLog = document.getElementById('new-log') as HTMLButtonElement;
 
 // Depth occlusion is opt-in (?occlude=depth): requested as optional so a
 // browser without it still starts the session.
@@ -38,7 +41,9 @@ World.create(document.getElementById('scene-container') as HTMLDivElement, proje
   const supported = (await navigator.xr?.isSessionSupported('immersive-ar').catch(() => false)) ?? false;
   if (supported && emulator) {
     enter.disabled = false;
-    note.textContent = 'Desktop emulator: a simulated room and hands. On a Quest, open the main link instead.';
+    note.textContent =
+      'Desktop emulator: a simulated room and hands. Enter seats you at its desk with hands; then H stands your hand between the lantern and the path, holding → slides it. On a Quest, open the main link instead.';
+    installEmuSeat(cover);
   } else if (supported) {
     enter.disabled = false;
     note.textContent = 'Sit at a desk. Hands only, no controllers.';
@@ -50,11 +55,17 @@ World.create(document.getElementById('scene-container') as HTMLDivElement, proje
     note.appendChild(a);
   }
 
-  enter.addEventListener('click', () => {
+  const start = () => {
     unlockAudio();
     Promise.resolve(world.launchXR()).catch((e: unknown) => {
       note.textContent = `Could not start: ${e instanceof Error ? e.message : String(e)}`;
     });
+  };
+  enter.addEventListener('click', start);
+  guided.disabled = enter.disabled;
+  guided.addEventListener('click', () => {
+    cover()?.armGuide();
+    start();
   });
   document.addEventListener('pointerdown', unlockAudio, { once: true });
 
@@ -66,16 +77,45 @@ World.create(document.getElementById('scene-container') as HTMLDivElement, proje
   if (flags.test) setUpTester();
 });
 
+function cover(): CoverDebug | undefined {
+  return (window as unknown as { __cover?: CoverDebug }).__cover;
+}
+
 function setUpTester(): void {
   tester.hidden = false;
-  const cover = () => (window as unknown as { __cover?: CoverDebug }).__cover;
   const refresh = () => {
-    const n = cover()?.logSamples() ?? 0;
-    download.disabled = copy.disabled = n === 0;
-    logInfo.textContent = n ? `Log ready: ${n} samples.` : 'No log yet.';
+    const f = cover();
+    const n = f?.logSamples() ?? 0;
+    const store = f?.logStore;
+    const sessions = store?.sessions ?? 0;
+    download.disabled = copy.disabled = sessions === 0;
+    newLog.disabled = sessions === 0;
+    const kept =
+      store?.status === 'ready'
+        ? 'Kept on this headset through reloads and restarts.'
+        : store?.status === 'failed'
+          ? `NOT kept on this headset (${store.error}): download it before you reload or restart.`
+          : '';
+    const full = store?.full ? ' The log is full: download it and start a new log.' : '';
+    logInfo.textContent = sessions
+      ? `Log: ${n} samples in ${sessions} session${sessions === 1 ? '' : 's'}. ${kept}${full}`
+      : `No log yet. ${kept}`;
   };
   refresh();
   window.addEventListener('cover:session-end', refresh);
+  window.addEventListener('cover:log-store', refresh);
+  // Write the log's last seconds when the page goes away (reload, new URL, headset sleep).
+  const flush = () => void cover()?.flushLog();
+  window.addEventListener('pagehide', flush);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flush();
+  });
+
+  newLog.addEventListener('click', async () => {
+    if (!confirm('Delete the log kept on this headset and start a new one? Download it first if you still need it.')) return;
+    await cover()?.resetLog();
+    refresh();
+  });
 
   download.addEventListener('click', () => {
     const json = cover()?.exportLog();
@@ -94,7 +134,7 @@ function setUpTester(): void {
     const summary = JSON.stringify(cover()?.summary());
     try {
       await navigator.clipboard.writeText(summary);
-      logInfo.textContent = 'Summary copied. Paste it in a message to us.';
+      logInfo.textContent = 'Summary copied. Paste it into the tester report (link above) and attach the downloaded log file.';
     } catch {
       logInfo.textContent = summary;
     }

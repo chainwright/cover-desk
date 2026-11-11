@@ -1,0 +1,18 @@
+# day-3 /emu/ seat run: built dist/emu/ served locally, headless Chromium (SwiftShader), 2026-11-11 02:27 CST
+note: Desktop emulator: a simulated room and hands. Enter seats you at its desk with hands; then H stands your hand between the lantern and the path, holding → slides it. On a Quest, open the main link instead.
+board on desk after 7.334 s {"placement":"desk","label":"desk","creature":{"s":0.013,"mode":"dash","spotted":0,"dashes":1,"wins":0,"length":0.38019222021102905},"hands":["true:flat","true:flat"],"line":{"state":"dark","by":-1},"cue":"teach","ghost":true} hud true
+after H {"placement":"desk","label":"desk","creature":{"s":0.169,"mode":"dash","spotted":0,"dashes":2,"wins":0,"length":0.38019222021102905},"hands":["true:flat","true:other"],"line":{"state":"shadow","by":1},"cue":"none","ghost":false}
+after slide right {"placement":"desk","label":"desk","creature":{"s":0.3802,"mode":"home","spotted":0,"dashes":2,"wins":1,"length":0.38019222021102905},"hands":["true:flat","true:other"],"line":{"state":"dark","by":-1},"cue":"none","ghost":false}
+later {"placement":"desk","label":"desk","creature":{"s":0.0325,"mode":"dash","spotted":0,"dashes":3,"wins":1,"length":0.38019222021102905},"hands":["true:flat","true:other"],"line":{"state":"dark","by":-1},"cue":"none","ghost":false}
+mid {"placement":"desk","label":"desk","creature":{"s":0.169,"mode":"dash","spotted":0,"dashes":5,"wins":2,"length":0.38019222021102905},"hands":["true:flat","true:other"],"line":{"state":"shadow","by":1},"cue":"none","ghost":false}
+after L {"placement":"desk","label":"desk","creature":{"s":0.1755,"mode":"spotted","spotted":1,"dashes":5,"wins":2,"length":0.38019222021102905},"hands":["true:flat","true:other"],"line":{"state":"seen","by":-1},"cue":"none","ghost":false}
+errors []
+
+# day-3 tester log + explicit guided poses (same build)
+plain Enter: [{"i":0,"guided":false,"build":"dev","labels":[],"n":62}]
+guided Enter: anchor [{"i":0,"guided":false,"build":"dev","labels":[],"n":62},{"i":1,"guided":true,"build":"dev","labels":["prep","stop"],"n":216}]
+info: Log: 278 samples in 2 sessions. Kept on this headset through reloads and restarts.
+after new URL: Log: 278 samples in 2 sessions. Kept on this headset through reloads and restarts. [{"i":0,"guided":false,"build":"dev","labels":[],"n":62},{"i":1,"guided":true,"build":"dev","labels":["prep","stop"],"n":216}]
+after new log: No log yet. Kept on this headset through reloads and restarts.
+after reload: No log yet. Kept on this headset through reloads and restarts.
+errors []

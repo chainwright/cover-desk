@@ -1,0 +1,63 @@
+name: Quest tester report
+description: Send back a Cover session from a Meta Quest 3 or 3S (the log file and your notes).
+title: "Tester report: Quest <3 or 3S>, <date>"
+labels: ["tester-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for testing Cover.
+
+        **Before you attach anything:** no faces, no other people and no brand logos in any screenshot or video (plain mug, book titles hidden, only your hands). This is a contest rule for us.
+
+        The log holds hand motion (wrist and index fingertip positions), game and frame-rate events, timestamps, the build id and your browser's user agent. No images, no audio, no account data.
+
+        You can fill this in on the headset itself: open this page in Quest Browser, and attach the log from Downloads with the attach link under the "Log file" box.
+  - type: dropdown
+    id: protocol
+    attributes:
+      label: Which session did you run?
+      options:
+        - 10-minute version (TESTER_10MIN.md)
+        - Full first session (TESTER_PROTOCOL.md)
+        - Just played
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Headset, Horizon OS version, Quest Browser version
+      placeholder: "Quest 3, OS v77, Browser 40.x"
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log file
+      description: |
+        In Cover's page (the ?test=1 link) press **Download log**, then attach the `cover-tester-log-….json` file here (drag it in, or use the attach link under this box). If GitHub refuses the .json, rename it to .txt or zip it. If you could not get the file, press **Copy summary** and paste the summary here instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Step results
+      description: Pass / fail per step and anything you noted (times in seconds).
+      placeholder: |
+        1 no emulator: pass
+        2 board on the desk: pass, 3 s
+        3 frame rate: ...
+    validations:
+      required: true
+  - type: textarea
+    id: words
+    attributes:
+      label: In your own words
+      description: Describe Cover in one sentence. What was confusing or annoying?
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Before sending
+      options:
+        - label: Nothing I attached shows a face, another person or a brand logo.
+          required: true

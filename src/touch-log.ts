@@ -24,6 +24,9 @@
  * - emulator: true when the Immersive Web Emulator replaced WebXR in this
  *   page (window.IWER_DEVICE); on a Quest it must be false
  * Lost hands are logged too (pose 0, zeros), so tracking loss shows up.
+ * Each session also carries the `build` it ran (a log kept across reloads,
+ * see log-store.ts, can span builds) and `guided` (the tester asked for the
+ * guided poses in this session).
  *
  * Events: session (frameRate, supportedFrameRates, emulator), placement
  * (method, planeLabel, localiseMs for an anchor), calibrated, line (a sight
@@ -60,6 +63,8 @@ export interface LogSession {
   index: number;
   startedAt: string;
   emulator: boolean;
+  build?: string;
+  guided?: boolean;
   placement: Record<string, unknown> | null;
   calibration: Record<string, unknown> | null;
   columns: readonly string[];
@@ -79,7 +84,8 @@ export interface TesterLog {
   sessions: LogSession[];
 }
 
-const MAX_SAMPLES = 60_000; // ≈ 16 min of both hands at 30 Hz: ~3 MB of JSON
+/** ≈ 33 min of both hands at 30 Hz, ~6 MB of JSON; the log is kept across reloads, so this caps the whole log. */
+export const MAX_SAMPLES = 120_000;
 
 export class TesterLogger {
   readonly log: TesterLog;
@@ -111,12 +117,46 @@ export class TesterLogger {
     return this.total;
   }
 
-  startSession(time: number, emulator = false): void {
+  /** True once MAX_SAMPLES is reached: events are still logged, hand samples are not. */
+  get full(): boolean {
+    return this.total >= MAX_SAMPLES;
+  }
+
+  /**
+   * Takes over a log restored from storage: its sessions come first, any
+   * session already started here follows, renumbered.
+   */
+  adopt(restored: TesterLog): void {
+    const current = this.log.sessions;
+    this.log.sessions = [...restored.sessions, ...current];
+    this.log.sessions.forEach((s, i) => (s.index = i));
+    this.log.createdAt = restored.createdAt;
+    if (restored.emulator) this.log.emulator = true;
+    this.total = 0;
+    for (const s of this.log.sessions) this.total += s.samples.length;
+  }
+
+  /** Starts a new, empty log (keeps the header). */
+  clear(): void {
+    this.log.sessions = this.session ? [this.session] : [];
+    if (this.session) {
+      this.session.index = 0;
+      this.session.samples.length = 0;
+      this.session.events.length = 0;
+    }
+    this.log.createdAt = new Date().toISOString();
+    this.log.emulator = this.session?.emulator ?? false;
+    this.total = 0;
+  }
+
+  startSession(time: number, emulator = false, guided = false): void {
     if (emulator) this.log.emulator = true;
     this.session = {
       index: this.log.sessions.length,
       startedAt: new Date().toISOString(),
       emulator,
+      build: this.log.build,
+      guided,
       placement: null,
       calibration: null,
       columns: COLUMNS,

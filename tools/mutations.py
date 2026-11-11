@@ -1,4 +1,4 @@
-"""Day-2 mutation check: applies each mutation to the source, runs `npm test`,
+"""Mutation check (days 2-3): applies each mutation to the source, runs `npm test`,
 restores the file, and prints which tests failed. Run: python3 tools/mutations.py
 A mutation that no test catches is printed with 0 failing."""
 import subprocess, shutil, re, sys
@@ -22,6 +22,14 @@ M=[
  ('4d also mark a still-tracked hand as lost (equivalent: the next line clears it)','src/creature.ts','&& !tracked[this.lastHand]) {','&& true) {'),
  ('LOS capsule inflation removed (+4 mm -> 0)','src/hand-proxy.ts','export const INFLATE = 0.004;','export const INFLATE = 0;'),
  ('LOS capsule radius halved','src/hand-proxy.ts','const r = Math.max(MIN_RADIUS, (ra + rb) / 2) + inflate;','const r = (Math.max(MIN_RADIUS, (ra + rb) / 2) + inflate) / 2;'),
+ # day-3: the two outside mutations that survived day 2 (O3, O4), plus new code
+ ('O3 object shade no longer clears the wait (branch body removed)','src/creature.ts','this.waitingFor = -1; // shaded by an object','// shaded by an object'),
+ ('O4 late-desk window off (LATE_DESK_S 10 -> 0)','src/placement.ts','export const LATE_DESK_S = 10;','export const LATE_DESK_S = 0;'),
+ ('3a anchor restore gives up at 4 s again','src/placement.ts','export const RESTORE_WAIT_S = 8;','export const RESTORE_WAIT_S = 4;'),
+ ('3b log cursor never advances (every flush rewrites the session)','src/log-store.ts','      d.s = s.samples.length;\n',''),
+ ('3c a restored log of another store version is mixed in','src/log-store.ts','if (!meta || meta.storeVersion !== STORE_VERSION) return null;','if (!meta) return null;'),
+ ('3d teaching copy back to day 2','src/onboarding.ts',"""teach: ["Stand your hand like 'stop'", '!between the lantern and the path'],""","""teach: ['Hold your hand up in the light,', "!like 'stop'"],"""),
+ ('3e searching floats the board at once (no desk wait)','src/placement.ts',"return c.time - c.searchStart > DESK_WAIT_S ? 'fallback' : 'none';","return 'fallback';"),
 ]
 for name, f, a, b in M:
     p=f'{ROOT}/{f}'; src=open(p).read()

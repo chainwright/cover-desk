@@ -82,8 +82,8 @@ for phase in sys.argv[1:]:
               s['placement'] == 'desk' and s['listening'], f"{s['placement']} listening={s['listening']} {json.dumps(s['info'])}")
         check('auto-desk path: plane label logged in the placement', 'planeLabel' in (s['info'] or {}), json.dumps(s['info']))
         check('auto-desk path: the ghost "stop" hand is visible', c['ghostVisible'], json.dumps(c))
-        check("auto-desk path: the teaching prompt reads \"Hold your hand up in the light, like 'stop'\"",
-              c['promptVisible'] and c['promptText'] == "Hold your hand up in the light, like 'stop'", c['promptText'])
+        check("auto-desk path: the teaching prompt is shown (day 3 copy: \"Stand your hand like 'stop' between the lantern and the path\")",
+              c['promptVisible'] and c['promptText'] == "Stand your hand like 'stop' between the lantern and the path", c['promptText'])
         check('auto-desk path: "tap & hold to move" is on the knob, not in the prompt', c['knobLabel'] and 'move' not in c['promptText'], json.dumps(c))
         check('auto-desk path: object registration is allowed without a desk tap', c['canRegister'])
         shot('day2_01_first_run_ghost_prompt.png')

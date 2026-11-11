@@ -72,17 +72,13 @@ import {
 } from './hand-proxy.ts';
 import { BOARD, CREATURE_Y, LEVEL_1, Route } from './level.ts';
 import { LightMap } from './light-map.ts';
+import { LogCursor, LogStore, metaOf, type StoreStatus } from './log-store.ts';
 import { KNOB_LINES, PROMPT_LINES, firstRunCues, newCues, type CueInput } from './onboarding.ts';
+import { placementStep, type PlacementClock, type PlacementState, type PlacementWorld } from './placement.ts';
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightResult } from './sightline.ts';
 import { TextCard } from './text-card.ts';
 import { LABELS, TesterLogger, analyseLog, logSettings, type Label } from './touch-log.ts';
 
-/** How long to wait for a desk plane before using the fallback spot. */
-const DESK_WAIT_S = 2.5;
-/** After a fallback, a desk found within this window still wins (once). */
-const LATE_DESK_S = 10;
-/** How long to wait for last session's anchor before searching again. */
-const RESTORE_WAIT_S = 4;
 /** Inset from desk edges so the whole board stays on the desk, whichever way it is turned. */
 const DESK_INSET = Math.max(BOARD.halfX, (BOARD.zMax - BOARD.zMin) / 2) + 0.01;
 /** A hold this far above a detected desk is a pause in the air, not a tap. */
@@ -98,15 +94,17 @@ const NEXT_ROUND_S = 3.5;
 const PANEL_REDRAW_S = 0.5;
 /** Per-frame update() timings kept for the once-a-second p95 (more than any refresh rate). */
 const UPD_BUF = 256;
+/** Tester log: write the new part to storage every this many seconds (and at every session end). */
+const LOG_FLUSH_S = 5;
 
-export type Placement = 'preview' | 'restoring' | 'searching' | 'desk' | 'fallback' | 'touch' | 'anchor';
+export type Placement = PlacementState;
 
 // The game's pose comes first, so the first thing a tester is told is how to play.
 // The flat hand is a measurement step (it casts only a short shadow near the lantern).
 const GUIDE: { label: Label; seconds: number; text: [string, string] }[] = [
-  { label: 'stop', seconds: 20, text: ["Hold your hand up in the light,", "like 'stop'. Keep it there."] },
+  { label: 'stop', seconds: 20, text: ["Stand your hand like 'stop' between", 'the lantern and the path. Keep it there.'] },
   { label: 'edge', seconds: 20, text: ['Stand your hand on its little-finger', 'side, like a wall. Keep it there.'] },
-  { label: 'flat', seconds: 20, text: ['Now lay one hand flat on the desk,', 'in the light. Keep it there.'] },
+  { label: 'flat', seconds: 20, text: ['Measurement only, not how to play:', 'lay one hand flat on the desk.'] },
   { label: 'register', seconds: 15, text: ['Point down onto the top of a mug', '(3-30 cm tall) beside the path. Hold still.'] },
 ];
 const GUIDE_PREP_S = 3;
@@ -130,6 +128,14 @@ export interface CoverDebug {
   coverWaitingFor: number;
   /** True when the Immersive Web Emulator replaced WebXR in this page. */
   emulator: boolean;
+  /** Tester mode: the log's storage ('off' outside tester mode) and how many sessions the log holds. */
+  logStore: { status: StoreStatus; error: string; sessions: number; full: boolean };
+  /** Tester mode: writes the log's new part to storage now. */
+  flushLog(): Promise<boolean>;
+  /** Tester mode: forgets the stored log and starts a new one. */
+  resetLog(): Promise<void>;
+  /** Tester mode: the next session runs the guided poses (they never start by themselves). */
+  armGuide(): void;
   /** World position of a board-frame point. */
   boardPoint(x: number, z: number, y: number): [number, number, number];
   /** Board-frame position of a world point. */
@@ -186,6 +192,7 @@ export class CoverSystem extends createSystem({
   private objects = new Float32Array(MAX_OBJECT_MARKERS * 3); // x, z, top
   private objectCount = 0;
   private handMask = new HandMask(flags.hands);
+  private handsExplicit = typeof location !== 'undefined' && new URLSearchParams(location.search).has('hands');
 
   private prompt!: TextCard;
   private panel: TextCard | null = null;
@@ -209,6 +216,15 @@ export class CoverSystem extends createSystem({
   private knobSince = new Float32Array(2).fill(-1);
   private knobArmed = [true, true];
   private guideStart = -1;
+  /** The tester asked for the guided poses for the next session (a separate Enter button). */
+  private guideArmed = false;
+  private guideActive = false;
+  private logStore: LogStore | null = null;
+  private logCursor = new LogCursor();
+  private storeReady = false;
+  private flushAt = 0;
+  private placeClock: PlacementClock = { placement: 'preview', time: 0, restoreStart: 0, searchStart: 0, placedAt: 0 };
+  private placeWorld!: PlacementWorld;
   private panelAt = 0;
   private lastTime = 0;
 
@@ -277,10 +293,11 @@ export class CoverSystem extends createSystem({
     this.ring.visible = false;
     this.world.createTransformEntity(this.ring, { persistent: true });
 
+    // 0.34 m (was 0.3) so the day-3 teaching line fits at the same letter size.
     this.prompt = new TextCard('prompt', {
-      widthM: 0.3,
+      widthM: 0.34,
       heightM: 0.07,
-      px: 900,
+      px: 1020,
       font: 52,
       background: 'rgba(23,17,12,0.82)',
       color: '#f4ead8',
@@ -323,7 +340,15 @@ export class CoverSystem extends createSystem({
         navigator.userAgent,
         build,
       );
+      void this.openLogStore();
     }
+
+    this.placeWorld = {
+      headY: 0,
+      anchorFailed: false,
+      anchorPose: () => !!this.deskAnchor.anchor && this.applyAnchorPose(),
+      findDesk: () => this.findDesk(),
+    };
 
     this.placePreview();
     this.exposeDebug();
@@ -350,7 +375,10 @@ export class CoverSystem extends createSystem({
     this.updatePlacement(time);
     if (this.followAnchor && this.deskAnchor.anchor) this.applyAnchorPose();
 
-    this.handMask.apply(this.input.xr as never);
+    // The default mask makes the hand invisible so the real one shows through
+    // passthrough. The emulator has no real hand behind it, so there the SDK's
+    // hand outline stays, unless ?hands= asks otherwise.
+    if (!this.emulator || this.handsExplicit) this.handMask.apply(this.input.xr as never);
     const root = this.model.root;
     root.updateWorldMatrix(true, false);
     this.inv.copy(root.matrixWorld).invert();
@@ -403,16 +431,20 @@ export class CoverSystem extends createSystem({
     this.moveRequested = false;
     this.coverWatch.reset();
     this.updN = 0;
-    this.logger?.startSession(time, this.emulator);
+    this.guideActive = this.guideArmed && flags.guide;
+    this.guideArmed = false;
+    this.logger?.startSession(time, this.emulator, this.guideActive);
     this.logger?.setLabel('free', time);
     const s = session as (XRSession & { frameRate?: number; supportedFrameRates?: Float32Array }) | null;
     this.frameRate = s?.frameRate ?? 0;
     this.logger?.event(time, 'session', {
       emulator: this.emulator,
+      guided: this.guideActive,
       frameRate: this.frameRate || null,
       supportedFrameRates: s?.supportedFrameRates ? Array.from(s.supportedFrameRates) : null,
     });
     console.info(`[cover] session start, emulator: ${this.emulator}`);
+    window.dispatchEvent(new CustomEvent('cover:session-start'));
     if (session && this.deskAnchor.hasSaved()) {
       this.placement = 'restoring';
       this.restoreStart = time;
@@ -426,6 +458,7 @@ export class CoverSystem extends createSystem({
   private endSession(): void {
     this.deskAnchor.endSession();
     this.logger?.endSession();
+    void this.flushLog();
     setHum(0, false);
     this.placePreview();
     window.dispatchEvent(new CustomEvent('cover:session-end'));
@@ -438,8 +471,16 @@ export class CoverSystem extends createSystem({
   // ---------------------------------------------------------------- placement
 
   private updatePlacement(time: number): void {
-    if (this.placement === 'restoring') {
-      if (this.deskAnchor.anchor && this.applyAnchorPose()) {
+    const c = this.placeClock;
+    c.placement = this.placement;
+    c.time = time;
+    c.restoreStart = this.restoreStart;
+    c.searchStart = this.searchStart;
+    c.placedAt = this.placedAt;
+    this.placeWorld.headY = this.head.y;
+    this.placeWorld.anchorFailed = this.deskAnchor.status === 'restore-failed' || this.deskAnchor.status === 'unsupported';
+    switch (placementStep(c, this.placeWorld)) {
+      case 'anchor':
         this.model.root.visible = true;
         this.placement = 'anchor';
         this.placedAt = time;
@@ -453,22 +494,18 @@ export class CoverSystem extends createSystem({
         };
         this.logger?.setPlacement(this.placementInfo);
         this.logger?.event(time, 'placement', this.placementInfo);
-      } else if (
-        this.deskAnchor.status === 'restore-failed' ||
-        this.deskAnchor.status === 'unsupported' ||
-        time - this.restoreStart > RESTORE_WAIT_S
-      ) {
+        break;
+      case 'restore-gave-up':
         this.logger?.event(time, 'anchor-restore', { ok: false, status: this.deskAnchor.status, ms: Math.round((time - this.restoreStart) * 1000) });
         this.placement = 'searching';
         this.searchStart = time;
-      }
-    } else if (this.placement === 'searching') {
-      if (this.head.y >= 0.3) {
-        if (this.findDesk()) this.placeAt(this.best, 'desk', time);
-        else if (time - this.searchStart > DESK_WAIT_S) this.placeFallback(time);
-      }
-    } else if (this.placement === 'fallback' && time - this.placedAt < LATE_DESK_S) {
-      if (this.findDesk()) this.placeAt(this.best, 'desk', time);
+        break;
+      case 'desk':
+        this.placeAt(this.best, 'desk', time);
+        break;
+      case 'fallback':
+        this.placeFallback(time);
+        break;
     }
   }
 
@@ -1073,6 +1110,10 @@ export class CoverSystem extends createSystem({
           redraws: this.panelRedraws,
         });
       }
+      if (this.logger && time - this.flushAt >= LOG_FLUSH_S) {
+        this.flushAt = time;
+        void this.flushLog();
+      }
       this.fpsStart = time;
       this.fpsFrames = 0;
       this.fpsWorst = 0;
@@ -1097,8 +1138,10 @@ export class CoverSystem extends createSystem({
     const placed = this.isPlaced();
     if (placed && this.guideStart < 0) this.guideStart = time + GUIDE_DELAY_S;
     let stepLine: [string, string] = ['', ''];
-    if (!flags.guide) {
-      stepLine = ['Free play (guided steps off)', ''];
+    if (!this.guideActive) {
+      stepLine = placed
+        ? ['Free play. Guided poses: leave the view,', '!then press "Enter: guided poses".']
+        : ['!Tap the desk beside you with one finger', 'and hold it still'];
     } else if (this.guideStart >= 0 && time >= this.guideStart) {
       let t = time - this.guideStart;
       let i = 0;
@@ -1135,7 +1178,7 @@ export class CoverSystem extends createSystem({
         `creature ${MODE_NAMES[this.creature.mode]}  line ${line}  lit ${(this.lightMap.litFraction * 100).toFixed(0)}%`,
         stepLine[0],
         stepLine[1],
-        `log ${this.logger?.sampleCount ?? 0} samples. Leave the view to download.`,
+        `log ${this.logger?.sampleCount ?? 0} samples${this.logger?.full ? ' (FULL)' : ''}, ${this.storeReady ? 'kept on this headset' : 'NOT kept: download before reload'}`,
       ]);
       if (redrawn) this.panelRedraws++;
     }
@@ -1145,6 +1188,45 @@ export class CoverSystem extends createSystem({
       panel.mesh.position.y += 0.1;
     }
     panel.mesh.visible = true;
+  }
+
+  // ------------------------------------------------------- tester log storage
+
+  /** Opens the on-headset log store and takes over a log kept from an earlier page load. */
+  private async openLogStore(): Promise<void> {
+    const store = new LogStore();
+    this.logStore = store;
+    if (await store.open()) {
+      const restored = await store.load();
+      if (restored && this.logger) {
+        this.logger.adopt(restored);
+        this.logCursor.markAll(restored);
+        console.info(`[cover] tester log restored: ${restored.sessions.length} sessions`);
+      }
+      this.storeReady = store.status === 'ready';
+    }
+    window.dispatchEvent(new CustomEvent('cover:log-store'));
+  }
+
+  /** Writes what the log gained since the last write. */
+  private async flushLog(): Promise<boolean> {
+    if (!this.logger || !this.logStore || !this.storeReady) return false;
+    const chunks = this.logCursor.take(this.logger.log);
+    if (!chunks.length) return true;
+    const ok = await this.logStore.write(metaOf(this.logger.log), chunks);
+    if (!ok) this.storeReady = false;
+    return ok;
+  }
+
+  private async resetLog(): Promise<void> {
+    if (!this.logger) return;
+    this.logger.clear();
+    this.logCursor.reset();
+    if (this.logStore) {
+      await this.logStore.clear();
+      this.storeReady = this.logStore.status === 'ready';
+    }
+    window.dispatchEvent(new CustomEvent('cover:log-store'));
   }
 
   // -------------------------------------------------------------------- debug
@@ -1209,6 +1291,19 @@ export class CoverSystem extends createSystem({
       },
       get emulator() {
         return self.emulator;
+      },
+      get logStore() {
+        return {
+          status: self.logStore?.status ?? 'off',
+          error: self.logStore?.error ?? '',
+          sessions: self.logger?.log.sessions.length ?? 0,
+          full: self.logger?.full ?? false,
+        };
+      },
+      flushLog: () => self.flushLog(),
+      resetLog: () => self.resetLog(),
+      armGuide() {
+        self.guideArmed = true;
       },
       boardPoint(x, z, y) {
         const v = new Vector3(x, y, z);

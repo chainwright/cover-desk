@@ -49,7 +49,10 @@ export const PROMPT_LINES: Record<Exclude<PromptKind, 'none'>, readonly string[]
   'tap-desk': ['Tap your desk with one finger', '!and hold it still'],
   'tap-new-spot': ['Tap the desk where you want it,', '!and hold it still'],
   waits: ['It waits for your hand.', '!Show me a hand.'],
-  teach: ['Hold your hand up in the light,', "!like 'stop'"],
+  // Day 3: "Hold your hand up in the light" sent hands into the lit area in
+  // front of the path (no shadow on it) or above the sight line (a wrist
+  // higher than about 7 cm). The hand must stand low, between lantern and path.
+  teach: ["Stand your hand like 'stop'", '!between the lantern and the path'],
 };
 
 export const KNOB_LINES: readonly string[] = ['tap & hold', '!to move'];

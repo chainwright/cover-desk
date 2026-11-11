@@ -27,6 +27,7 @@
         text-align: left; font-size: 14px; }
       #tester[hidden] { display: none; }
       #tester ol { margin: 0 0 12px; padding-left: 20px; line-height: 1.45; color: #dccfb8; }
+      #tester a { color: #f0c58f; }
       #tester .row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
       button.small { font-size: 15px; padding: 9px 18px; }
       button.ghost { background: transparent; color: #f4ead8; border: 1px solid rgba(244, 234, 216, 0.4); }
@@ -44,18 +45,20 @@
     <div id="scene-container"></div>
     <div id="intro">
       <h1>Cover</h1>
-      <p>A sleepy keeper's lantern lights your desk. Hold your hand up in the light, like 'stop', and a tiny felt creature dashes through your shadow.</p>
+      <p>A sleepy keeper's lantern lights your desk. Stand your hand on the desk between the lantern and the path, like 'stop', and a tiny felt creature dashes through your shadow.</p>
       <button id="enter" type="button" disabled>Enter</button>
       <p id="note">Checking for a headset…</p>
       <div id="tester" hidden>
         <ol>
-          <li>Press Enter, then tap the desk with one finger where you want the board, and hold still.</li>
-          <li>Follow the short steps on the panel: three hand poses, then one object (about 1.5 minutes). Then play.</li>
-          <li>Leave the immersive view and press Download log.</li>
+          <li><b>Enter</b> = play and measure. If the board floats, tap the desk beside you with one finger and hold still.</li>
+          <li>Guided poses (about 1.5 min) start only from <b>Enter: guided poses</b>.</li>
+          <li>The log stays on this headset through reloads and restarts. At the end: <b>Download log</b>, then send it with a <a id="report" href="https://github.com/chainwright/cover-desk/issues/new?template=tester-report.yml" target="_blank" rel="noopener">tester report</a>.</li>
         </ol>
         <div class="row">
+          <button id="guided" type="button" class="small ghost" disabled>Enter: guided poses</button>
           <button id="download" type="button" class="small" disabled>Download log</button>
           <button id="copy" type="button" class="small ghost" disabled>Copy summary</button>
+          <button id="new-log" type="button" class="small ghost" disabled>Start a new log</button>
         </div>
         <p id="log-info">No log yet.</p>
       </div>
