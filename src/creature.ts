@@ -6,8 +6,9 @@
  *  - otherwise it waits where it is (in its nook, or in a shadow);
  *  - if the keeper sees it for SPOT_S in a row it is spotted: it freezes,
  *    then scurries back to its nook;
- *  - if the headset loses every hand, it waits: nothing moves, nothing is
- *    judged, and a short grace follows when a hand comes back.
+ *  - if the headset loses every hand, or loses the hand that was shading it
+ *    (see CoverWatch), it waits: nothing moves, nothing is judged, and a
+ *    short grace follows when a hand comes back.
  *  - at the end of the route it has its trinket back.
  */
 
@@ -68,8 +69,58 @@ export interface CreatureWorld {
   routeLength: number;
   /** Would the keeper see the creature at arc length s right now? */
   seen(s: number): boolean;
-  /** Is at least one hand tracked? */
+  /** Is a hand there to play with? (false pauses the creature; see CoverWatch) */
   handPresent: boolean;
+}
+
+/** How recently a hand must have shaded the creature to count as its cover. */
+export const COVER_WINDOW_S = 0.3;
+
+/**
+ * Which hand is the creature's cover, and did the headset just lose it?
+ *
+ * Day 1 paused only when both hands were lost. With one hand shading the
+ * creature and the other resting in view, a tracking drop of the shading hand
+ * left the creature in the light and it was "spotted by the headset", not by
+ * the player. Now: if the hand that shaded the creature within the last
+ * COVER_WINDOW_S stops being tracked while the creature stands in the light,
+ * play pauses until that hand is back, or until something else shades the
+ * creature, or it stands outside the light.
+ *
+ * A hand lifted but still tracked is not a loss: that is the "lift your hand
+ * and it is spotted" rule, unchanged.
+ */
+export class CoverWatch {
+  /** The hand (0 left, 1 right) play is waiting for; -1 none. */
+  waitingFor = -1;
+  private lastHand = -1;
+  private lastAt = Number.NEGATIVE_INFINITY;
+
+  reset(): void {
+    this.waitingFor = -1;
+    this.lastHand = -1;
+    this.lastAt = Number.NEGATIVE_INFINITY;
+  }
+
+  /**
+   * Call once per frame before stepping the creature.
+   * @param shadeHand the hand shading the creature right now (-1: none)
+   * @param exposed the keeper sees the creature right now
+   * @returns whether a hand counts as present (CreatureWorld.handPresent)
+   */
+  update(time: number, tracked: readonly boolean[], shadeHand: number, exposed: boolean, window = COVER_WINDOW_S): boolean {
+    if (shadeHand >= 0) {
+      this.lastHand = shadeHand;
+      this.lastAt = time;
+      this.waitingFor = -1;
+    } else if (!exposed) {
+      this.waitingFor = -1; // shaded by an object, or out of the light: nothing at risk
+    } else if (this.waitingFor < 0 && this.lastHand >= 0 && time - this.lastAt <= window && !tracked[this.lastHand]) {
+      this.waitingFor = this.lastHand;
+    }
+    if (this.waitingFor >= 0 && tracked[this.waitingFor]) this.waitingFor = -1;
+    return (tracked[0] || tracked[1]) && this.waitingFor < 0;
+  }
 }
 
 /** Event codes returned by step (for sounds and the log). */

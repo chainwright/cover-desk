@@ -21,7 +21,8 @@ if (log.format !== LOG_FORMAT) {
 }
 
 const s = analyseLog(log);
-console.log(`build ${log.build}, ${log.userAgent}`);
+console.log(`build ${log.build}, emulator ${s.emulator}, ${log.userAgent}`);
+if (s.emulator) console.log('WARNING: this log comes from the Immersive Web Emulator, not a headset: its fps and tracking numbers mean nothing.');
 console.log(`sessions ${s.sessions}, samples ${s.samples}`);
 console.log('placement:', JSON.stringify(s.placement));
 for (const x of log.sessions) if (x.calibration) console.log('calibration:', JSON.stringify(x.calibration));
@@ -33,6 +34,10 @@ for (const l of s.labels) {
   console.log(`| ${l.label} | ${l.hand ? 'R' : 'L'} | ${l.samples} | ${(l.tracked * 100).toFixed(1)}% | ${match} | ${l.poseFlipsPerMin} | ${l.wristStepMm} | ${l.wristSdMm} |`);
 }
 console.log('\nsight lines to the creature:', JSON.stringify(s.lines));
+console.log('\n| step | seconds | line flips | flips/min |');
+console.log('|---|---|---|---|');
+for (const l of s.lineFlips) console.log(`| ${l.label} | ${l.seconds} | ${l.flips} | ${l.perMin} |`);
+console.log('joint paths:', JSON.stringify(s.jointPaths));
 console.log('creature:', JSON.stringify(s.creature));
 console.log('registrations:', JSON.stringify(s.registrations));
 console.log('fps:', JSON.stringify(s.fps));

@@ -19,6 +19,10 @@ export class HandJoints {
   readonly world = [new Float32Array(JOINTS * 3), new Float32Array(JOINTS * 3)];
   readonly radii = [new Float32Array(JOINTS), new Float32Array(JOINTS)];
   readonly tracked = [false, false];
+  /** Which WebXR path filled the joints last time (for the tester log). */
+  readonly posePath: ('fillPoses' | 'getJointPose' | 'none')[] = ['none', 'none'];
+  /** Where the radii came from: fillJointRadii, the per-joint pose.radius, or zeroed (then the 7 mm floor applies). */
+  readonly radiusPath: ('fillJointRadii' | 'pose.radius' | 'zeroed' | 'none')[] = ['none', 'none'];
   private spaces: (XRJointSpace[] | null)[] = [null, null];
   private sources: (XRInputSource | null)[] = [null, null];
   private matrices = new Float32Array(JOINTS * 16);
@@ -52,6 +56,8 @@ export class HandJoints {
     const out = this.world[h];
     let ok = true;
     if (f.fillPoses) {
+      this.posePath[h] = 'fillPoses';
+      this.radiusPath[h] = 'zeroed';
       try {
         ok = f.fillPoses(spaces, ref, this.matrices);
       } catch {
@@ -65,6 +71,8 @@ export class HandJoints {
         }
       }
     } else {
+      this.posePath[h] = 'getJointPose';
+      this.radiusPath[h] = 'pose.radius';
       for (let i = 0; i < JOINTS && ok; i++) {
         const pose = frame.getJointPose?.(spaces[i], ref);
         if (!pose) {
@@ -79,13 +87,25 @@ export class HandJoints {
     }
     if (ok && f.fillJointRadii) {
       try {
-        if (!f.fillJointRadii(spaces, this.radii[h])) this.radii[h].fill(0);
+        if (f.fillJointRadii(spaces, this.radii[h])) this.radiusPath[h] = 'fillJointRadii';
+        else {
+          this.radii[h].fill(0);
+          this.radiusPath[h] = 'zeroed';
+        }
       } catch {
         this.radii[h].fill(0);
+        this.radiusPath[h] = 'zeroed';
       }
     }
     if (ok) for (let i = 0; i < JOINTS; i++) toWorld(out, i);
     this.tracked[h] = ok;
     return ok;
+  }
+
+  /** Mean joint radius of hand h in mm (for the tester log). */
+  meanRadiusMm(h: number): number {
+    let sum = 0;
+    for (let i = 0; i < JOINTS; i++) sum += this.radii[h][i];
+    return Math.round((sum / JOINTS) * 10000) / 10;
   }
 }

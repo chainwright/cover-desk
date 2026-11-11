@@ -1,5 +1,10 @@
 # Day 1 (built 10–11 Nov 2026, overnight): sight lines, hand cover, level 1
 
+> Corrected on day 2 (11 Nov) after an outside fact check: the commit subjects
+> below are now quoted word for word, and the sentences marked *[corrected]*
+> replace ones that were false or claimed more than the evidence showed. The
+> mutation table was replaced by a re-run with recorded edits.
+
 ## Where this code comes from
 
 Cover grows out of the desk prototype built earlier in the competition window
@@ -8,11 +13,13 @@ repository, so its four commits from 10 Nov stay in the history, with their
 original dates, as the record of when the reused modules were written:
 
 ```
-7af31ef 2026-11-10 17:19 -0600  desk prototype day 1
-ec235cc 2026-11-10 17:22 -0600  devlog
-d20aeef 2026-11-10 18:04 -0600  desk prototype day 2: desk tap calibration, desk anchor, touch thresholds, tester mode
-2610fd1 2026-11-10 18:29 -0600  devlog
+7af31ef 2026-11-10 17:19 -0600  Fade day 1: soroban on the desk with fingertip push
+ec235cc 2026-11-10 17:22 -0600  Devlog: public URL check and screenshots
+d20aeef 2026-11-10 18:04 -0600  Fade day 2: desk tap calibration, desk anchor, touch thresholds, tester mode
+2610fd1 2026-11-10 18:29 -0600  Devlog: day 2 public URL check in tester mode
 ```
+
+("Fade" was the prototype's working name.)
 
 The prototype's own notes and screenshots moved to `devlog/fade-origin/`.
 Its soroban (abacus) is removed: bead physics, rest reader, soroban model and
@@ -45,8 +52,10 @@ system, their tests and the threshold sweep. Reused as they were or extended:
   through the gaps. A pose class (flat / edge / stop / other) is computed only
   for the log and the tutorial.
 - **Light map** (`src/light-map.ts`). A 64 × 32 polar grid from the lantern
-  (angle × distance), each cell tested with the same `look()` as the game, so
-  the drawn shadow is exactly where the creature is safe. Half the columns are
+  (angle × distance), each cell tested with the same segment and cylinder
+  tests as the game (re-implemented with culls, checked equal at all 2,048
+  cell centres), so the drawn shadow matches where the creature is safe at
+  every cell centre *[corrected: it does not call `look()` itself]*. Half the columns are
   refreshed per frame; each column tests only occluders whose angle range
   covers it and that are near enough. It is uploaded as a tiny texture and
   drawn by a light-pool shader: warm light on the desk, a dark wedge where your
@@ -68,10 +77,14 @@ system, their tests and the threshold sweep. Reused as they were or extended:
   moves forward through shadow (it checks 1.5 and 3 cm ahead), waits in any
   shadow, is spotted after 0.15 s in the light (so a one-frame flicker doesn't
   count), freezes 0.7 s, then runs back. A full crossing in shadow takes about
-  3 s, well inside the 8 s hold limit. Path dots show the state of the path:
+  3 s, well inside our 8 s design budget for holding a hand still (not yet
+  measured with players) *[corrected: there is no hold limit in the code]*.
+  Path dots show the state of the path:
   warm = the keeper sees it, blue = your shadow, paper = outside the light. A
-  pale ghost hand shows the "stop" palm until the creature first stands in a
-  hand's shadow. After a win the next round starts 3.5 s later.
+  pale ghost hand shows the "stop" palm after a touch placement, for up to
+  25 s, until the creature first stands in a hand's shadow *[corrected: on
+  the automatic desk placement it never showed; fixed on day 2]*. After a win
+  the next round starts 3.5 s later.
 - **When the headset loses the hands, the creature waits.** No movement, no
   verdict, a card says "It waits for your hand", and there is a 0.5 s grace
   when a hand comes back.
@@ -112,16 +125,12 @@ spotted and back, a one-frame flicker is ignored, pause on hand loss with
 grace. Registration verdicts, path distance, hysteresis, the reused desk tap
 and placement, flags, the log summary.
 
-Mutations (each one breaks the tests listed, so those tests guard real logic):
-
-| Mutation | Tests that fail |
-|---|---|
-| quick reject inverted | 6 (capsule boundary, quick reject, flat-hand shadow, light map, …) |
-| capsule radius halved | 3 (boundary, spread vs closed, light map) |
-| no "seen for 0.15 s" debounce | single-frame flicker |
-| no palm webs | 30 capsules; the palm stays solid with fingers spread |
-| light-map distance cull too aggressive | light map equals the sight test |
-| no pause on hand loss | hand-loss pause and grace |
+Mutations *[corrected]*: the day-1 table here did not reproduce for an
+outside checker and its exact edits were not recorded. The same mutations are
+now in `tools/mutations.py` with their exact edits and were re-run on day 2
+against the day-2 suite (results in `devlog/day2_mutations_output.txt` and
+`DAY2.md`). On day 1's 29 tests an outside checker got: no pause 1 failing,
+radius halved 2, quick reject inverted 7, no palm webs 2, no debounce 1.
 
 Light-map half refresh with two hands and four objects: **0.11 ms** in Node on
 the Mac. This is not a headset number.
@@ -136,19 +145,19 @@ transforms and named poses. One page, all phases in a row:
 |---|---|
 | First run: board placed on the detected desk, still listening for a tap | pass |
 | A flat hand coming down and resting on the desk does not move the board | pass |
-| One-finger tap + hold → placed by touch; desk height vs plane | −0.1 mm |
+| One-finger tap + hold → placed by touch; desk height vs plane | −0.2 mm *[corrected]* |
 | No hand in the light: light map 100% lit, creature waits out of the light | pass |
 | Middle of the path: "stop" palm, edge-on wall, flat hand by the path, fist held up, open high-five → shadow | 5/5 |
 | Flat hand near the lantern → still seen (light passes over it) | pass |
 | Pose classes in the emulator: stop, edge, flat | 3/3 |
 | "Stop" palm near the lantern → the creature dashes into the shadow | pass |
-| Sweeping the palm 8.5 cm sideways near the lantern guides it home, never spotted | pass |
+| Sweeping the palm sideways near the lantern (wrist from x = −3.5 to +5 cm in the script; the output does not record it) guides it home, never spotted | pass |
 | Lifting the hand while it stands in the light → spotted → back out of the light | pass |
 | Hands lost (input switched to controllers) → paused; nothing moves or is judged; resumes | pass |
 | Registration: on the path → rejected; at desk height → nothing; 9 cm up beside the path → registered with top 90 mm | pass |
 | The object shades the path behind it (`shadow:object-0`) | pass |
 | Touching near it again replaces it; a second object elsewhere is added | pass |
-| Exit and re-enter from elsewhere in the room → board back at the same spot | 0.00 mm |
+| Exit and re-enter (same viewpoint, emulator) → board restored by anchor *[corrected: not "from elsewhere"]* | 0.00 mm |
 | Log export → `cover-tester-log` v1 with line, dash, fps and register events | pass |
 
 A guided tester run (`?test=1`, the four steps with the emulated right hand in
@@ -161,7 +170,8 @@ the pipeline, not stability. Logs: `day1_emulator_log.json`,
 Found and fixed during testing:
 - The light reached 40 cm and hung past the desk's front edge (into the air
   over the drawer). It now reaches 28 cm, which still covers the path with
-  about 10 cm to spare.
+  at least 6–7 cm to spare *[corrected: about 11 cm only at the path's
+  centre]*.
 - The analyser pooled both hands, so a hand resting elsewhere diluted pose
   match and inflated wrist spread. It now scores each hand separately.
 - A system method named `play` shadowed the ECS system's own `play()`
@@ -219,8 +229,10 @@ Screenshots (emulator, leaning over the board):
 5. **Emulator-only evidence.** Every number above is from the emulator or
    Node.
 6. **Bundle.** The production build carries the emulator (about 1.5 MB) so
-   judges without a headset can try it on a desktop. The Quest browser skips
-   it, but it still downloads it.
+   judges without a headset can try it on a desktop. The Quest browser should
+   skip it (default user-agent exclusion, not yet verified on a device), but
+   it still downloads it *[corrected; on day 2 the emulator moved to a
+   separate `/emu/` build]*.
 
 ## Public URL
 

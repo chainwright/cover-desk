@@ -9,9 +9,10 @@
     "dev:down": "iwsdk dev down",
     "dev:status": "iwsdk dev status",
     "typecheck": "tsc --noEmit",
-    "build": "vite build",
+    "build": "vite build && node tools/build-emu.mjs && node tools/check-dist.mjs",
+    "build:main": "vite build",
     "preview": "vite preview",
-    "test": "node --test tests/sightline.test.ts tests/game.test.ts",
+    "test": "node --test tests/sightline.test.ts tests/game.test.ts tests/day2.test.ts tests/los-cases.test.ts",
     "check": "npm run typecheck && npm test && npm run build",
     "analyze": "node tools/analyze-log.mjs"
   },

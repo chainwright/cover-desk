@@ -3,12 +3,12 @@
  * re-analyse offline. Grown from the desk prototype's touch log; same
  * recorder design (30 Hz per hand, events, sessions), new columns.
  *
- * Format "cover-tester-log" v1:
+ * Format "cover-tester-log" v2 (v1 had no ix/iy/iz columns and no `emulator`):
  * {
- *   format, version, createdAt, userAgent, build, labels, settings,
+ *   format, version, createdAt, userAgent, build, emulator, labels, settings,
  *   sessions: [{
- *     index, startedAt, placement, calibration,
- *     columns: ["t","hand","wx","wy","wz","tipY","pose","normalY","label"],
+ *     index, startedAt, emulator, placement, calibration,
+ *     columns: ["t","hand","wx","wy","wz","tipY","pose","normalY","label","ix","iy","iz"],
  *     samples: [[...], ...],
  *     events: [{ t, type, ... }, ...]
  *   }]
@@ -20,17 +20,25 @@
  * - pose: 0 lost, 1 flat, 2 edge, 3 stop, 4 other (hand-proxy.ts)
  * - normalY: palm normal's vertical component × 1000
  * - label: index into `labels` (what the tester was asked to do then)
+ * - ix, iy, iz: index fingertip joint in the board frame, mm (fingertip jitter)
+ * - emulator: true when the Immersive Web Emulator replaced WebXR in this
+ *   page (window.IWER_DEVICE); on a Quest it must be false
  * Lost hands are logged too (pose 0, zeros), so tracking loss shows up.
  *
- * Events: placement, calibrated, line (a sight line to the creature became
- * blocked or clear, and by what), spotted, dash, home, pause/resume (hand
- * lost/found), register / register-rejected, fps (once a second), label.
+ * Events: session (frameRate, supportedFrameRates, emulator), placement
+ * (method, planeLabel, localiseMs for an anchor), calibrated, line (a sight
+ * line to the creature became blocked or clear, and by what), spotted, dash,
+ * home, pause/resume, cover-hand-lost, hand-lost / hand-found (with the joint
+ * path that ran and the mean joint radius), register / register-rejected,
+ * anchor-restore (ok, status, ms), fps (once a second: fps, worstMs, updP95Ms
+ * = 95th percentile of the app's own update() time, drops = frames longer than
+ * 1.5 display frames, frameRate, redraws = tester panel redraws), label.
  */
 import { POSE_EDGE, POSE_FLAT, POSE_LOST, POSE_NAMES, POSE_STOP } from './hand-proxy.ts';
 
 export const LOG_FORMAT = 'cover-tester-log';
-export const LOG_VERSION = 1;
-export const COLUMNS = ['t', 'hand', 'wx', 'wy', 'wz', 'tipY', 'pose', 'normalY', 'label'] as const;
+export const LOG_VERSION = 2;
+export const COLUMNS = ['t', 'hand', 'wx', 'wy', 'wz', 'tipY', 'pose', 'normalY', 'label', 'ix', 'iy', 'iz'] as const;
 
 /** Labels for the guided tester steps. 'free' is unguided play; 'prep' is a gap between steps. */
 export const LABELS = ['free', 'prep', 'flat', 'edge', 'stop', 'register'] as const;
@@ -51,6 +59,7 @@ export type LogEvent = { t: number; type: string } & Record<string, unknown>;
 export interface LogSession {
   index: number;
   startedAt: string;
+  emulator: boolean;
   placement: Record<string, unknown> | null;
   calibration: Record<string, unknown> | null;
   columns: readonly string[];
@@ -64,6 +73,7 @@ export interface TesterLog {
   createdAt: string;
   userAgent: string;
   build: string;
+  emulator: boolean;
   labels: readonly string[];
   settings: Record<string, unknown>;
   sessions: LogSession[];
@@ -86,6 +96,7 @@ export class TesterLogger {
       createdAt: new Date().toISOString(),
       userAgent,
       build,
+      emulator: false,
       labels: LABELS,
       settings,
       sessions: [],
@@ -100,10 +111,12 @@ export class TesterLogger {
     return this.total;
   }
 
-  startSession(time: number): void {
+  startSession(time: number, emulator = false): void {
+    if (emulator) this.log.emulator = true;
     this.session = {
       index: this.log.sessions.length,
       startedAt: new Date().toISOString(),
+      emulator,
       placement: null,
       calibration: null,
       columns: COLUMNS,
@@ -144,6 +157,7 @@ export class TesterLogger {
     time: number, hand: number,
     wx: number, wy: number, wz: number, tipY: number,
     pose: number, normalY: number,
+    ix = 0, iy = 0, iz = 0,
   ): void {
     const s = this.session;
     if (!s || this.total >= MAX_SAMPLES) return;
@@ -158,6 +172,7 @@ export class TesterLogger {
       pose,
       Math.round(normalY * 1000),
       this.label,
+      mm(ix), mm(iy), mm(iz),
     ]);
   }
 
@@ -192,17 +207,41 @@ export interface LabelStats {
   wristSdMm: number;
 }
 
+/** Sight-line changes per guided step: how often the cover flickers while the tester holds a pose. */
+export interface LineFlipStats {
+  label: string;
+  seconds: number;
+  flips: number;
+  perMin: number;
+}
+
 export interface LogSummary {
   format: string;
   version: number;
+  emulator: boolean;
   sessions: number;
   samples: number;
   placement: unknown[];
   labels: LabelStats[];
   lines: { blocked: number; cleared: number; byOwner: Record<string, number> };
-  creature: { dashes: number; spotted: number; home: number; pauses: number };
+  lineFlips: LineFlipStats[];
+  creature: { dashes: number; spotted: number; home: number; pauses: number; coverHandLost: number };
   registrations: { ok: number; rejected: Record<string, number> };
-  fps: { seconds: number; p5: number; median: number; worstFrameMs: number } | null;
+  fps: {
+    seconds: number;
+    p5: number;
+    median: number;
+    worstFrameMs: number;
+    /** Median and worst of the per-second 95th percentile of update() time (null in v1 logs). */
+    updP95MedianMs: number | null;
+    updP95WorstMs: number | null;
+    /** Frames longer than 1.5 display frames, in total and per minute. */
+    drops: number | null;
+    dropsPerMin: number | null;
+    frameRate: number | null;
+  } | null;
+  /** Joint path and mean radius per hand, from hand-found events. */
+  jointPaths: Record<string, unknown>[];
 }
 
 /** Scores a tester log: pose stability per guided step, line events, fps. */
@@ -210,14 +249,41 @@ export function analyseLog(log: TesterLog): LogSummary {
   const per = new Map<string, { n: number; tracked: number; match: number; flips: number; trackedT: number; steps: number[]; wx: number[]; wy: number[]; wz: number[] }>();
   let samples = 0;
   const lines = { blocked: 0, cleared: 0, byOwner: {} as Record<string, number> };
-  const creature = { dashes: 0, spotted: 0, home: 0, pauses: 0 };
+  const creature = { dashes: 0, spotted: 0, home: 0, pauses: 0, coverHandLost: 0 };
+  const flipCount = new Map<string, number>();
+  const labelTime = new Map<string, number>();
+  const updP95: number[] = [];
+  let drops = 0;
+  let dropSeconds = 0;
+  let frameRate: number | null = null;
+  const jointPaths: Record<string, unknown>[] = [];
+  const seenPaths = new Set<string>();
   const registrations = { ok: 0, rejected: {} as Record<string, number> };
   const fpsVals: number[] = [];
   let worst = 0;
 
   for (const s of log.sessions) {
     samples += s.samples.length;
+    // Walk the events in time order, tracking the current guided label.
+    let label = 'free';
+    let labelAt = 0;
+    const end = Math.max(s.samples.length ? s.samples[s.samples.length - 1][0] : 0, s.events.length ? s.events[s.events.length - 1].t : 0);
     for (const e of s.events) {
+      if (e.type === 'label') {
+        labelTime.set(label, (labelTime.get(label) ?? 0) + (e.t - labelAt));
+        label = String(e.label);
+        labelAt = e.t;
+        continue;
+      }
+      if (e.type === 'line') flipCount.set(label, (flipCount.get(label) ?? 0) + 1);
+      if (e.type === 'session' && typeof e.frameRate === 'number') frameRate = e.frameRate;
+      if (e.type === 'hand-found' && e.path) {
+        const k = `${e.hand}/${e.path}/${e.radii}`;
+        if (!seenPaths.has(k)) {
+          seenPaths.add(k);
+          jointPaths.push({ hand: e.hand, path: e.path, radii: e.radii, meanRadiusMm: e.meanRadiusMm });
+        }
+      }
       if (e.type === 'line') {
         if (e.blocked) {
           lines.blocked++;
@@ -228,6 +294,7 @@ export function analyseLog(log: TesterLog): LogSummary {
       else if (e.type === 'spotted') creature.spotted++;
       else if (e.type === 'home') creature.home++;
       else if (e.type === 'pause') creature.pauses++;
+      else if (e.type === 'cover-hand-lost') creature.coverHandLost++;
       else if (e.type === 'register') registrations.ok++;
       else if (e.type === 'register-rejected') {
         const k = String(e.reason);
@@ -235,8 +302,15 @@ export function analyseLog(log: TesterLog): LogSummary {
       } else if (e.type === 'fps') {
         fpsVals.push(Number(e.fps));
         worst = Math.max(worst, Number(e.worstMs) || 0);
+        if (typeof e.updP95Ms === 'number') updP95.push(e.updP95Ms);
+        if (typeof e.drops === 'number') {
+          drops += e.drops;
+          dropSeconds++;
+        }
+        if (typeof e.frameRate === 'number') frameRate = e.frameRate;
       }
     }
+    labelTime.set(label, (labelTime.get(label) ?? 0) + Math.max(0, end - labelAt));
     const prev = [
       { pose: -1, t: -1, x: 0, y: 0, z: 0 },
       { pose: -1, t: -1, x: 0, y: 0, z: 0 },
@@ -287,19 +361,40 @@ export function analyseLog(log: TesterLog): LogSummary {
   }
   labels.sort((a, b) => LABELS.indexOf(a.label as Label) - LABELS.indexOf(b.label as Label) || a.hand - b.hand);
   fpsVals.sort((a, b) => a - b);
+  updP95.sort((a, b) => a - b);
+  const lineFlips: LineFlipStats[] = [];
+  for (const [label, seconds] of labelTime) {
+    if (seconds <= 0 && !flipCount.has(label)) continue;
+    const flips = flipCount.get(label) ?? 0;
+    lineFlips.push({ label, seconds: r1(seconds), flips, perMin: seconds > 0 ? r1((flips / seconds) * 60) : 0 });
+  }
+  lineFlips.sort((a, b) => LABELS.indexOf(a.label as Label) - LABELS.indexOf(b.label as Label));
   return {
     format: log.format,
     version: log.version,
+    emulator: log.emulator === true,
     sessions: log.sessions.length,
     samples,
     placement: log.sessions.map((s) => s.placement),
     labels,
     lines,
+    lineFlips,
     creature,
     registrations,
     fps: fpsVals.length
-      ? { seconds: fpsVals.length, p5: fpsVals[Math.floor(fpsVals.length * 0.05)], median: fpsVals[Math.floor(fpsVals.length / 2)], worstFrameMs: r1(worst) }
+      ? {
+          seconds: fpsVals.length,
+          p5: fpsVals[Math.floor(fpsVals.length * 0.05)],
+          median: fpsVals[Math.floor(fpsVals.length / 2)],
+          worstFrameMs: r1(worst),
+          updP95MedianMs: updP95.length ? updP95[Math.floor(updP95.length / 2)] : null,
+          updP95WorstMs: updP95.length ? updP95[updP95.length - 1] : null,
+          drops: dropSeconds ? drops : null,
+          dropsPerMin: dropSeconds ? r1((drops / dropSeconds) * 60) : null,
+          frameRate,
+        }
       : null,
+    jointPaths,
   };
 }
 

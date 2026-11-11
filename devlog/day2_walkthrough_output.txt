@@ -1,0 +1,35 @@
+--- firstrun
+PASS emulator build reports emulator: true 
+PASS first run: board placed automatically on the detected desk, still listening for a tap (the auto-desk path) desk listening=True {"method": "desk", "planeLabel": "desk", "eyeDistance": 0.643, "eyeDrop": 0.454, "deskY": 0.726}
+PASS auto-desk path: plane label logged in the placement {"method": "desk", "planeLabel": "desk", "eyeDistance": 0.643, "eyeDrop": 0.454, "deskY": 0.726}
+PASS auto-desk path: the ghost "stop" hand is visible {"ghost": true, "prompt": "teach", "knobLabel": true, "canRegister": true, "ghostVisible": true, "promptVisible": true, "promptText": "Hold your hand up in the light, like 'stop'"}
+PASS auto-desk path: the teaching prompt reads "Hold your hand up in the light, like 'stop'" Hold your hand up in the light, like 'stop'
+PASS auto-desk path: "tap & hold to move" is on the knob, not in the prompt {"ghost": true, "prompt": "teach", "knobLabel": true, "canRegister": true, "ghostVisible": true, "promptVisible": true, "promptText": "Hold your hand up in the light, like 'stop'"}
+PASS auto-desk path: object registration is allowed without a desk tap 
+  shot day2_01_first_run_ghost_prompt.png
+--- register
+PASS no desk tap first: a pointing hold 9 cm up beside the path registers a real object on the auto-desk board [{"x": 0.06, "z": -0.01, "top": 0.09}] desk
+--- teach
+PASS before the first shadow: ghost still visible 
+PASS following the prompt: a 'stop' palm near the lantern and the creature dashes into its shadow {"s": 0.1314, "mode": "dash", "spotted": 0, "dashes": 3, "wins": 0, "length": 0.38019222021102905}
+PASS after the first shadow: the ghost, the teaching prompt and the knob label go away {"ghost": false, "prompt": "none", "knobLabel": false, "canRegister": true, "ghostVisible": false, "promptVisible": false, "promptText": ""}
+--- coverloss
+PASS setup: the creature waits in the right palm's shadow, the left hand rests in view {"s": 0.2409, "mode": "wait", "spotted": 1, "dashes": 6, "wins": 0, "length": 0.38019222021102905}
+PASS the covering (right) hand is lost, the left is still tracked: the creature waits, not spotted {"s": 0.2409, "mode": "paused", "spotted": 1, "dashes": 6, "wins": 0, "length": 0.38019222021102905} waitingFor=1
+PASS the pause card shows "It waits for your hand." It waits for your hand. Show me a hand.
+  shot day2_02_cover_hand_lost_waits.png
+PASS while waiting nothing moves and nothing is judged {'s': 0.2409, 'mode': 'paused', 'spotted': 1, 'dashes': 6, 'wins': 0, 'length': 0.38019222021102905} -> {'s': 0.2409, 'mode': 'paused', 'spotted': 1, 'dashes': 6, 'wins': 0, 'length': 0.38019222021102905}
+PASS the hand is back over the light: play resumes, still not spotted {"s": 0.2409, "mode": "wait", "spotted": 1, "dashes": 6, "wins": 0, "length": 0.38019222021102905}
+--- lifted
+PASS control: the covering hand lifted away but still tracked: spotted (rule unchanged) {"s": 0.2412, "mode": "spotted", "spotted": 3, "dashes": 8, "wins": 0, "length": 0.38019222021102905}
+--- tester
+PASS log v2 with emulator: true in the emulator build 
+PASS samples carry the index-tip xyz columns [15.135, 1, -30, 20, -60, 191.4, 3, 110, 0, -41.3, 199.4, -73.5]
+PASS session event with the display frame rate [{"t": 0, "type": "session", "emulator": true, "frameRate": 90, "supportedFrameRates": [72, 80, 90, 120]}]
+PASS fps events carry update() p95, dropped frames, frame rate and panel redraws {"t": 14.604, "type": "fps", "fps": 10, "worstMs": 136.5, "updP95Ms": 1.1, "drops": 9, "frameRate": 90, "redraws": 2}
+PASS tester panel redraws at most twice a second [2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2]
+PASS hand-found events name the joint path and radius source [{"t": 0.71, "type": "hand-found", "hand": 0, "path": "fillPoses", "radii": "fillJointRadii", "meanRadiusMm": 11}, {"t": 0.71, "type": "hand-found", "hand": 1, "path": "fillPoses", "radii": "fillJointRadii", "meanRadiusMm": 11}]
+PASS placement carries the chosen plane label {"method": "desk", "planeLabel": "desk", "eyeDistance": 0.643, "eyeDrop": 0.454, "deskY": 0.726}
+  summary.fps {"seconds": 15, "p5": 8.8, "median": 12.7, "worstFrameMs": 147.4, "updP95MedianMs": 1.1, "updP95WorstMs": 3, "drops": 155, "dropsPerMin": 620, "frameRate": 90} lineFlips [{"label": "free", "seconds": 15.7, "flips": 1, "perMin": 3.8}]
+  shot day2_03_tester_panel_512px.png
+24/24 passed

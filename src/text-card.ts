@@ -21,6 +21,7 @@ export class TextCard {
   private ctx: CanvasRenderingContext2D;
   private texture: CanvasTexture;
   private last = '';
+  private lastLines: readonly string[] | null = null;
 
   private style: CardStyle;
 
@@ -38,10 +39,12 @@ export class TextCard {
     this.mesh.renderOrder = 5;
   }
 
-  /** Lines starting with "!" are drawn in the accent colour. */
-  set(lines: readonly string[]): void {
+  /** Lines starting with "!" are drawn in the accent colour. Returns true when it redrew. */
+  set(lines: readonly string[]): boolean {
+    if (lines === this.lastLines) return false; // same constant array: nothing to compare
+    this.lastLines = lines;
     const key = lines.join('\n');
-    if (key === this.last) return;
+    if (key === this.last) return false;
     this.last = key;
     const { ctx, canvas, style } = this;
     const w = canvas.width;
@@ -67,5 +70,6 @@ export class TextCard {
       ctx.fillText(accent ? line.slice(1) : line, style.font * 0.8, top + i * lineH, w - style.font * 1.6);
     });
     this.texture.needsUpdate = true;
+    return true;
   }
 }

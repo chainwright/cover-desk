@@ -29,17 +29,32 @@ World.create(document.getElementById('scene-container') as HTMLDivElement, proje
   }
   world.registerSystem(CoverSystem);
 
+  // The main build never contains the Immersive Web Emulator (IWER); the
+  // desktop emulator build lives at ./emu/. This flag says which one runs here.
+  const emulator = 'IWER_DEVICE' in window;
+  console.info(`[cover] emulator: ${emulator}`);
+  document.documentElement.dataset.emulator = String(emulator);
+
   const supported = (await navigator.xr?.isSessionSupported('immersive-ar').catch(() => false)) ?? false;
-  if (supported) {
+  if (supported && emulator) {
+    enter.disabled = false;
+    note.textContent = 'Desktop emulator: a simulated room and hands. On a Quest, open the main link instead.';
+  } else if (supported) {
     enter.disabled = false;
     note.textContent = 'Sit at a desk. Hands only, no controllers.';
   } else {
-    note.textContent = 'Open this page in the browser of a Meta Quest 3 or 3S.';
+    note.textContent = 'Open this page in the browser of a Meta Quest 3 or 3S. No headset? ';
+    const a = document.createElement('a');
+    a.href = './emu/';
+    a.textContent = 'Try it in the desktop emulator.';
+    note.appendChild(a);
   }
 
   enter.addEventListener('click', () => {
     unlockAudio();
-    world.launchXR();
+    Promise.resolve(world.launchXR()).catch((e: unknown) => {
+      note.textContent = `Could not start: ${e instanceof Error ? e.message : String(e)}`;
+    });
   });
   document.addEventListener('pointerdown', unlockAudio, { once: true });
 

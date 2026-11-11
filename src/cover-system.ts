@@ -6,7 +6,8 @@
  * preference:
  *   1. anchor   — the spot saved last session (persistent WebXR anchor);
  *   2. touch    — one-touch calibration: point at the desk with one fingertip,
- *                 tap and hold still; the board goes under that hand;
+ *                 tap and hold still; the board goes on the desk near that
+ *                 spot, pulled within comfortable reach;
  *   3. desk     — a detected horizontal plane at desk height (automatic);
  *   4. fallback — a comfortable spot in the air when there is no desk.
  * Hold a fingertip on the small knob at the near-left corner to move it.
@@ -36,6 +37,7 @@ import { REGISTER, REGISTER_HOLD, TIP_PAD, distanceToPolyline, judgeRegistration
 import { KNOB, MAX_OBJECT_MARKERS, PATH_DOTS, buildCover, setInstance, type CoverModel } from './cover-model.ts';
 import {
   CREATURE,
+  CoverWatch,
   EV_BACK_IN_NOOK,
   EV_DASH_START,
   EV_HOME,
@@ -70,6 +72,7 @@ import {
 } from './hand-proxy.ts';
 import { BOARD, CREATURE_Y, LEVEL_1, Route } from './level.ts';
 import { LightMap } from './light-map.ts';
+import { KNOB_LINES, PROMPT_LINES, firstRunCues, newCues, type CueInput } from './onboarding.ts';
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightResult } from './sightline.ts';
 import { TextCard } from './text-card.ts';
 import { LABELS, TesterLogger, analyseLog, logSettings, type Label } from './touch-log.ts';
@@ -91,16 +94,20 @@ const KNOB_HOLD_S = 0.8;
 const OBJECT_OWNER = 10;
 /** After a win, the next round starts this much later. */
 const NEXT_ROUND_S = 3.5;
-/** The ghost hand shows until the first dash, or this long. */
-const GHOST_MAX_S = 25;
+/** Tester panel: redraw at most this often (a canvas upload can cost a frame). */
+const PANEL_REDRAW_S = 0.5;
+/** Per-frame update() timings kept for the once-a-second p95 (more than any refresh rate). */
+const UPD_BUF = 256;
 
 export type Placement = 'preview' | 'restoring' | 'searching' | 'desk' | 'fallback' | 'touch' | 'anchor';
 
+// The game's pose comes first, so the first thing a tester is told is how to play.
+// The flat hand is a measurement step (it casts only a short shadow near the lantern).
 const GUIDE: { label: Label; seconds: number; text: [string, string] }[] = [
-  { label: 'flat', seconds: 20, text: ['Rest one hand flat on the desk,', 'in the light. Keep it there.'] },
-  { label: 'edge', seconds: 20, text: ['Rest your hand on its little-finger', 'side, like a wall. Keep it there.'] },
-  { label: 'stop', seconds: 20, text: ['Hold your palm up toward the lantern,', 'like "stop". Keep it there.'] },
-  { label: 'register', seconds: 15, text: ['Point down onto the top of a mug or', 'book next to the path. Hold still.'] },
+  { label: 'stop', seconds: 20, text: ["Hold your hand up in the light,", "like 'stop'. Keep it there."] },
+  { label: 'edge', seconds: 20, text: ['Stand your hand on its little-finger', 'side, like a wall. Keep it there.'] },
+  { label: 'flat', seconds: 20, text: ['Now lay one hand flat on the desk,', 'in the light. Keep it there.'] },
+  { label: 'register', seconds: 15, text: ['Point down onto the top of a mug', '(3-30 cm tall) beside the path. Hold still.'] },
 ];
 const GUIDE_PREP_S = 3;
 const GUIDE_DELAY_S = 3;
@@ -117,6 +124,12 @@ export interface CoverDebug {
   fps: number;
   anchorStatus: string;
   placementInfo: Record<string, unknown> | null;
+  /** First-run cues this frame (ghost, prompt, knob label, registration allowed). */
+  cues: { ghost: boolean; prompt: string; knobLabel: boolean; canRegister: boolean; ghostVisible: boolean; promptVisible: boolean; promptText: string };
+  /** The hand play is waiting for after a cover-hand loss (-1 none). */
+  coverWaitingFor: number;
+  /** True when the Immersive Web Emulator replaced WebXR in this page. */
+  emulator: boolean;
   /** World position of a board-frame point. */
   boardPoint(x: number, z: number, y: number): [number, number, number];
   /** Board-frame position of a world point. */
@@ -155,6 +168,12 @@ export class CoverSystem extends createSystem({
   private wins = 0;
   private homeAt = -1;
   private everDashed = false;
+  private coverWatch = new CoverWatch();
+  private moveRequested = false;
+  private cues = newCues();
+  private cueIn: CueInput = { placement: 'preview', placed: false, listening: false, moveRequested: false, everDashed: false, paused: false };
+  private promptKey = '';
+  private knobCard!: TextCard;
   private stepAt = 0;
 
   private joints = new HandJoints();
@@ -182,6 +201,7 @@ export class CoverSystem extends createSystem({
   private restoreStart = 0;
   private placedAt = 0;
   private resetDone = false;
+  private planeLabel = '';
   private deskAnchor = new DeskAnchor();
   private calibrators = [new TapCalibrator(), new TapCalibrator()];
   private registrars = [new TapCalibrator(REGISTER_HOLD), new TapCalibrator(REGISTER_HOLD)];
@@ -192,11 +212,18 @@ export class CoverSystem extends createSystem({
   private panelAt = 0;
   private lastTime = 0;
 
-  // fps
+  // fps and the app's own cost
   private fpsFrames = 0;
   private fpsStart = -1;
   private fpsWorst = 0;
   private fps = 0;
+  private fpsDrops = 0;
+  private frameRate = 0;
+  private updMs = new Float32Array(UPD_BUF);
+  private updSorted = new Float32Array(UPD_BUF);
+  private updN = 0;
+  private panelRedraws = 0;
+  private emulator = false;
 
   private head = new Vector3();
   private forward = new Vector3();
@@ -262,12 +289,28 @@ export class CoverSystem extends createSystem({
     this.prompt.mesh.visible = false;
     this.world.createTransformEntity(this.prompt.mesh, { persistent: true });
 
+    // "tap & hold to move" lives on the knob only, not in the main prompt.
+    this.knobCard = new TextCard('knob-label', {
+      widthM: 0.06,
+      heightM: 0.026,
+      px: 240,
+      font: 38,
+      background: 'rgba(23,17,12,0.78)',
+      color: '#f4ead8',
+      accent: '#ffc27a',
+    });
+    this.knobCard.set(KNOB_LINES);
+    this.knobCard.mesh.visible = false;
+    this.world.createTransformEntity(this.knobCard.mesh, { persistent: true });
+
     if (flags.test) {
+      // 512 px wide and redrawn at most twice a second, so the panel itself
+      // doesn't bias the frame-rate numbers it shows (day 1: 1140 px, ~7 Hz).
       this.panel = new TextCard('tester-panel', {
         widthM: 0.38,
         heightM: 0.2,
-        px: 1140,
-        font: 46,
+        px: 512,
+        font: 21,
         background: 'rgba(12,16,20,0.88)',
         color: '#e8eef2',
         accent: '#ffc27a',
@@ -287,6 +330,12 @@ export class CoverSystem extends createSystem({
   }
 
   update(delta: number, time: number): void {
+    const t0 = performance.now();
+    this.tick(delta, time);
+    if (this.placement !== 'preview' && this.updN < UPD_BUF) this.updMs[this.updN++] = performance.now() - t0;
+  }
+
+  private tick(delta: number, time: number): void {
     this.lastTime = time;
     const vis = this.world.visibilityState.peek();
     if (vis === VisibilityState.NonImmersive) {
@@ -305,6 +354,7 @@ export class CoverSystem extends createSystem({
     const root = this.model.root;
     root.updateWorldMatrix(true, false);
     this.inv.copy(root.matrixWorld).invert();
+    this.updateCues();
     this.readHands(time);
 
     const placed = this.isPlaced();
@@ -316,9 +366,21 @@ export class CoverSystem extends createSystem({
     } else {
       setHum(0, false);
     }
+    this.updateCues();
     this.updateRing();
-    this.updatePrompt(time);
+    this.updatePrompt();
     if (this.panel) this.updateTester(time);
+  }
+
+  private updateCues(): void {
+    const i = this.cueIn;
+    i.placement = this.placement;
+    i.placed = this.isPlaced();
+    i.listening = this.listening;
+    i.moveRequested = this.moveRequested;
+    i.everDashed = this.everDashed;
+    i.paused = this.creature.mode === MODE_PAUSED;
+    firstRunCues(i, this.cues);
   }
 
   // ------------------------------------------------------------- sessions
@@ -337,8 +399,20 @@ export class CoverSystem extends createSystem({
     this.fpsStart = -1;
     for (const c of this.calibrators) c.reset();
     for (const c of this.registrars) c.reset();
-    this.logger?.startSession(time);
+    this.emulator = typeof window !== 'undefined' && 'IWER_DEVICE' in window;
+    this.moveRequested = false;
+    this.coverWatch.reset();
+    this.updN = 0;
+    this.logger?.startSession(time, this.emulator);
     this.logger?.setLabel('free', time);
+    const s = session as (XRSession & { frameRate?: number; supportedFrameRates?: Float32Array }) | null;
+    this.frameRate = s?.frameRate ?? 0;
+    this.logger?.event(time, 'session', {
+      emulator: this.emulator,
+      frameRate: this.frameRate || null,
+      supportedFrameRates: s?.supportedFrameRates ? Array.from(s.supportedFrameRates) : null,
+    });
+    console.info(`[cover] session start, emulator: ${this.emulator}`);
     if (session && this.deskAnchor.hasSaved()) {
       this.placement = 'restoring';
       this.restoreStart = time;
@@ -371,7 +445,12 @@ export class CoverSystem extends createSystem({
         this.placedAt = time;
         this.followAnchor = true;
         this.listening = false;
-        this.placementInfo = { method: 'anchor', savedBy: this.deskAnchor.savedMethod(), ...this.distanceInfo() };
+        this.placementInfo = {
+          method: 'anchor',
+          savedBy: this.deskAnchor.savedMethod(),
+          localiseMs: Math.round((time - this.restoreStart) * 1000),
+          ...this.distanceInfo(),
+        };
         this.logger?.setPlacement(this.placementInfo);
         this.logger?.event(time, 'placement', this.placementInfo);
       } else if (
@@ -379,7 +458,7 @@ export class CoverSystem extends createSystem({
         this.deskAnchor.status === 'unsupported' ||
         time - this.restoreStart > RESTORE_WAIT_S
       ) {
-        this.logger?.event(time, 'anchor-restore', { ok: false, status: this.deskAnchor.status });
+        this.logger?.event(time, 'anchor-restore', { ok: false, status: this.deskAnchor.status, ms: Math.round((time - this.restoreStart) * 1000) });
         this.placement = 'searching';
         this.searchStart = time;
       }
@@ -435,6 +514,7 @@ export class CoverSystem extends createSystem({
       const score = miss - (isDesk ? 0.3 : 0);
       if (score < bestScore) {
         bestScore = score;
+        this.planeLabel = label || 'unlabelled';
         this.best.set(cx, 0, cz);
         obj.localToWorld(this.best);
       }
@@ -443,8 +523,8 @@ export class CoverSystem extends createSystem({
   }
 
   /** The detected horizontal surface under a world point, nearest in height to y; null if none. */
-  private deskPlaneAt(x: number, y: number, z: number): { obj: Object3D; y: number; minX: number; maxX: number; minZ: number; maxZ: number } | null {
-    let best: { obj: Object3D; y: number; minX: number; maxX: number; minZ: number; maxZ: number } | null = null;
+  private deskPlaneAt(x: number, y: number, z: number): { obj: Object3D; y: number; label: string; minX: number; maxX: number; minZ: number; maxZ: number } | null {
+    let best: { obj: Object3D; y: number; label: string; minX: number; maxX: number; minZ: number; maxZ: number } | null = null;
     for (const entity of this.queries.planes.entities) {
       const plane = entity.getValue(XRPlaneComponent, '_plane') as XRPlane | undefined;
       const obj = entity.object3D;
@@ -459,7 +539,7 @@ export class CoverSystem extends createSystem({
       obj.worldToLocal(this.tmp);
       const b = polygonBounds(plane.polygon);
       if (this.tmp.x < b.minX || this.tmp.x > b.maxX || this.tmp.z < b.minZ || this.tmp.z > b.maxZ) continue;
-      best = { obj, y: py, ...b };
+      best = { obj, y: py, label: label || 'unlabelled', ...b };
     }
     return best;
   }
@@ -479,8 +559,9 @@ export class CoverSystem extends createSystem({
     this.placement = how;
     this.placedAt = time;
     this.followAnchor = false;
+    this.moveRequested = false;
     if (how === 'touch') this.listening = false;
-    this.placementInfo = { method: how, ...this.distanceInfo(), ...extra };
+    this.placementInfo = { method: how, ...(how === 'desk' ? { planeLabel: this.planeLabel } : {}), ...this.distanceInfo(), ...extra };
     this.logger?.setPlacement(this.placementInfo);
     this.logger?.event(time, 'placement', this.placementInfo);
     // Real objects were registered against the old spot: forget them.
@@ -518,8 +599,10 @@ export class CoverSystem extends createSystem({
     this.placement = 'preview';
     this.followAnchor = false;
     this.listening = false;
+    this.moveRequested = false;
     this.ring.visible = false;
     this.prompt.mesh.visible = false;
+    this.knobCard.mesh.visible = false;
     if (this.panel) this.panel.mesh.visible = false;
   }
 
@@ -565,6 +648,7 @@ export class CoverSystem extends createSystem({
       spreadMm: +(res.spread * 1000).toFixed(1),
       samples: res.samples,
       planeDeltaMm: plane ? +((plane.y - deskY) * 1000).toFixed(1) : null,
+      planeLabel: plane ? plane.label : null,
       pulledIn: spot.moved,
       keptOnDesk,
     };
@@ -603,7 +687,14 @@ export class CoverSystem extends createSystem({
         this.logger?.sample(time, h, 0, 0, 0, 0, POSE_LOST, 0);
         continue;
       }
-      if (!was) this.logger?.event(time, 'hand-found', { hand: h });
+      if (!was) {
+        this.logger?.event(time, 'hand-found', {
+          hand: h,
+          path: this.joints.posePath[h],
+          radii: this.joints.radiusPath[h],
+          meanRadiusMm: this.joints.meanRadiusMm(h),
+        });
+      }
       const w = this.joints.world[h];
       const l = this.local[h];
       for (let i = 0; i < JOINTS; i++) {
@@ -639,7 +730,8 @@ export class CoverSystem extends createSystem({
       this.updateKnob(h, lx, ly, lz, time);
 
       // Registration of a real object: a pointing fingertip held on top of something.
-      if (!this.listening) {
+      // Allowed after a plane placement too (day 1 needed a desk tap first).
+      if (this.cues.canRegister) {
         const res = this.registrars[h].push(time, tx, ty, tz, this.head.x, this.head.y, this.head.z);
         const top = ly - TIP_PAD;
         const plausible = this.pointing[h] && top >= REGISTER.minHeight && top <= REGISTER.maxHeight;
@@ -651,7 +743,7 @@ export class CoverSystem extends createSystem({
       }
 
       if (this.logger) {
-        this.logger.sample(time, h, l[WRIST * 3], l[WRIST * 3 + 1], l[WRIST * 3 + 2], ly - TIP_PAD, this.pose[h].pose, this.pose[h].normalY);
+        this.logger.sample(time, h, l[WRIST * 3], l[WRIST * 3 + 1], l[WRIST * 3 + 2], ly - TIP_PAD, this.pose[h].pose, this.pose[h].normalY, lx, ly, lz);
       }
     }
   }
@@ -744,6 +836,7 @@ export class CoverSystem extends createSystem({
 
   private requestMove(time: number): void {
     this.listening = true;
+    this.moveRequested = true;
     for (const c of this.calibrators) c.reset();
     this.logger?.event(time, 'move-requested');
     click(0.7, 0.4);
@@ -762,12 +855,22 @@ export class CoverSystem extends createSystem({
     this.creature.spottedCount = keep.spottedCount;
     this.creature.dashes = keep.dashes;
     this.homeAt = -1;
+    this.coverWatch.reset();
   }
 
   private runGame(dt: number, time: number): void {
     const c = this.creature;
     const m = this.model;
-    this.cw.handPresent = this.joints.tracked[0] || this.joints.tracked[1];
+    // Which hand is its cover right now? If the headset drops that hand while
+    // the creature stands in the light, play waits for it (not "spotted").
+    this.route.at(c.s, this.at3);
+    look(this.lantern, this.occ, this.at3[0], CREATURE_Y, this.at3[1], this.sight);
+    const shadeHand = this.sight.state === SHADOW && this.sight.by < OBJECT_OWNER ? this.sight.by : -1;
+    const waiting = this.coverWatch.waitingFor;
+    this.cw.handPresent = this.coverWatch.update(time, this.joints.tracked, shadeHand, this.sight.state === SEEN);
+    if (this.coverWatch.waitingFor >= 0 && waiting < 0) {
+      this.logger?.event(time, 'cover-hand-lost', { hand: HAND_SIDES[this.coverWatch.waitingFor], sMm: Math.round(c.s * 1000) });
+    }
 
     if (c.mode === MODE_HOME && this.homeAt >= 0 && time - this.homeAt > NEXT_ROUND_S) this.restart();
 
@@ -788,7 +891,7 @@ export class CoverSystem extends createSystem({
         lock();
         break;
       case EV_PAUSE:
-        this.logger?.event(time, 'pause');
+        this.logger?.event(time, 'pause', { reason: this.coverWatch.waitingFor >= 0 ? 'cover-hand-lost' : 'no-hands' });
         break;
       case EV_RESUME:
         this.logger?.event(time, 'resume');
@@ -862,9 +965,9 @@ export class CoverSystem extends createSystem({
     }
     if (m.pathDots.instanceColor) m.pathDots.instanceColor.needsUpdate = true;
 
-    // Ghost hand: shows the "stop" palm until the first dash.
-    const since = time - this.placedAt;
-    const ghost = !this.everDashed && since < GHOST_MAX_S && !this.listening;
+    // Ghost hand: shows the "stop" palm on every first run, until the creature
+    // first stands in a hand's shadow (whether or not a desk tap is still awaited).
+    const ghost = this.cues.ghost;
     m.ghostHand.visible = ghost;
     if (ghost) m.ghostMat.opacity = 0.18 + 0.14 * (0.5 + 0.5 * Math.sin(time * 3));
 
@@ -906,27 +1009,20 @@ export class CoverSystem extends createSystem({
     this.ring.visible = true;
   }
 
-  private updatePrompt(time: number): void {
+  private updatePrompt(): void {
     const card = this.prompt.mesh;
-    let lines: string[] | null = null;
-    let onBoard = true;
-    if (this.listening && this.placement !== 'restoring') {
-      const placed = this.isPlaced() && this.placement !== 'fallback';
-      lines = placed
-        ? ['Tap the desk with one finger to move it,', '!or put your hand in the light']
-        : ['Tap your desk with one finger', '!and hold it still'];
-      onBoard = placed;
-    } else if (this.isPlaced() && this.creature.mode === MODE_PAUSED) {
-      lines = ['It waits for your hand.', '!Show me a hand.'];
-    } else if (this.isPlaced() && !this.everDashed && time - this.placedAt > 4 && time - this.placedAt < GHOST_MAX_S) {
-      lines = ['Shade its path:', '!rest your hand in the light'];
-    }
-    if (!lines) {
+    const cues = this.cues;
+    // The knob label stands just left of the knob (outside the board, clear of the nook).
+    const knob = this.knobCard.mesh;
+    knob.visible = cues.knobLabel && this.model.root.visible;
+    if (knob.visible) this.placeCard(knob, KNOB.x - 0.047, KNOB.z, 0.016);
+    this.promptKey = cues.prompt;
+    if (cues.prompt === 'none') {
       card.visible = false;
       return;
     }
-    this.prompt.set(lines);
-    this.placeCard(card, onBoard ? 0 : null, BOARD.zMin - 0.01, 0.13);
+    this.prompt.set(PROMPT_LINES[cues.prompt]);
+    this.placeCard(card, cues.promptOnBoard ? 0 : null, BOARD.zMin - 0.01, 0.13);
     card.visible = true;
   }
 
@@ -959,14 +1055,41 @@ export class CoverSystem extends createSystem({
     }
     this.fpsFrames++;
     if (delta > this.fpsWorst) this.fpsWorst = delta;
+    // A dropped frame: longer than 1.5 display frames (72 Hz assumed until the session reports its rate).
+    const rate = this.frameRate || 72;
+    if (delta > 1.5 / rate) this.fpsDrops++;
     const span = time - this.fpsStart;
     if (span >= 1) {
       this.fps = this.fpsFrames / span;
-      this.logger?.event(time, 'fps', { fps: Math.round(this.fps * 10) / 10, worstMs: Math.round(this.fpsWorst * 10000) / 10 });
+      if (this.logger) {
+        const s = this.xrManager.getSession() as (XRSession & { frameRate?: number }) | null;
+        if (s?.frameRate) this.frameRate = s.frameRate;
+        this.logger.event(time, 'fps', {
+          fps: Math.round(this.fps * 10) / 10,
+          worstMs: Math.round(this.fpsWorst * 10000) / 10,
+          updP95Ms: this.updP95(),
+          drops: this.fpsDrops,
+          frameRate: this.frameRate || null,
+          redraws: this.panelRedraws,
+        });
+      }
       this.fpsStart = time;
       this.fpsFrames = 0;
       this.fpsWorst = 0;
+      this.fpsDrops = 0;
+      this.panelRedraws = 0;
+      this.updN = 0;
     }
+  }
+
+  /** 95th percentile of this second's update() times, ms (sorted in a preallocated buffer). */
+  private updP95(): number {
+    const n = this.updN;
+    if (!n) return 0;
+    for (let i = 0; i < n; i++) this.updSorted[i] = this.updMs[i];
+    for (let i = n; i < UPD_BUF; i++) this.updSorted[i] = Number.POSITIVE_INFINITY;
+    this.updSorted.sort();
+    return Math.round(this.updSorted[Math.min(n - 1, Math.floor(n * 0.95))] * 1000) / 1000;
   }
 
   private updateTester(time: number): void {
@@ -1001,19 +1124,20 @@ export class CoverSystem extends createSystem({
       stepLine = ['!Get ready: a short guided test starts soon', ''];
     }
 
-    if (time - this.panelAt > 0.15) {
+    if (time - this.panelAt >= PANEL_REDRAW_S) {
       this.panelAt = time;
       const hand = (h: number) =>
         this.joints.tracked[h] ? `${POSE_NAMES[this.pose[h].pose]}${this.pointing[h] ? '/point' : ''}` : '--';
       const line = this.lineState === SEEN ? 'SEEN' : this.lineState === SHADOW ? `shadow:${this.ownerName(this.lineBy)}` : 'dark';
-      panel.set([
-        `TEST  ${this.placement}  anchor ${this.deskAnchor.status}  ${this.fps.toFixed(0)} fps`,
+      const redrawn = panel.set([
+        `TEST ${this.emulator ? 'EMULATOR' : 'native'} ${this.placement} anchor ${this.deskAnchor.status} ${this.fps.toFixed(0)} fps`,
         `R ${hand(1)}   L ${hand(0)}   objects ${this.objectCount}`,
         `creature ${MODE_NAMES[this.creature.mode]}  line ${line}  lit ${(this.lightMap.litFraction * 100).toFixed(0)}%`,
         stepLine[0],
         stepLine[1],
         `log ${this.logger?.sampleCount ?? 0} samples. Leave the view to download.`,
       ]);
+      if (redrawn) this.panelRedraws++;
     }
     if (placed) this.placeCard(panel.mesh, 0, BOARD.zMin - 0.04, 0.32);
     else {
@@ -1067,6 +1191,24 @@ export class CoverSystem extends createSystem({
       },
       get placementInfo() {
         return self.placementInfo;
+      },
+      get cues() {
+        const c = self.cues;
+        return {
+          ghost: c.ghost,
+          prompt: c.prompt,
+          knobLabel: c.knobLabel,
+          canRegister: c.canRegister,
+          ghostVisible: self.model.ghostHand.visible,
+          promptVisible: self.prompt.mesh.visible,
+          promptText: self.prompt.mesh.visible && self.promptKey !== 'none' ? PROMPT_LINES[self.promptKey as keyof typeof PROMPT_LINES].join(' ').replace(/!/g, '') : '',
+        };
+      },
+      get coverWaitingFor() {
+        return self.coverWatch.waitingFor;
+      },
+      get emulator() {
+        return self.emulator;
       },
       boardPoint(x, z, y) {
         const v = new Vector3(x, y, z);

@@ -53,7 +53,10 @@
       "device": "metaQuest3",
       "environment": "home_office",
       "activation": "always",
-      "injectOnBuild": true
+      "injectOnBuild": false,
+      "userAgentException": {
+        "source": "OculusBrowser|Quest"
+      }
     }
   }
 }
