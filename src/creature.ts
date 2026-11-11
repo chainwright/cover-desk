@@ -36,6 +36,14 @@ export interface CreatureParams {
   grace: number;
   /** The nook: route length from the start that counts as "home base". */
   nook: number;
+  /**
+   * Day 7: standing still, it moves on only after the path ahead has been dark
+   * this long. Hand tracking updates at about 30 Hz and the joints jitter; without
+   * this the creature crept forward on every forward flicker of the shadow's
+   * edge and a backward one then left it in the light ("spotted" under a still
+   * hand). Mid-dash it keeps going as before.
+   */
+  dwell: number;
 }
 
 export const CREATURE: CreatureParams = {
@@ -46,6 +54,7 @@ export const CREATURE: CreatureParams = {
   freeze: 0.7,
   grace: 0.5,
   nook: 0.02,
+  dwell: 0.1,
 };
 
 export interface CreatureState {
@@ -58,10 +67,12 @@ export interface CreatureState {
   graceLeft: number;
   spottedCount: number;
   dashes: number;
+  /** How long the path ahead has been dark while it stands still (see CreatureParams.dwell). */
+  clearFor: number;
 }
 
 export function newCreature(): CreatureState {
-  return { s: 0, mode: MODE_NOOK, resume: MODE_NOOK, seenFor: 0, modeTime: 0, graceLeft: 0, spottedCount: 0, dashes: 0 };
+  return { s: 0, mode: MODE_NOOK, resume: MODE_NOOK, seenFor: 0, modeTime: 0, graceLeft: 0, spottedCount: 0, dashes: 0, clearFor: 0 };
 }
 
 /** What the creature can ask about the world. */
@@ -193,6 +204,11 @@ export function stepCreature(c: CreatureState, dt: number, w: CreatureWorld, p: 
   const ahead2 = Math.min(w.routeLength, c.s + p.lookahead);
   if (!w.seen(ahead1) && !w.seen(ahead2)) {
     const wasDash = c.mode === MODE_DASH;
+    if (!wasDash) {
+      c.clearFor += dt;
+      if (c.clearFor < p.dwell) return EV_NONE; // standing still: the way ahead must stay dark a moment
+    }
+    c.clearFor = 0;
     setMode(c, MODE_DASH);
     c.s = Math.min(w.routeLength, c.s + p.dash * dt);
     if (c.s >= w.routeLength) {
@@ -205,6 +221,7 @@ export function stepCreature(c: CreatureState, dt: number, w: CreatureWorld, p: 
     }
     return EV_NONE;
   }
+  c.clearFor = 0;
   setMode(c, c.s <= p.nook ? MODE_NOOK : MODE_WAIT);
   return EV_NONE;
 }

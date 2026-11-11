@@ -5,8 +5,10 @@ sleepy lantern-keeper. You never move it. You protect it: stand your hand on
 the desk like "stop", between the keeper's lantern and the path, and the
 creature dashes through your hand's shadow.
 
-Level 2 needs a real mug or book on your desk: your hand alone can't get
-the creature across, and neither can the mug; the two together can.
+Level 2 needs a registered object, a mug or a book on your desk: your hand
+alone can't get the creature across, and neither can the object; the two
+together can. You register it by pointing onto its top; the headset doesn't
+see the object itself, so a still finger in mid-air can register one too.
 
 Mixed reality, hands only, seated. Built for Quest 3/3S; so far tested only in
 the Immersive Web Emulator (no headset run yet, see [CLAIMS.md](CLAIMS.md)).
@@ -19,14 +21,16 @@ Judges: the five-minute path is in [JUDGES.md](JUDGES.md); what is proven and
 how is in [CLAIMS.md](CLAIMS.md); the evidence per criterion, with what is
 still unproven, is in [EVIDENCE.md](EVIDENCE.md).
 
-Checked so far: line-of-sight case set **18/18** on synthetic 25-joint hands
-(9 cover cases, 9 negative controls; not yet on real tracked hands) · 89/89
-unit tests · 57 of 58 deliberate bugs in the tested code make a unit test
-fail (the 58th is equivalent; one day-6 survivor, 7e, got a new test and was
-re-run) · 19 glue mutations (the outside run's ten from day 4, nine in the
-day-6 level-2 glue): 3 fail a unit test, the other 16 fail the emulator
-wiring check on the built `/emu/` (`tools/emu/wiring_check.mjs`) · frame
-rate on a Quest: **not measured yet**.
+Checked so far: line-of-sight case set **18/18** for the sight-line function
+on synthetic 25-joint hands (9 cover cases, 9 negative controls; since day 7
+every cover pose stands outside the keeper's wake radius, checked by a test,
+so the game gives the same verdict; not yet on real tracked hands) ·
+103/103
+unit tests · 66 of 67 deliberate bugs in the tested code make a unit test
+fail (the 67th is equivalent) · 33 glue mutations (ten from an outside run
+on day 4, nine day-6, the eleven an outside run made on day 6, three day-7)
+run against unit tests and then the emulator wiring check on the built
+`/emu/` (`tools/emu/wiring_check.mjs`); results in `devlog/DAY7.md` · frame rate on a Quest: **not measured yet**.
 
 ## How it plays (level 1)
 
@@ -45,7 +49,10 @@ rate on a Quest: **not measured yet**.
 - **Your hand is cover.** Put a hand in the light between the lantern and the
   path, standing on the desk like "stop", and its shadow appears on the desk.
   A pale ghost hand shows the pose and the place on your first run, 8 cm in
-  front of the lantern and 9 cm behind the path. The light reaches past the
+  front of the lantern and 9 cm behind the path, left of the middle; the
+  card says "Stand your hand like 'stop' right where the pale hand is"
+  (day 7: "between the lantern and the path" sent hands to the middle,
+  where the lane misses the waiting creature). The light reaches past the
   path toward you, but a hand there shades nothing on the path. Keep the
   wrist low (3 cm from the board centre toward the lantern, it must stay
   below about 5.9 cm to shade the middle of the path, in the model), or the light passes
@@ -61,17 +68,27 @@ rate on a Quest: **not measured yet**.
   creature dashes into it and stops at its far edge; a still "stop" hand
   there never gets it home. Slide the hand toward the trinket and the
   creature follows your shadow across (a card says so after the first
-  dash). In the model any slide from 1 to 9 cm/s leads it home unspotted and
-  10 cm/s or faster outruns it; the testers are asked for about a hand's
-  width every 2 seconds.
+  dash). In the model any slide from 1 to 9 cm/s leads it home unspotted,
+  at every joint thickness tried (7–13 mm); 10 cm/s outruns it at 7–11 mm
+  and 11 cm/s or faster at every thickness (`tests/day7.test.ts`); the
+  testers are asked for about a hand's width every 2 seconds. Standing
+  still, the creature moves on only once the way ahead has been dark for
+  0.1 s (day 7): hand tracking updates at about 30 Hz and jitters, and
+  without that a still hand's flickering edge let it creep forward into
+  the light and get spotted (in the model, ±7 mm jitter: 10 spots in ten
+  30 s runs before, 0 after).
 - **The keeper wakes.** A hand within 6.3 cm of the lantern (any joint, in
   the model) wakes the keeper: its eyes open, a low "hm?" sounds, a card
   says "Too close: the keeper woke up", and it sees the whole path, so the
   creature stays home. This closes the day-4 shortcut of cupping the lantern
   (one hand there shaded nearly the whole light). The radius was chosen by
-  bisection: the farthest still hand that crossed without a slide had a
-  joint 6.1 cm from the lantern; the ghost's spot moved 1 cm toward the
-  lantern is 6.5 cm away. That margin is about 2 mm on each side.
+  bisection: the farthest still hand that crossed without a slide had its
+  nearest joint between 5.5 and 6.2 cm from the lantern (test bound, one
+  hand fixture at one height; the author's sweep read 6.1 cm); the ghost's
+  spot moved 1 cm toward the lantern is 6.5 cm away. That margin is about
+  2 mm on each side (one hand fixture, one height). Once awake, the keeper
+  goes back to sleep only when every joint is beyond 7 cm (day 7), so a
+  hand jittering at 6.3 cm doesn't wake it over and over.
   Still open: a hand laid on its edge along the path, as a long wall, shades
   the whole lit path and the creature crosses without a slide (a test pins
   it as known).
@@ -86,12 +103,18 @@ rate on a Quest: **not measured yet**.
   bead pops into the row along the near edge, one per win (up to ten, this
   session only). The creature carries the trinket on its back until the next
   round. Then the ghost hand comes back with a card, "Home! Bring your hand
-  back to the ghost for another round", until a hand stands there again.
+  back to the ghost for another round", and both stay until a hand stands
+  there again (or about 10 s pass); then the next round starts. After the
+  first win, level 2's card and gaze show only after that. (Until day 6 they
+  vanished 3.5 s after the win.)
 - **Real objects are cover too.** Point down with one finger onto the top of
   a mug or a stack of books (3–30 cm tall) standing between the lantern and
   the path, not on it, and hold still: it becomes an 8 cm-wide column of
   cover at the height you touched. (An object on your side of the path
-  shades nothing on it.)
+  shades nothing on it.) A depth-only column of that size is drawn where
+  the object stands, so the real object should hide the virtual light and
+  keeper behind it (day 7; not yet checked on a headset; in `/emu/`, where
+  there is no real object, the column is drawn as a pale paper mug).
 - **If the headset loses the hand that was shading the creature in the last
   0.3 s, it waits** (also when it loses both hands). Nothing moves and nothing
   is judged until that hand is back, or another hand or object shades it.
@@ -101,9 +124,11 @@ rate on a Quest: **not measured yet**.
 ## Level 2: the keeper's gaze (needs a real object)
 
 Level 1 plays the same on any flat surface. Level 2 is why Cover is mixed
-reality: it can't be won without a real object standing on your desk.
+reality: it can't be won without a registered object. You point onto the
+top of a real mug or book to register it; the headset doesn't see the
+object itself, so a still finger in mid-air can register one too.
 
-- **Unlocked by your first level-1 win.** The game then draws the keeper's
+- **Unlocked by your first level-1 win.** Once the win's card is done, the game draws the keeper's
   gaze (a pale wedge from the lantern across the middle of the path) and a
   ghost mug in it, with a card: "Level 2: stand a mug or a book in the gaze;
   hold a finger on top". Level 1 plays on until you do. Registering the
@@ -117,8 +142,8 @@ reality: it can't be won without a real object standing on your desk.
   (`tests/day6.test.ts`), and the wake test is padded so a hand can't shade
   a gaze point without being noticed.
 - **The mug alone** shades the gaze and a good part of the light, never all
-  of it: both ends of the lit path stay lit, so the creature can't even
-  leave its nook. In the model that holds at every legal spot on a 1 cm
+  of it: both ends of the lit path stay lit, so the creature can't get past
+  the near edge of the light. In the model that holds at every legal spot on a 1 cm
   grid for one registration-sized object (8 cm footprint), 30 cm tall (the
   registration limit).
 - **Together:** stand your hand at the ghost on the left and edge it toward
@@ -126,19 +151,22 @@ reality: it can't be won without a real object standing on your desk.
   holds it there while you lift your hand over the gaze (a hand above the
   sight lines shades nothing, so it wakes nothing) to the ghost on the right;
   your shadow takes it home. The mug frees your hand at the one moment the
-  hand can't do the job.
+  hand can't do the job. Lift your hand well up, about a hand's length,
+  before moving it over: in the model a continuous lift-over of 5 cm or
+  more wakes nothing and a 1 cm one wakes the keeper (`tests/day7.test.ts`,
+  either hand); `/emu/`'s R key still jumps between the two spots.
 - **Level 2 counts one object**; a new registration replaces it. (In the
   model two objects can shade the whole path between them and replace the
   hand.)
 - **Without an object** level 2 says so ("Level 2 needs a real mug or book")
-  and there is no win. Nothing is faked: the emulator's `O` key (below)
+  and there is no win. The emulator's `O` key (below)
   registers an emulated object through the same rules, for desktop judges
   only.
 
 How this differs from Silhouette (2023), the closest game we know of: as far
-as we can tell it is played with your hands' shadows alone; in Cover's level
-2 a real object from your desk has to share the work with your hand, so the
-game needs your room, not just your hands.
+as we can tell its shadows come from your hands and in-game objects, in VR;
+in Cover's level 2 a real object from your desk has to share the work with
+your hand.
 
 All of this is the geometry model and the emulator; no real mug has been
 played with on a Quest yet.
@@ -177,8 +205,11 @@ what counts. When the headset loses the hand that was shading the creature
 (or both hands), the game pauses.
 
 The labelled case set in `tests/los-cases.test.ts` states the main claim for
-the geometry model, with synthetic 25-joint hands, as 18 cases written from
-the geometry (labels and test arrived in the same commit): 9 where a hand pose or an object stands in
+the sight-line function, with synthetic 25-joint hands, as 18 cases written from
+the geometry (labels and test arrived in the same commit; on day 7 six of
+the cover poses moved from 4.5 to 8 cm in front of the lantern, because
+there the day-5 wake rule woke the keeper in the game, and a test now
+checks every cover hand stands outside the wake radius): 9 where a hand pose or an object stands in
 the sight line (upright palm, edge-on hand, flat hand beside the path, fist,
 two hands, a mug) and 9 negative controls (no hand, a hand beside, behind,
 above or under the line, a flat hand near the lantern, an object too low, a
@@ -226,6 +257,9 @@ npm run build      # dist/ (no emulator) and dist/emu/ (emulator), then checks b
 npm run check      # all three
 ```
 
+The emulator wiring check and the live replay (`tools/emu/`) use Playwright
+(a dev dependency) and its Chromium: `npx playwright install chromium` once.
+
 ## Try it without a headset (emulator)
 
 The main build has no emulator in it, so a Quest browser always gets its own
@@ -242,8 +276,9 @@ holding **→** slides it along to lead the creature home, **L** lifts it
 emulator its own controls back. For level 2 (after a win, or with
 `?level=2`): **O** puts an emulated 10 cm mug on the ghost mug (registered
 through the same rules as a fingertip registration; the emulator's room has
-no real mug), **H** stands the hand at level 2's left ghost, and **R** moves
-it over the gaze to the right ghost. **H** alone,
+no real mug; it is drawn as a pale paper mug), **H** stands the hand at
+level 2's left ghost, and **R** moves it over the gaze to the right ghost
+(a jump; the continuous lift-over is checked in the model). **H** alone,
 without sliding, gets the creature only to the far edge of the lane. If the
 board ever floats in the air instead, it is playable there too. The seat and
 keys only run in the `/emu/` build: their code ships in both bundles but does

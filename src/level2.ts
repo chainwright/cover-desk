@@ -195,3 +195,15 @@ export function objectSlot(level2: boolean, objects: ArrayLike<number>, count: n
 export function startLevel(search: string): 1 | 2 {
   return new URLSearchParams(search).get('level') === '2' ? 2 : 1;
 }
+
+/**
+ * When level 2 starts it keeps only the object registered last (`lastSlot`):
+ * moves it to slot 0 of the x, z, top triples and returns the new count (0 or
+ * 1). Pure since day 7 (an outside run made the switch keep every object and
+ * nothing noticed).
+ */
+export function keepNewestObject(objects: Float32Array, count: number, lastSlot: number): number {
+  if (count === 0) return 0;
+  if (lastSlot !== 0) objects.copyWithin(0, lastSlot * 3, lastSlot * 3 + 3);
+  return 1;
+}

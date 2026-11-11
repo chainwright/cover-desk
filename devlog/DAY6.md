@@ -166,3 +166,19 @@ in-game key bar lists O and R); not changed today.
 - Not checked by any test or the wiring check: plane choice, the anchor
   flow, registration gating, the desk tap and the knob gate.
 - The video.
+
+## Corrections (day 7, after the outside review `judges_impl_d5`)
+
+- "so the creature can't leave its nook" (the design, above) is wrong: with
+  one object the creature creeps out to the near edge of the light, by
+  design; it can't get past it.
+- Silhouette: as far as we can tell its shadows come from your hands *and
+  in-game objects* (a review says so); it is VR, so they are virtual.
+- "Catch rate overall: 76 of 77" is over the author's own mutants. On the
+  outside run's 11 independent glue edits, 4 were caught and 7 not (R3,
+  R7, R9, R10, R11 survived both stages; R4 and R8 failed only the flaky
+  hop check). Day 7 adds checks for them (`devlog/DAY7.md`).
+- "With ghosts at ±7 cm the emulator's own hand … woke the keeper": an
+  author's scratch run, output not kept. "11 mm radii (the emulator reports
+  about 11)": not logged anywhere either; the day-7 wiring check doesn't
+  log them, so it stays the author's reading.

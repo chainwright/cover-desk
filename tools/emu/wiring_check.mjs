@@ -9,9 +9,12 @@
 //   flush-hide a pagehide writes the log at once (O16: index.ts wiring)
 //   slide-card after H the card says "Slide your hand along" (O22: latch)
 //   win-*      after a slide: trinket carried, one bead, a chime, the hop, the flare (O17–O19)
-//              (day 6: the hop counts from 3 mm, not 1 cm: at 3–6 fps on a loaded machine the
-//              0.45 s hop gets two or three frames, and a 1 cm floor failed a clean build)
+//              (day 7: win-hop-flare no longer samples the hop from outside: the game records each
+//              frame of the win (t since home, the hop and flare it applied) and the check compares
+//              every recorded frame with the pure winFx(t); at 3–6 fps polling missed the hop's peak
+//              and the day-6 check failed a clean build about half the time)
 //   again      after a win the "again" card and the ghost, until H stands the hand at the ghost's spot
+//   again-waits (day 7) 6 s after the win, the hand not back: still home, the card and the ghost, no gaze yet
 //   spotted-*  L: eyes open, stare line, "hm?", the spotted card (O20, O21)
 //   wake-*     C cups the lantern: the keeper wakes, the card says so, the creature stays home
 //   l2-*       day 6: after the level-1 win the unlock card and the gaze; O registers the emulated
@@ -19,6 +22,16 @@
 //              the gaze (the swap card, the ghost on the right); R: home (a level-2 win); O again:
 //              no object, the "needs a real mug" card, and H + → held never wins (the hand in the
 //              gaze wakes the keeper)
+//   day 7, checks for an outside run's glue mutations that survived both stages (R3, R4, R7–R11):
+//   spotted-log      the 'spotted' log event carries the tracked hand's wrist speed (R10)
+//   woke-reason-*    'keeper-woke' says 'lantern' after C and 'gaze' in level 2 (R8)
+//   l2-start         two objects registered in level 1 (O, then one elsewhere): level 2 keeps the newest (R7)
+//   l2-o-key         O takes the object away and puts the emulated mug back on the ghost mug (G8)
+//   l2-won-flag      a level-2 win is recorded as one (R11)
+//   register-gate    a still, not-pointing hand over a legal spot registers nothing; a pointing one does (R4);
+//                    note: that pointing hold is in mid-air, so it also shows a phantom registration
+//   knob-gate        a flat hand resting its fingertips on the knob doesn't move the board; a pointing one does (R3)
+//   fps-inview       with the head turned away the 'fps' log says inView false, looking at the board true (R9)
 //   errors     no console errors
 import { chromium } from 'playwright';
 
@@ -36,8 +49,44 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 page.on('pageerror', (e) => errors.push(String(e)));
 const S = () => page.evaluate(() => {
   const f = window.__cover;
-  return { placement: f.placement, creature: f.creature, lit: f.litFraction, cue: f.cues.prompt, promptText: f.cues.promptText, ghost: f.cues.ghostVisible, payoff: f.payoff, logStore: f.logStore, level: f.level, objects: f.objects.length, fps: f.fps };
+  return { placement: f.placement, creature: f.creature, lit: f.litFraction, cue: f.cues.prompt, promptText: f.cues.promptText, ghost: f.cues.ghostVisible, payoff: f.payoff, logStore: f.logStore, level: f.level, objects: f.objects.length, objs: f.objects, fps: f.fps, hands: f.hands };
 });
+const events = (type) => page.evaluate((type) => {
+  const log = JSON.parse(window.__cover.exportLog() ?? 'null');
+  return log ? log.sessions.flatMap((x) => x.events).filter((e) => e.type === type) : [];
+}, type);
+/**
+ * Puts the emulator's right hand in a built-in pose (e.g. 'flat', 'point'), fingers down, so that its
+ * index fingertip lands on board point (x, y, z): sets the pose, reads the fingertip back from the game
+ * and corrects the hand position (the grip offset depends on the pose), a few times.
+ */
+async function handTipAt(poseId, x, y, z) {
+  for (let i = 0; i < 4; i++) {
+    await page.evaluate(({ poseId, x, y, z, first }) => {
+      const d = window.IWER_DEVICE, f = window.__cover, r = d.hands.right;
+      const o = f.boardPoint(0, 0, 0), ax = f.boardPoint(1, 0, 0);
+      const yaw = Math.atan2(ax[2] - o[2], ax[0] - o[0]);
+      // fingers down: −90° about x (the 'stop' hand is +90°), then the board's turn about y
+      const a = -Math.PI / 4, b = -yaw / 2;
+      const qx = [Math.sin(a), 0, 0, Math.cos(a)], qy = [0, Math.sin(b), 0, Math.cos(b)];
+      const q = [qy[3] * qx[0], qy[1] * qx[3], -qy[1] * qx[0], qy[3] * qx[3]]; // qy * qx
+      r.poseId = poseId;
+      r.quaternion.set(q[0], q[1], q[2], q[3]);
+      const target = f.boardPoint(x, z, y);
+      if (first) r.position.set(target[0], target[1] + 0.09, target[2]);
+      else {
+        const j = f.joints(1);
+        if (j) r.position.set(r.position.x + target[0] - j[27], r.position.y + target[1] - j[28], r.position.z + target[2] - j[29]);
+      }
+      d.notifyStateChange?.();
+    }, { poseId, x, y, z, first: i === 0 });
+    await sleep(500);
+  }
+  return page.evaluate(() => {
+    const j = window.__cover.joints(1);
+    return j ? window.__cover.toBoard(j[27], j[28], j[29]) : null;
+  });
+}
 const chunks = () => page.evaluate(() => new Promise((res) => {
   const r = indexedDB.open('cover-tester-log-v2');
   r.onsuccess = () => {
@@ -121,17 +170,29 @@ try {
   check('win-trinket', carried, null);
   check('win-bead', s.payoff.beads === 1, s.payoff.beads);
   check('win-chime', s.payoff.sounds.chime === chime0 + 1, s.payoff.sounds);
-  check('win-hop-flare', maxHop > 0.003 && maxFlare > 0.1, { maxHop, maxFlare, maxBead, fps: s.fps });
+  // Every frame the game recorded during the win: the hop it applied to the creature and the flare it
+  // applied to the light equal the pure winFx(t) at that frame's t; at least one frame fell inside the hop.
+  const trace = s.payoff.winTrace;
+  const expect = await page.evaluate((ts) => ts.map((t) => window.__cover.winFxAt(t)), trace.map((r) => r[0]));
+  const bad = trace.filter((r, i) => Math.abs(r[1] - expect[i].hop) > 2e-4 || Math.abs(r[2] - expect[i].flare) > 2e-3);
+  const inHop = trace.filter((r, i) => expect[i].hop > 0.002 && r[1] > 0.002).length;
+  const inFlare = trace.filter((r, i) => expect[i].flare > 0.05 && r[2] > 0.05).length;
+  check('win-hop-flare', trace.length > 0 && bad.length === 0 && inHop > 0 && inFlare > 0, { frames: trace.length, inHop, inFlare, bad: bad.slice(0, 3), polledMaxHop: maxHop, polledMaxFlare: maxFlare, fps: s.fps });
   await shot('day5_02_emu_again_ghost');
   check('again', s.cue === 'again' && s.ghost && /bring your hand back/i.test(s.promptText), { cue: s.cue, ghost: s.ghost });
 
-  // next round: H away, H at the ghost's spot → the "again" card goes
-  await until(async () => (await S()).creature.mode !== 'home', 8000);
+  // Day 7: the next round waits for the hand. 6 s after the win (day 6 restarted at 3.5 s and the card and
+  // ghost were gone), the hand still at the end of its slide: still home, the card and the ghost, no gaze yet.
+  await sleep(Math.max(0, 6000 - (Date.now() - won)));
+  s = await S();
+  check('again-waits', s.creature.mode === 'home' && s.cue === 'again' && s.ghost && !s.level.gazeShown && !s.level.mugGhostShown, { mode: s.creature.mode, cue: s.cue, ghost: s.ghost, gaze: s.level.gazeShown, sinceWinS: (Date.now() - won) / 1000 });
+  // next round: H away, H at the ghost's spot → the round starts and the "again" card goes
   await page.keyboard.press('h');
   await sleep(300);
   await page.keyboard.press('h');
-  const cleared = await until(async () => { const x = await S(); return x.cue !== 'again' ? x : null; }, 6000);
-  check('again-cleared', cleared && !cleared.ghost, cleared ? { cue: cleared.cue, ghost: cleared.ghost } : null);
+  let cleared = await until(async () => { const x = await S(); return x.cue !== 'again' ? x : null; }, 6000);
+  if (cleared) { await sleep(400); cleared = await S(); } // the ghost follows the cue on the next frame
+  check('again-cleared', cleared && cleared.cue !== 'again' && !cleared.ghost && cleared.creature.mode !== 'home', cleared ? { cue: cleared.cue, ghost: cleared.ghost, mode: cleared.creature.mode } : null);
 
   // lead it into the path, then L: spotted
   await until(async () => (await S()).creature.s > 0.06, 15000);
@@ -144,6 +205,9 @@ try {
   check('spotted-eyes-stare', sp && sp.payoff.stare, sp?.payoff);
   check('spotted-hm', sp && sp.payoff.sounds.hm === hm0 + 1, sp?.payoff.sounds);
   check('spotted-card', sp && sp.cue === 'spotted' && /saw it/i.test(sp.promptText), sp ? { cue: sp.cue, text: sp.promptText } : null);
+  const spEv = (await events('spotted')).at(-1);
+  // both emulated hands are tracked (the left one rests by the chair), so both speeds are numbers
+  check('spotted-log', spEv && Array.isArray(spEv.wristMmS) && spEv.wristMmS.length === 2 && spEv.wristMmS.every(Number.isFinite), spEv);
 
   // C: cup the lantern → the keeper wakes; the creature doesn't cross
   await page.keyboard.press('h'); // the hand away (L had lifted it)
@@ -165,14 +229,32 @@ try {
   await page.keyboard.press('c');
   const asleep = await until(async () => { const x = await S(); return !x.payoff.awake ? x : null; }, 5000);
   check('wake-ends', !!asleep, null);
+  const wokeL = await events('keeper-woke');
+  check('woke-reason-lantern', wokeL.length > 0 && wokeL.at(-1).reason === 'lantern', wokeL.at(-1));
 
   // Day 6: level 2. The level-1 win unlocked it; with no object the card says what it needs.
   await until(async () => (await S()).creature.mode === 'nook', 10000);
   s = await S();
   check('l2-unlocked', s.level.id === 1 && s.level.unlocked && s.cue === 'unlocked' && /level 2/i.test(s.promptText) && s.level.gazeShown && s.level.mugGhostShown, { level: s.level, cue: s.cue, text: s.promptText });
+  // Day 7 (R7): two objects registered in level 1 before the switch, in one page task (so in the same
+  // frame): the O key puts the mug in the gaze, then one more object stands elsewhere. At the switch
+  // (the creature is in its nook, a round boundary) level 2 keeps only the newest.
+  const { v1, before2 } = await page.evaluate(() => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'o' }));
+    const v1 = window.__cover.registerAt(0.12, -0.04, 0.1);
+    return { v1, before2: window.__cover.objects.length };
+  });
+  const l2 = await until(async () => { const x = await S(); return x.level.id === 2 ? x : null; }, 15000, 50);
+  check('l2-start', l2 && before2 === 2 && v1 === 'ok' && l2.objects === 1 && Math.abs(l2.objs[0].x - 0.12) < 1e-3 /* mugCovers follows a frame later: l2-mug-off */, l2 ? { before2, v1, level: l2.level, objs: l2.objs, cue: l2.cue } : { before2, v1 });
+  await until(async () => (await S()).creature.mode === 'nook', 15000);
+  await sleep(300);
+  check('l2-mug-off', (await S()).cue === 'mug-off', (await S()).cue);
+  // O takes that object away; O again stands the emulated mug on the ghost mug (G8)
   await page.keyboard.press('o');
-  const l2 = await until(async () => { const x = await S(); return x.level.id === 2 ? x : null; }, 5000, 50);
-  check('l2-start', l2 && l2.objects === 1 && l2.level.mugCovers && l2.cue === 'l2-teach' && l2.level.ghostSpot === 'left', l2 ? { level: l2.level, cue: l2.cue, objects: l2.objects } : null);
+  await until(async () => (await S()).objects === 0, 3000, 50);
+  await page.keyboard.press('o');
+  const mug = await until(async () => { const x = await S(); return x.objects === 1 && x.level.mugCovers && x.cue === 'l2-teach' ? x : null; }, 5000, 50);
+  check('l2-o-key', mug && Math.abs(mug.objs[0].x) < 1e-3 && mug.level.ghostSpot === 'left', mug ? { objs: mug.objs, cue: mug.cue, level: mug.level } : null);
   await sleep(300);
   s = await S();
   check('l2-visuals', s.level.gazeShown && !s.level.mugGhostShown && s.ghost && Math.abs(s.level.ghostAt[0] + 0.08) < 1e-3, s.level);
@@ -193,10 +275,11 @@ try {
   await page.keyboard.press('r');
   const won2 = await until(async () => { const x = await S(); return x.creature.wins > wins1 ? x : null; }, 30000, 50);
   check('l2-win', won2 && won2.level.id === 2 && won2.creature.spotted === s.creature.spotted, won2 ? { creature: won2.creature } : null);
+  check('l2-won-flag', won2 && won2.level.l2Won === true, won2?.level);
   await shot('day6_03_emu_l2_win');
   // O again: the object is gone; level 2 stays and says so; H + → held never wins (the hand reaches the gaze)
-  await page.keyboard.press('h'); // hand away
-  await until(async () => (await S()).creature.mode === 'nook', 10000);
+  await page.keyboard.press('h'); // hand away (it is not back at the start, so the next round starts after 10 s)
+  await until(async () => (await S()).creature.mode === 'nook', 16000);
   await page.keyboard.press('o');
   const none = await until(async () => { const x = await S(); return x.objects === 0 && x.cue === 'need-object' ? x : null; }, 5000, 50);
   check('l2-need-object', none && none.level.id === 2 && /needs a real mug/i.test(none.promptText), none ? { cue: none.cue, text: none.promptText } : null);
@@ -214,6 +297,48 @@ try {
   await page.keyboard.up('ArrowRight');
   s = await S();
   check('l2-no-object-no-win', s.creature.wins === wins2 && gazeWoke, { wins: s.creature.wins, gazeWoke });
+  const wokeG = (await events('keeper-woke')).filter((e) => e.level === 2);
+  check('woke-reason-gaze', wokeG.length > 0 && wokeG.every((e) => e.reason === 'gaze'), wokeG.slice(-3));
+
+  // R4: registration needs a pointing finger. Level 2, no object: a still flat hand (fingers down, not
+  // pointing) comes down onto a legal spot 10 cm up and holds; then the same with a pointing hand.
+  await page.keyboard.press('h'); // the seat's hand away; from here the check poses the hand itself
+  await sleep(500);
+  const hold = async (poseId) => {
+    await handTipAt(poseId, 0.12, 0.14, -0.04);
+    for (let k = 0; k < 5; k++) { await handTipAt(poseId, 0.12, 0.13 - k * 0.01, -0.04); }
+    const at = await handTipAt(poseId, 0.12, 0.09, -0.04);
+    const pointing = (await S()).hands[1].pointing;
+    await sleep(1500);
+    return { at, pointing, objects: (await S()).objects };
+  };
+  const flat = await hold('flat');
+  const point = await hold('point');
+  check('register-gate', flat.pointing === false && flat.objects === 0 && point.pointing === true && point.objects === 1, { flat, point });
+
+  // R3: the move knob needs a pointing finger. A flat hand's fingertips resting on the knob for 2 s: no move;
+  // a pointing fingertip there: "tap the new spot".
+  const KNOB = { x: -0.23, z: 0.11 };
+  await handTipAt('flat', KNOB.x, 0.05, KNOB.z);
+  await handTipAt('flat', KNOB.x, 0.02, KNOB.z);
+  const flatKnob = await S();
+  await sleep(2000);
+  const flatAfter = await S();
+  await handTipAt('point', KNOB.x, 0.05, KNOB.z);
+  const pk = await handTipAt('point', KNOB.x, 0.021, KNOB.z);
+  const moved = await until(async () => { const x = await S(); return x.cue === 'tap-new-spot' ? x : null; }, 4000, 50);
+  check('knob-gate', !flatKnob.hands[1].pointing && flatAfter.cue !== 'tap-new-spot' && !!moved, { flatCue: flatAfter.cue, flatPointing: flatKnob.hands[1].pointing, pointTip: pk, moved: !!moved });
+
+  // R9: the fps log's inView. Turn the emulated head to look up and back for 3 s, then back at the board.
+  const fps0 = (await events('fps')).length;
+  await page.evaluate(() => { const d = window.IWER_DEVICE; d.quaternion.set(0.3826834, 0, 0, 0.9238795); d.notifyStateChange?.(); });
+  await sleep(3500);
+  await page.evaluate(() => { const d = window.IWER_DEVICE; const a = (-52 * Math.PI) / 360; d.quaternion.set(Math.sin(a), 0, 0, Math.cos(a)); d.notifyStateChange?.(); });
+  await sleep(2500);
+  const fpsEv = (await events('fps')).slice(fps0);
+  const away = fpsEv.filter((e) => e.viewDeg > 60);
+  const seen = fpsEv.filter((e) => e.viewDeg < 30);
+  check('fps-inview', away.length > 0 && away.every((e) => e.inView === false) && seen.length > 0 && seen.every((e) => e.inView === true), fpsEv.map((e) => [e.viewDeg, e.inView]));
 } catch (e) {
   check('ran', false, String(e));
 }

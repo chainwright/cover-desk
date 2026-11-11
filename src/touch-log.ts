@@ -475,3 +475,9 @@ function r1(v: number): number {
 export function logSettings(extra: Record<string, unknown>): Record<string, unknown> {
   return { poses: POSE_NAMES, ...extra };
 }
+
+/** The 'fps' event's `inView`: the board is placed and within this angle of where the head looks. */
+export const IN_VIEW_DEG = 35;
+export function boardInView(placed: boolean, viewDeg: number): boolean {
+  return placed && viewDeg < IN_VIEW_DEG;
+}

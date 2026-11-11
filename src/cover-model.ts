@@ -44,9 +44,16 @@ import type { Lantern } from './sightline.ts';
 
 export const PATH_DOTS = 26;
 export const MAX_OBJECT_MARKERS = 4;
+/** A unit-high column of the registration footprint, base at y = 0 (scaled to each object's top). */
+const OBJECT_COLUMN = new CylinderGeometry(REGISTER.radius, REGISTER.radius, 1, 32).translate(0, 0.5, 0);
+/** Writes depth only: virtual things behind a registered real object are not drawn (passthrough shows the object). */
+export const OBJECT_OCCLUDER = new MeshBasicMaterial({ colorWrite: false });
+/** /emu/ has no real object: the emulated one is drawn as a pale paper mug instead. */
+export const OBJECT_EMULATED = new MeshBasicMaterial({ color: 0xe9dfcc, transparent: true, opacity: 0.6, depthWrite: false });
 export { WIN_BEADS } from './feedback.ts';
 import { WIN_BEADS } from './feedback.ts';
-export const KNOB = { x: -(BOARD.halfX + 0.02), z: BOARD.zMax - 0.02, r: 0.014 } as const;
+export { KNOB } from './level.ts';
+import { KNOB } from './level.ts';
 
 const FELT = (color: number) => new MeshStandardMaterial({ color, roughness: 1, metalness: 0 });
 const WOOD = (color: number) => new MeshStandardMaterial({ color, roughness: 0.55, metalness: 0 });
@@ -249,7 +256,13 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
     const topRing = new Mesh(new RingGeometry(0.012, 0.016, 24), FELT(0xffb050));
     topRing.rotation.x = -Math.PI / 2;
     topRing.name = 'top';
-    g.add(foot, topRing);
+    // Day 7: a depth-only column where the real object stands (its footprint, up to the touched top), drawn
+    // first, so the real mug hides the virtual keeper, light and path behind it in passthrough (as the hand
+    // mask does for the hand). The system scales it to the object's height; in /emu/ it is drawn visibly.
+    const occluder = new Mesh(OBJECT_COLUMN, OBJECT_OCCLUDER);
+    occluder.name = 'occluder';
+    occluder.renderOrder = -5;
+    g.add(foot, topRing, occluder);
     g.visible = false;
     root.add(g);
     objectMarkers.push(g);

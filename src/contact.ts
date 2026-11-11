@@ -119,3 +119,13 @@ export function distanceToPolyline(x: number, z: number, xz: ArrayLike<number>):
   }
   return best;
 }
+
+/**
+ * The move knob (day 5: pointing only, so a resting hand never moves the
+ * board): a pointing fingertip on the knob, low. Board frame, metres. Pure
+ * since day 7 so the pointing gate is unit-tested (an outside run removed it
+ * and nothing noticed).
+ */
+export function onKnob(pointing: boolean, lx: number, ly: number, lz: number, knob: { x: number; z: number; r: number }): boolean {
+  return pointing && Math.hypot(lx - knob.x, lz - knob.z) < knob.r + 0.006 && ly < 0.01 + TIP_PAD + 0.015;
+}

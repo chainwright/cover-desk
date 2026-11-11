@@ -37,8 +37,8 @@ import {
 } from '@iwsdk/core';
 import { PLACE, TapCalibrator, spotFromTouch, type CalibResult, type PlaceParams } from './calibration.ts';
 import { chime, click, hm, lock, setHum, soundCounts, step } from './click-sound.ts';
-import { REGISTER, REGISTER_HOLD, TIP_PAD, distanceToPolyline, judgeRegistration } from './contact.ts';
-import { KNOB, MAX_OBJECT_MARKERS, PATH_DOTS, buildCover, setInstance, type CoverModel } from './cover-model.ts';
+import { REGISTER, REGISTER_HOLD, TIP_PAD, distanceToPolyline, judgeRegistration, onKnob } from './contact.ts';
+import { KNOB, MAX_OBJECT_MARKERS, OBJECT_EMULATED, OBJECT_OCCLUDER, PATH_DOTS, buildCover, setInstance, type CoverModel } from './cover-model.ts';
 import {
   CREATURE,
   CoverWatch,
@@ -62,7 +62,7 @@ import {
   type CreatureWorld,
 } from './creature.ts';
 import { DeskAnchor } from './desk-anchor.ts';
-import { RoundCues, handAtLantern, handAtTeachSpot, newPayoff, newWinFx, nearestJointToLantern, payoffFor, winFx } from './feedback.ts';
+import { LanternWake, RoundCues, handAtTeachSpot, newPayoff, newWinFx, nearestJointToLantern, nextRoundDue, payoffFor, winFx } from './feedback.ts';
 import { flags } from './flags.ts';
 import { HandJoints } from './hand-joints.ts';
 import { HAND_SIDES, HandMask } from './hand-mask.ts';
@@ -78,14 +78,14 @@ import {
   type PoseInfo,
 } from './hand-proxy.ts';
 import { BOARD, CREATURE_Y, LEVEL_1, Route, TEACH_SPOT, type Level } from './level.ts';
-import { Gaze, L2_LEFT, L2_RIGHT, LEVEL_2, LevelProgress, objectSlot, startLevel } from './level2.ts';
+import { Gaze, L2_LEFT, L2_RIGHT, LEVEL_2, LevelProgress, keepNewestObject, objectSlot, startLevel } from './level2.ts';
 import { LightMap } from './light-map.ts';
 import { LogKeeper, LogStore, type StoreStatus } from './log-store.ts';
 import { KNOB_LINES, PROMPT_LINES, firstRunCues, newCues, type CueInput } from './onboarding.ts';
 import { placementStep, type PlacementClock, type PlacementState, type PlacementWorld } from './placement.ts';
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightResult } from './sightline.ts';
 import { TextCard } from './text-card.ts';
-import { LABELS, TesterLogger, analyseLog, logSettings, type Label } from './touch-log.ts';
+import { LABELS, TesterLogger, analyseLog, boardInView, logSettings, type Label } from './touch-log.ts';
 
 /** Inset from desk edges so the whole board stays on the desk, whichever way it is turned. */
 const DESK_INSET = Math.max(BOARD.halfX, (BOARD.zMax - BOARD.zMin) / 2) + 0.01;
@@ -96,8 +96,6 @@ const BOARD_PLACE: PlaceParams = { ...PLACE, maxEyeDistance: 0.5, minReach: 0.28
 const KNOB_HOLD_S = 0.8;
 /** Owner tags for cover: hands 0/1, objects 10 + n. */
 const OBJECT_OWNER = 10;
-/** After a win, the next round starts this much later. */
-const NEXT_ROUND_S = 3.5;
 /** Tester panel: redraw at most this often (a canvas upload can cost a frame). */
 const PANEL_REDRAW_S = 0.5;
 /** Per-frame update() timings kept for the once-a-second p95 (more than any refresh rate). */
@@ -136,7 +134,9 @@ export interface CoverDebug {
    * Win and spotted feedback: keeper eye opening (1 closed), stare line, trinket on the creature's back, win beads shown;
    * day 5: keeper awake (a hand at the lantern), the win's hop (m), flare and newest bead's scale, and how often each sound played.
    */
-  payoff: { eyes: number; stare: boolean; trinketCarried: boolean; beads: number; awake: boolean; hop: number; flare: number; bead: number; sounds: Record<string, number> };
+  payoff: { eyes: number; stare: boolean; trinketCarried: boolean; beads: number; awake: boolean; hop: number; flare: number; bead: number; sounds: Record<string, number>; winTrace: [number, number, number][] };
+  /** Day 7: the win effects the pure code gives `t` seconds after a win (the wiring check compares the applied ones with it). */
+  winFxAt(t: number): { hop: number; flare: number; bead: number };
   /** True when the Immersive Web Emulator replaced WebXR in this page. */
   emulator: boolean;
   /** Tester mode: the log's storage ('off' outside tester mode) and how many sessions the log holds. */
@@ -163,7 +163,7 @@ export interface CoverDebug {
   /** Starts a fresh round (creature back in its nook). */
   restart(): void;
   /** Day 6: the round's level, whether level 2 is unlocked, a hand in the keeper's gaze, the object covering the gaze. */
-  level: { id: number; unlocked: boolean; gazeWake: boolean; mugCovers: boolean; ghostSpot: string; gazeShown: boolean; mugGhostShown: boolean; ghostAt: [number, number] };
+  level: { id: number; unlocked: boolean; gazeWake: boolean; mugCovers: boolean; ghostSpot: string; gazeShown: boolean; mugGhostShown: boolean; ghostAt: [number, number]; l2Won: boolean };
   /**
    * Day 6, /emu/ only (the O key): registers an object standing at board point (x, z) with its top at `top`,
    * through the same rules as a fingertip registration (judgeRegistration), without the hold. Returns the verdict.
@@ -203,6 +203,13 @@ export class CoverSystem extends createSystem({
   private round = new RoundCues();
   /** A hand is at the lantern: the keeper is awake and sees the whole path. */
   private keeperAwake = false;
+  /** Day 7: the lantern wake with hysteresis (wakes inside 6.3 cm, sleeps beyond 7 cm). */
+  private lanternWake = new LanternWake();
+  /** A tracked hand stands where the round starts (level 1's ghost spot, or level 2's left ghost). */
+  private handBack = false;
+  /** Day 7: the last win's frames as (t since home, hop applied, flare applied), for the wiring check. */
+  private winTrace = new Float32Array(64 * 3);
+  private winTraceN = 0;
   private pay = newPayoff();
   private fx = newWinFx();
   private coverWatch = new CoverWatch();
@@ -456,7 +463,8 @@ export class CoverSystem extends createSystem({
     // Latched round state (feedback.ts): the slide card from the first wait in
     // a hand's lane until the first win, the spotted card until the next dash,
     // the "again" card and ghost from a win until a hand is back at the start.
-    this.round.frame(this.creature.mode, this.lineState === SHADOW && this.lineBy < OBJECT_OWNER, handAtTeachSpot(this.local, this.joints.tracked));
+    this.handBack = handAtTeachSpot(this.local, this.joints.tracked, undefined, this.level.needsObject ? L2_LEFT : TEACH_SPOT);
+    this.round.frame(this.creature.mode, this.lineState === SHADOW && this.lineBy < OBJECT_OWNER, this.handBack);
     i.leading = this.round.leading(this.wins);
     i.spotted = this.round.spotted;
     i.awake = this.keeperAwake;
@@ -476,7 +484,9 @@ export class CoverSystem extends createSystem({
    * while a hand shades any point of the path inside its gaze (level2.ts).
    */
   private updateWake(placed: boolean, time: number): void {
-    const h = placed ? handAtLantern(this.local, this.joints.tracked, this.lantern) : -1;
+    // Day 7: with hysteresis, so a hand jittering at the wake radius doesn't toggle it every frame.
+    if (!placed) this.lanternWake.reset();
+    const h = placed ? this.lanternWake.update(this.local, this.joints.tracked, this.lantern) : -1;
     const g = placed && this.level.needsObject ? this.gaze.handInGaze(this.local, this.joints.radii, this.joints.tracked) : -1;
     const awake = h >= 0 || g >= 0;
     if (awake && !this.keeperAwake) {
@@ -921,8 +931,7 @@ export class CoverSystem extends createSystem({
     if (!this.progress.update(this.objectCount, boundary)) return;
     this.level = LEVEL_2;
     if (this.objectCount > 1 || this.lastSlot !== 0) {
-      this.objects.copyWithin(0, this.lastSlot * 3, this.lastSlot * 3 + 3);
-      this.objectCount = 1;
+      this.objectCount = keepNewestObject(this.objects, this.objectCount, this.lastSlot);
       this.lastSlot = 0;
       this.syncObjectMarkers();
     }
@@ -943,6 +952,9 @@ export class CoverSystem extends createSystem({
       if (!g.visible) continue;
       g.position.set(this.objects[i * 3], 0, this.objects[i * 3 + 1]);
       g.getObjectByName('top')!.position.y = this.objects[i * 3 + 2] + 0.002;
+      const column = g.getObjectByName('occluder') as Mesh;
+      column.scale.y = Math.max(0.001, this.objects[i * 3 + 2]);
+      column.material = this.emulator ? OBJECT_EMULATED : OBJECT_OCCLUDER;
     }
   }
 
@@ -975,7 +987,7 @@ export class CoverSystem extends createSystem({
 
   /** Hold a pointing fingertip on the knob to move the board somewhere else (day 5: pointing only, so a resting hand never triggers it). */
   private updateKnob(h: number, lx: number, ly: number, lz: number, time: number): void {
-    const on = this.pointing[h] && Math.hypot(lx - KNOB.x, lz - KNOB.z) < KNOB.r + 0.006 && ly < 0.01 + TIP_PAD + 0.015;
+    const on = onKnob(this.pointing[h], lx, ly, lz, KNOB);
     if (!on) {
       this.knobSince[h] = -1;
       this.knobArmed[h] = true;
@@ -1034,7 +1046,8 @@ export class CoverSystem extends createSystem({
       this.logger?.event(time, 'cover-hand-lost', { hand: HAND_SIDES[this.coverWatch.waitingFor], sMm: Math.round(c.s * 1000) });
     }
 
-    if (c.mode === MODE_HOME && this.homeAt >= 0 && time - this.homeAt > NEXT_ROUND_S) this.restart();
+    // Day 7: the next round waits for a hand back at the start (or NEXT_ROUND_MAX_S), so the ghost and the "again" card stay until then.
+    if (c.mode === MODE_HOME && this.homeAt >= 0 && nextRoundDue(time - this.homeAt, this.handBack)) this.restart();
 
     const ev = stepCreature(c, dt, this.cw);
     this.round.onEvent(ev);
@@ -1056,6 +1069,7 @@ export class CoverSystem extends createSystem({
       case EV_HOME:
         this.wins++;
         this.homeAt = time;
+        this.winTraceN = 0;
         if (this.level.needsObject) this.l2Won = true;
         this.progress.onWin();
         this.logger?.event(time, 'home', { wins: this.wins, spotted: c.spottedCount, level: this.level.id, objects: this.objectCount });
@@ -1155,6 +1169,12 @@ export class CoverSystem extends createSystem({
     m.winBeads.count = pay.beads;
     m.setBead(pay.beads - 1, this.fx.bead);
     (m.poolMat.uniforms.uFlare as { value: number }).value = this.fx.flare;
+    if (c.mode === MODE_HOME && this.homeAt >= 0 && this.winTraceN < 64) {
+      const k = this.winTraceN++ * 3;
+      this.winTrace[k] = time - this.homeAt;
+      this.winTrace[k + 1] = cr.root.position.y;
+      this.winTrace[k + 2] = (m.poolMat.uniforms.uFlare as { value: number }).value;
+    }
 
     // Lantern: brighter while the keeper stares at the creature (or is awake).
     const staring = this.sight.state === SEEN || this.keeperAwake;
@@ -1281,7 +1301,7 @@ export class CoverSystem extends createSystem({
         this.toBoardC.copy(this.model.root.position).sub(this.head);
         const viewDeg = this.toBoardC.lengthSq() > 1e-8 ? (this.viewDir.angleTo(this.toBoardC) * 180) / Math.PI : 180;
         this.logger.event(time, 'fps', {
-          inView: this.isPlaced() && viewDeg < 35,
+          inView: boardInView(this.isPlaced(), viewDeg),
           viewDeg: Math.round(viewDeg),
           fps: Math.round(this.fps * 10) / 10,
           worstMs: Math.round(this.fpsWorst * 10000) / 10,
@@ -1475,6 +1495,7 @@ export class CoverSystem extends createSystem({
           beads: m.winBeads.count,
           awake: self.keeperAwake,
           hop: +m.creature.root.position.y.toFixed(4),
+          winTrace: Array.from({ length: self.winTraceN }, (_, i) => [self.winTrace[i * 3], self.winTrace[i * 3 + 1], self.winTrace[i * 3 + 2]] as [number, number, number]),
           flare: +((m.poolMat.uniforms.uFlare as { value: number }).value).toFixed(3),
           bead: +self.fx.bead.toFixed(3),
           sounds: { ...soundCounts },
@@ -1492,6 +1513,7 @@ export class CoverSystem extends createSystem({
         };
       },
       flushLog: () => self.flushLog(),
+      winFxAt: (t: number) => ({ ...winFx(t) }),
       resetLog: () => self.resetLog(),
       armGuide() {
         self.guideArmed = true;
@@ -1536,6 +1558,7 @@ export class CoverSystem extends createSystem({
           gazeShown: m.gaze.visible,
           mugGhostShown: m.mugGhost.visible,
           ghostAt: [+m.ghostHand.position.x.toFixed(4), +m.ghostHand.position.z.toFixed(4)] as [number, number],
+          l2Won: self.l2Won,
         };
       },
       registerAt(x, z, top) {

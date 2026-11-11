@@ -1,5 +1,6 @@
 // Live replay of the judges' emulator path (day 6), against a deployed or local /emu/:
-//   level 1: H, 30 s still → no win; → held → a win
+//   level 1: H, 30 s still → no win; → held → a win; (day 7) 6 s later still home with the "again" card and
+//            the ghost, the gaze not yet drawn; H H (the hand back at the start) → the next round
 //   level 2 (?level=2): no object, H then → held for 30 s → no win (the hand reaches the keeper's gaze);
 //            O (emulated mug), H, then R once the creature waits in the mug's shadow → a win
 // (The build stamp is checked by tools/emu/public_check.mjs.) Prints JSON and exits 1 if any step fails or the console shows an error.
@@ -25,7 +26,7 @@ async function open(query) {
 }
 const S = (page) => page.evaluate(() => {
   const f = window.__cover;
-  return { creature: f.creature, cue: f.cues.prompt, lit: f.litFraction, level: f.level, objects: f.objects.length, awake: f.payoff.awake };
+  return { creature: f.creature, cue: f.cues.prompt, lit: f.litFraction, level: f.level, objects: f.objects.length, awake: f.payoff.awake, ghost: f.cues.ghostVisible };
 });
 async function until(fn, ms, every = 100) {
   const t0 = Date.now();
@@ -52,6 +53,15 @@ try {
   const won = await until(async () => { const x = await S(a.page); return x.creature.wins > 0 ? x : null; }, 120000);
   await a.page.keyboard.up('ArrowRight');
   step('l1-slide-wins', !!won, won ? { afterS: (Date.now() - t0) / 1000, spotted: won.creature.spotted, unlocked: won.level.unlocked } : null);
+  const tWon = Date.now();
+  await sleep(6000);
+  s = await S(a.page);
+  step('l1-home-card-waits', s.creature.mode === 'home' && s.cue === 'again' && s.ghost && !s.level.gazeShown, { afterWinS: (Date.now() - tWon) / 1000, mode: s.creature.mode, cue: s.cue, ghost: s.ghost, gaze: s.level.gazeShown });
+  await a.page.keyboard.press('h');
+  await sleep(300);
+  await a.page.keyboard.press('h');
+  const next = await until(async () => { const x = await S(a.page); return x.creature.mode !== 'home' && x.cue !== 'again' ? x : null; }, 8000);
+  step('l1-hand-back-next-round', !!next, next ? { mode: next.creature.mode, cue: next.cue, gaze: next.level.gazeShown } : null);
   await a.page.close();
 
   // ---- level 2 (?level=2): no object → no win

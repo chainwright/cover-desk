@@ -39,6 +39,34 @@ export const WIN_BEADS = 10;
  */
 export const WAKE_RADIUS = 0.063;
 
+/**
+ * Day 7 (outside review: the wake test had no hysteresis, so a hand jittering
+ * around 6.3 cm toggled the card, the "hm?" and the eyes every frame): once
+ * awake, the keeper goes back to sleep only when every joint is farther than
+ * this. The wake radius itself is unchanged.
+ */
+export const SLEEP_RADIUS = 0.07;
+
+/** The lantern wake with hysteresis: wakes inside WAKE_RADIUS, sleeps again only beyond SLEEP_RADIUS. */
+export class LanternWake {
+  /** The hand keeping the keeper awake (-1: asleep). */
+  hand = -1;
+
+  get awake(): boolean {
+    return this.hand >= 0;
+  }
+
+  /** Call once per frame; returns the hand at the lantern (-1 none). */
+  update(local: readonly Float32Array[], tracked: readonly boolean[], l: Lantern): number {
+    this.hand = handAtLantern(local, tracked, l, this.hand >= 0 ? SLEEP_RADIUS : WAKE_RADIUS);
+    return this.hand;
+  }
+
+  reset(): void {
+    this.hand = -1;
+  }
+}
+
 /** Nearest of a hand's 25 joints (board frame, x y z per joint) to the lantern, metres. */
 export function nearestJointToLantern(j: Float32Array, l: Lantern): number {
   let best = Number.POSITIVE_INFINITY;
@@ -68,14 +96,29 @@ export function handAtLantern(local: readonly Float32Array[], tracked: readonly 
 export const RETURN_RADIUS = 0.04;
 export const RETURN_MAX_Y = 0.06;
 
-/** Is a tracked hand's wrist (joint 0) back where the ghost hand stands? */
-export function handAtTeachSpot(local: readonly Float32Array[], tracked: readonly boolean[], r = RETURN_RADIUS): boolean {
+/** Is a tracked hand's wrist (joint 0) back where the ghost hand stands (level 1's spot, or level 2's left ghost)? */
+export function handAtTeachSpot(local: readonly Float32Array[], tracked: readonly boolean[], r = RETURN_RADIUS, spot: { x: number; z: number } = TEACH_SPOT): boolean {
   for (let h = 0; h < local.length; h++) {
     if (!tracked[h]) continue;
     const j = local[h];
-    if (j[1] <= RETURN_MAX_Y && Math.hypot(j[0] - TEACH_SPOT.x, j[2] - TEACH_SPOT.z) < r) return true;
+    if (j[1] <= RETURN_MAX_Y && Math.hypot(j[0] - spot.x, j[2] - spot.z) < r) return true;
   }
   return false;
+}
+
+/** After a win the next round starts no sooner than this (the win and the "Home!" card get their time)… */
+export const NEXT_ROUND_S = 3.5;
+/** …and, if no hand comes back to the start, this much later anyway. */
+export const NEXT_ROUND_MAX_S = 10;
+
+/**
+ * Day 7 (outside review: the ghost and the "again" card vanished 3.5 s after
+ * a win, before the hand was back, because the next round's creep-out dash
+ * cleared them): the next round starts once a hand is back at the start, or
+ * after NEXT_ROUND_MAX_S.
+ */
+export function nextRoundDue(sinceHome: number, handBack: boolean): boolean {
+  return sinceHome > NEXT_ROUND_MAX_S || (handBack && sinceHome > NEXT_ROUND_S);
 }
 
 /**
@@ -85,7 +128,8 @@ export function handAtTeachSpot(local: readonly Float32Array[], tracked: readonl
  *    doesn't blink while the creature follows the lane);
  *  - `spotted`: from a spot until the next dash;
  *  - `again`: from a win until a hand stands at the ghost's spot again (or
- *    the next dash, whichever comes first).
+ *    the next dash, whichever comes first; since day 7 the next round, and
+ *    so its first dash, waits for that hand or NEXT_ROUND_MAX_S).
  */
 export class RoundCues {
   leadSeen = false;

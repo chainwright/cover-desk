@@ -11,7 +11,12 @@ Rebuild dist/ afterwards (npm run build).
 
 Day 6: 7a-7m mutate the level-2 code (unit tests); G1-G9 its glue (cover-system.ts,
 emu-seat.ts), tried against the emulator wiring check's l2-* phase when no unit test
-catches them."""
+catches them.
+
+Day 7: 8a-8i mutate the day-7 code (post-win flow, wake hysteresis, the creature's
+dwell, the gaze during the win card, the teach copy, and the pure pieces pulled out of
+the glue). R1-R11 are the outside run's eleven day-6 glue mutations (judges_impl_d5,
+ORGANISER_CHECKS section 5), recreated at today's call sites; G10-G12 the day-7 glue."""
 import subprocess, shutil, re, sys
 import os
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,7 +44,7 @@ M=[
  ('3a anchor restore gives up at 4 s again','src/placement.ts','export const RESTORE_WAIT_S = 8;','export const RESTORE_WAIT_S = 4;'),
  ('3b log cursor never advances (every flush rewrites the session)','src/log-store.ts','    for (const c of chunks) this.done.set(c.from, { s: c.toS, e: c.toE });\n',''),
  ('3c a restored log of another store version is mixed in','src/log-store.ts','if (!meta || meta.storeVersion !== STORE_VERSION) return null;','if (!meta) return null;'),
- ('3d teaching copy back to day 2','src/onboarding.ts',"""teach: ["Stand your hand like 'stop'", '!between the lantern and the path'],""","""teach: ['Hold your hand up in the light,', "!like 'stop'"],"""),
+ ('3d teaching copy back to day 2','src/onboarding.ts',"""teach: ["Stand your hand like 'stop'", '!right where the pale hand is'],""","""teach: ['Hold your hand up in the light,', "!like 'stop'"],"""),
  ('3e searching floats the board at once (no desk wait)','src/placement.ts',"return c.time - c.searchStart > DESK_WAIT_S ? 'fallback' : 'none';","return 'fallback';"),
  # day-4: the three outside mutations that survived day 3 (O9, O10, O12), plus new code
  ('O9 no log flush on page hide','src/log-store.ts',"  win.addEventListener('pagehide', flush);\n",''),
@@ -80,6 +85,16 @@ M=[
  ('7k unlock card replaces the day-5 "again" card','src/onboarding.ts',"if (i.unlocked && !i.objects && cues.prompt === 'none')","if (i.unlocked && !i.objects && (cues.prompt === 'none' || cues.prompt === 'again'))"),
  ('7l level-2 ghosts back at 6 cm (too near the gaze)','src/level2.ts','export const L2_LEFT = { x: -0.08, z: -0.025 } as const;','export const L2_LEFT = { x: -0.06, z: -0.025 } as const;'),
  ('7m ghost mug off the gaze','src/level2.ts','export const MUG_SPOT = { x: 0, z: -0.03 } as const;','export const MUG_SPOT = { x: 0.05, z: -0.03 } as const;'),
+ # day-7 code
+ ('8a the next round no longer waits for the hand (3.5 s again)','src/feedback.ts','return sinceHome > NEXT_ROUND_MAX_S || (handBack && sinceHome > NEXT_ROUND_S);','return sinceHome > NEXT_ROUND_S;'),
+ ('8b no wake hysteresis (sleeps at 6.3 cm again)','src/feedback.ts','this.hand >= 0 ? SLEEP_RADIUS : WAKE_RADIUS','WAKE_RADIUS'),
+ ('8c creature dwell 0 (day-6 creature)','src/creature.ts','  dwell: 0.1,','  dwell: 0,'),
+ ('8d dwell check removed in stepCreature','src/creature.ts','      if (c.clearFor < p.dwell) return EV_NONE; // standing still: the way ahead must stay dark a moment\n',''),
+ ('8e gaze drawn during the win\'s "again" card','src/onboarding.ts','cues.gaze = i.placed && (l2 || (!!i.unlocked && !i.again));','cues.gaze = i.placed && (l2 || !!i.unlocked);'),
+ ('8f teach copy back to "between the lantern and the path"','src/onboarding.ts',"""teach: ["Stand your hand like 'stop'", '!right where the pale hand is'],""","""teach: ["Stand your hand like 'stop'", '!between the lantern and the path'],"""),
+ ('8g knob: pointing gate removed (pure; R3 in the function)','src/contact.ts','  return pointing && Math.hypot(lx - knob.x','  return Math.hypot(lx - knob.x'),
+ ('8h level switch keeps every object (pure; R7 in the function)','src/level2.ts','  if (lastSlot !== 0) objects.copyWithin(0, lastSlot * 3, lastSlot * 3 + 3);\n  return 1;','  return count;'),
+ ('8i fps inView always true (pure; R9 in the function)','src/touch-log.ts','  return placed && viewDeg < IN_VIEW_DEG;','  return true;'),
 ]
 # The outside run's ten day-4 glue mutations, recreated at today's call sites
 # (marked 'emu': if no unit test catches them, the emulator wiring check is tried).
@@ -104,6 +119,22 @@ OUT=[
  ('G7 level 2 keeps every object (one-object rule off at the call site)','src/cover-system.ts','objectSlot(this.level.needsObject, this.objects,','objectSlot(false, this.objects,'),
  ('G8 /emu/ O key registers nothing','src/emu-seat.ts','      else console.info(`[cover] emulated object: ${f.registerAt(EMU_MUG.x, EMU_MUG.z, EMU_MUG.top)}`);','      else console.info(\'[cover] emulated object: off\');'),
  ('G9 /emu/ R key uses the left spot','src/emu-seat.ts',"  if (level === 2) return key === 'r' ? L2_RIGHT.x : L2_LEFT.x;","  if (level === 2) return L2_LEFT.x;"),
+ # day 7: the outside run's eleven day-6 glue mutations (judges_impl_d5, ORGANISER_CHECKS section 5), at today's call sites
+ ('R1 an awake keeper no longer sees the whole path','src/cover-system.ts','seen: (s: number) => this.keeperAwake || this.seenAt(s),','seen: (s: number) => this.seenAt(s),'),
+ ('R2 lantern wake not wired at the call site (updateWake)','src/cover-system.ts','const h = placed ? this.lanternWake.update(this.local, this.joints.tracked, this.lantern) : -1;','const h = -1;'),
+ ('R3 move knob: pointing gate removed at the call site','src/cover-system.ts','const on = onKnob(this.pointing[h], lx, ly, lz, KNOB);','const on = onKnob(true, lx, ly, lz, KNOB);'),
+ ('R4 registration call site: any hand counts as pointing','src/cover-system.ts','      pointing: this.pointing[h],\n','      pointing: true,\n'),
+ ('R5 desk tap: pointing gate removed','src/cover-system.ts','const blocked = !this.pointing[h] ||','const blocked = false ||'),
+ ('R6 level-2 round boundary back to nook/home only','src/cover-system.ts','const boundary = c.mode === MODE_NOOK || c.mode === MODE_HOME || (c.mode === MODE_WAIT && this.lineState === DARK);','const boundary = c.mode === MODE_NOOK || c.mode === MODE_HOME;'),
+ ('R7 level 2 keeps every earlier object at the switch','src/cover-system.ts','if (this.objectCount > 1 || this.lastSlot !== 0) {','if (false) {'),
+ ('R8 keeper-woke log event always says reason lantern','src/cover-system.ts',"reason: h >= 0 ? 'lantern' : 'gaze',","reason: 'lantern',"),
+ ('R9 fps log: inView always true','src/cover-system.ts','inView: boardInView(this.isPlaced(), viewDeg),','inView: true,'),
+ ('R10 spotted log: wrist speeds dropped','src/cover-system.ts','wristMmS: [0, 1].map((h) => (this.joints.tracked[h] ? Math.round(this.wristSpeed[h] * 1000) : null)),','wristMmS: [null, null],'),
+ ('R11 a level-2 win is never recorded as one (l2Won)','src/cover-system.ts','        if (this.level.needsObject) this.l2Won = true;\n',''),
+ # day-7 glue
+ ('G10 the next round starts 3.5 s after a win again (call site)','src/cover-system.ts','nextRoundDue(time - this.homeAt, this.handBack)','time - this.homeAt > 3.5'),
+ ('G11 the win hop not applied to the creature (call site)','src/cover-system.ts','      bob = this.fx.hop; // the win','      bob = 0; // the win'),
+ ('G12 the win flare not applied to the light (call site)','src/cover-system.ts','    (m.poolMat.uniforms.uFlare as { value: number }).value = this.fx.flare;\n','    (m.poolMat.uniforms.uFlare as { value: number }).value = 0;\n'),
 ]
 EMU=os.environ.get('COVER_EMU_BASE')
 ONLY=sys.argv[1] if len(sys.argv)>1 else None  # 'unit' or 'outside'

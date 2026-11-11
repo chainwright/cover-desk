@@ -87,7 +87,9 @@ export const PROMPT_LINES: Record<Exclude<PromptKind, 'none'>, readonly string[]
   // Day 3: "Hold your hand up in the light" sent hands into the lit area in
   // front of the path (no shadow on it) or above the sight line (a wrist
   // higher than about 7 cm). The hand must stand low, between lantern and path.
-  teach: ["Stand your hand like 'stop'", '!between the lantern and the path'],
+  // Day 7: "between the lantern and the path" sent hands to the middle of the
+  // light, where the lane misses the waiting creature; the ghost stands left.
+  teach: ["Stand your hand like 'stop'", '!right where the pale hand is'],
   // Day 4: a standing hand shades a lane, not the whole light, so the
   // creature waits at the lane's far edge until the hand slides along.
   slide: ['Slide your hand along, slowly:', '!it follows your shadow'],
@@ -122,7 +124,8 @@ export function firstRunCues(i: CueInput, cues: Cues = newCues()): Cues {
   cues.canRegister = onDesk && !i.moveRequested && (!i.listening || i.placement === 'desk');
   cues.ghostSpot = 'teach';
   const l2 = i.level === 2;
-  cues.gaze = i.placed && (l2 || !!i.unlocked);
+  // Day 7: in level 1 the gaze and the ghost mug wait until the win's "again" card is done.
+  cues.gaze = i.placed && (l2 || (!!i.unlocked && !i.again));
   cues.mugGhost = cues.gaze && (!i.objects || (l2 && !i.mugCovers));
   if (!onDesk) {
     // A board floating in the air: ask for a desk tap. Not while the desk is

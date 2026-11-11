@@ -69,6 +69,10 @@ Nothing here has run on a Quest yet.
    its nearest joint 6.1 cm from the lantern (1 mm sweep; the test's 2.5 mm
    sweep finds 6.08), and the ghost's spot moved 1 cm toward the lantern is
    6.5 cm away. The margin is about 2 mm each side, in the model.
+   (Corrected day 7: the test asserts only that the farthest crossing hand's
+   nearest joint lies between 5.5 and 6.2 cm; the 6.1 and 6.08 cm readings
+   were printed in runs whose output was not kept. The bisection covers one
+   left-hand "stop" fixture 2 cm up, |x| ≤ 5 cm, not every still pose.)
    `tests/day4.test.ts`'s "known, not prevented" now asserts the keeper
    wakes; `tests/day5.test.ts` plays it out (still or sliding, never home).
    The day-3 copy ("between the lantern and the path covers") stays true as

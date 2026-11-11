@@ -89,7 +89,9 @@ function sightWithStop(y: number, z: number): number {
 
 test('teaching copy: a "stop" hand standing on the desk between the lantern and the path is cover; one held high or in the lit area in front of the path is not', () => {
   const teach = PROMPT_LINES.teach.join(' ').replace(/!/g, '');
-  assert.ok(teach.includes('between the lantern and the path'), teach);
+  // Day 7: the copy points at the ghost hand (it stands between the lantern and the path, left of the middle);
+  // "between the lantern and the path" alone sent hands to the middle, where the lane misses the creature.
+  assert.ok(/stop.*pale hand/i.test(teach), teach);
   assert.ok(!/hold your hand up|in the light/i.test(teach), 'the day-2 wording sent hands too high or in front of the path');
   // Standing on the desk (wrist 2 cm up) anywhere between the lantern (z −10.5 cm) and the path (z ≈ 6 cm).
   for (const z of [-0.08, -0.06, -0.03, 0, 0.03]) assert.equal(sightWithStop(0.02, z), SHADOW, `standing at z=${z}`);

@@ -14,10 +14,12 @@
  * lights a 76° fan, 28 cm long, toward the user (+z). The creature's body
  * centre is 1.2 cm above the desk and its path runs at z ≈ 6–6.5 cm, so a
  * sight line to the middle of the path passes about 5.8 cm above the desk at
- * z = −6 cm (4.5 cm in front of the lantern) and 4 cm above it at z = −1 cm.
+ * z = −6 cm (4.5 cm in front of the lantern), 4.5 cm above it at z = −2.5 cm and 4 cm above it at
+ * z = −1 cm.
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { SLEEP_RADIUS, WAKE_RADIUS, nearestJointToLantern } from '../src/feedback.ts';
 import { addHandCapsules } from '../src/hand-proxy.ts';
 import { CREATURE_Y, LEVEL_1 } from '../src/level.ts';
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type SightResult } from '../src/sightline.ts';
@@ -44,24 +46,27 @@ interface Case {
 
 export const CASES: Case[] = [
   // ---- positive: something real stands in the sight line
-  { id: 'P1', expect: 'shadow', by: 1, at: [0, 0.065], hands: [{ joints: stopHand(0, 0.02, -0.06), owner: 1 }],
-    why: "'stop' palm 4.5 cm in front of the lantern; the line crosses it at y≈5.8 cm, inside the palm (2–19 cm)" },
-  { id: 'P2', expect: 'shadow', by: 1, at: [-0.1, 0.064], hands: [{ joints: stopHand(0, 0.02, -0.06), owner: 1 }],
-    why: 'same palm; a point 10 cm left on the path crosses z=−6 cm at x≈−2.6 cm, still on the palm' },
-  { id: 'P3', expect: 'shadow', by: 1, at: [0.1, 0.064], hands: [{ joints: stopHand(0, 0.02, -0.06), owner: 1 }],
-    why: 'mirror of P2: x≈+2.6 cm at the palm, inside the index-side knuckle (+2.6 cm + radius)' },
+  // Day 7: P1–P3 and P6–P8 stood 4.5 cm in front of the lantern (z −6 cm), where the day-5 wake rule
+  // wakes the keeper in the game. They now stand 8 cm in front of it (z −2.5 cm, the ghost's depth), every
+  // joint more than 7 cm from the lantern (test below), so the verdict here is also the game's.
+  { id: 'P1', expect: 'shadow', by: 1, at: [0, 0.065], hands: [{ joints: stopHand(0, 0.02, -0.025), owner: 1 }],
+    why: "'stop' palm 8 cm in front of the lantern; the line crosses it at y≈4.5 cm, inside the palm (2–19 cm)" },
+  { id: 'P2', expect: 'shadow', by: 1, at: [-0.1, 0.064], hands: [{ joints: stopHand(-0.05, 0.02, -0.025), owner: 1 }],
+    why: 'a palm 5 cm left of centre; the line to a point 10 cm left on the path crosses z=−2.5 cm at x≈−4.7 cm, on the palm (x −7.7…−2.4 cm)' },
+  { id: 'P3', expect: 'shadow', by: 1, at: [0.1, 0.064], hands: [{ joints: stopHand(0.05, 0.02, -0.025), owner: 1 }],
+    why: 'mirror of P2: the line crosses at x≈+4.7 cm, on a palm 5 cm right of centre (x +2.3…+7.6 cm)' },
   { id: 'P4', expect: 'shadow', by: 1, at: [0, 0.065], hands: [{ joints: edgeHand(-0.08, 0.045, -0.03), owner: 1 }],
     why: 'hand on its little-finger side, fingers along x from −8 to +9 cm at z=−3 cm, 4.5 cm up: a wall across the line (y≈4.7 cm there)' },
   { id: 'P5', expect: 'shadow', by: 1, at: [0, 0.065], hands: [{ joints: flatHand(-0.09, 0.015, 0.035), owner: 1 }],
     why: 'flat hand lying beside the path at z=+3.5 cm; the line is only ~2.3 cm high there, below the back of the hand' },
-  { id: 'P6', expect: 'shadow', by: 1, at: [0, 0.065], hands: [{ joints: fist(0, 0.03, -0.06), owner: 1 }],
-    why: 'a fist held up at z=−6 cm spans y≈3–11 cm around x=0; the line passes at 5.8 cm' },
+  { id: 'P6', expect: 'shadow', by: 1, at: [0, 0.065], hands: [{ joints: fist(0, 0.03, -0.025), owner: 1 }],
+    why: 'a fist held up at z=−2.5 cm spans y≈3–11 cm around x=0; the line passes at 4.5 cm' },
   { id: 'P7', expect: 'shadow', by: 0, at: [-0.1, 0.064],
-    hands: [{ joints: stopHand(-0.035, 0.02, -0.06), owner: 0 }, { joints: stopHand(0.07, 0.02, -0.06), owner: 1 }],
-    why: 'two hands: the left palm (x −6.5…−0.5 cm) covers the line to the left point (x≈−2.6 cm at the palm); it is reported as the left hand' },
+    hands: [{ joints: stopHand(-0.05, 0.02, -0.025), owner: 0 }, { joints: stopHand(0.07, 0.02, -0.025), owner: 1 }],
+    why: 'two hands: the left palm (x −7.7…−2.4 cm) covers the line to the left point (x≈−4.7 cm at the palm); it is reported as the left hand' },
   { id: 'P8', expect: 'shadow', by: 1, at: [0.1, 0.064],
-    hands: [{ joints: stopHand(-0.035, 0.02, -0.06), owner: 0 }, { joints: stopHand(0.03, 0.02, -0.06), owner: 1 }],
-    why: 'two hands: the right palm (x 0…+6 cm) covers the line to the right point (x≈+2.6 cm)' },
+    hands: [{ joints: stopHand(-0.05, 0.02, -0.025), owner: 0 }, { joints: stopHand(0.04, 0.02, -0.025), owner: 1 }],
+    why: 'two hands: the right palm (x +1.3…+6.6 cm) covers the line to the right point (x≈+4.7 cm)' },
   { id: 'P9', expect: 'shadow', by: 10, at: [0.1, 0.064], objects: [{ x: 0.06, z: -0.01, r: 0.04, top: 0.09, owner: 10 }],
     why: 'a 9 cm mug at (6, −1) cm: the line to (10, 6.4) passes x≈5.6 cm at z=−1 cm, 4 cm high, inside the 8 cm-wide column' },
 
@@ -109,4 +114,18 @@ test('line-of-sight case set: every labelled case gets its expected verdict', ()
   console.log(`  line-of-sight case set: ${pass}/${CASES.length} (${CASES.length - neg} cover cases, ${neg} negative controls)`);
   const failed = rows.filter((r) => r.startsWith('FAIL'));
   assert.equal(failed.length, 0, '\n' + failed.join('\n'));
+});
+
+test('every hand in a cover case stands outside the keeper\'s wake radius, with room to spare (so the game agrees with the case set)', () => {
+  // Day 7 (outside review): six of the nine cover cases stood where the day-5 wake rule wakes the keeper,
+  // who then sees the whole path: the case set tested the sight function, not the game.
+  let hands = 0;
+  for (const c of CASES.filter((k) => k.expect === 'shadow')) {
+    for (const h of c.hands ?? []) {
+      hands++;
+      const d = nearestJointToLantern(h.joints, L);
+      assert.ok(d > SLEEP_RADIUS, `${c.id}: nearest joint ${(d * 100).toFixed(2)} cm from the lantern (wakes at ${WAKE_RADIUS * 100}, sleeps beyond ${SLEEP_RADIUS * 100})`);
+    }
+  }
+  assert.equal(hands, 10, 'hands in the cover cases (P7 and P8 have two)');
 });

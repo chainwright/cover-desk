@@ -49,7 +49,8 @@ run on a Quest yet.
      `src/level.ts`: halfway between the lantern and the path (z −2.5 cm),
      6.5 cm left of centre so the lane starts at the creature. The `/emu/`
      hand now stands fingers up with its wrist on that spot (measured offset
-     from grip to wrist, `GRIP_TO_WRIST`). The other option, waking the
+     from grip to wrist, `GRIP_TO_WRIST`; corrected day 5, noted day 7: read
+     from the emulator's joint poses, no record of the reading kept). The other option, waking the
      keeper when a hand comes within N cm of the lantern, would add a rule
      the teaching never shows and make the day-3 copy test ("anywhere
      between the lantern and the path covers") false; the lane keeps the

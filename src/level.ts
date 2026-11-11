@@ -12,6 +12,9 @@ import type { Lantern } from './sightline.ts';
 
 export const BOARD = { halfX: 0.21, zMin: -0.16, zMax: 0.13 } as const;
 
+/** The move knob at the board's near-left corner (board frame; was in cover-model.ts until day 7). */
+export const KNOB = { x: -(BOARD.halfX + 0.02), z: BOARD.zMax - 0.02, r: 0.014 } as const;
+
 /** Height of the point on the creature the keeper must not see (its body centre). */
 export const CREATURE_Y = 0.012;
 

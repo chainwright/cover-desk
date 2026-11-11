@@ -1,6 +1,6 @@
 # Evidence: what is shown, how, and what is not
 
-Day 6, 11 Nov 2026. No Meta Quest has run this build yet. Every number below
+Day 7, 11 Nov 2026. No Meta Quest has run this build yet. Every number below
 comes from Node unit tests, the Immersive Web Emulator, or the author's
 scripted runs, and says which. [CLAIMS.md](CLAIMS.md) lists each claim with
 its proof level; this page holds the evidence itself.
@@ -19,17 +19,25 @@ its proof level; this page holds the evidence itself.
 `tests/los-cases.test.ts`, 18/18 pass. Synthetic 25-joint hands
 (`tests/hand-fixture.ts`) with the fixed proxy radius, in the level-1 board
 frame; the creature's body centre 1.2 cm above the desk. These test the
-geometry model, not tracked hands. Labels were written from the geometry in
+sight-line function, not tracked hands. Labels were written from the geometry in
 the same commit as the test (`9155473`); there is no earlier record of them.
+
+Day 7 (outside review): P1–P3 and P6–P8 stood 4.5 cm in front of the
+lantern, where the day-5 wake rule wakes the keeper and it sees the whole
+path, so in the game those six would have lost. They now stand 8 cm in
+front of it (the ghost's depth); a test checks that every hand in a cover
+case has its nearest joint beyond 7 cm from the lantern (the keeper wakes
+inside 6.3 cm and sleeps again beyond 7 cm), so the case set's verdict is
+also the game's. Still synthetic hands.
 
 | Id | Expected | Setup |
 |---|---|---|
-| P1 | shadow (right hand) | "stop" palm 4.5 cm in front of the lantern, middle of the path |
-| P2 | shadow | same palm, a point 10 cm left on the path |
-| P3 | shadow | same palm, a point 10 cm right |
+| P1 | shadow (right hand) | "stop" palm 8 cm in front of the lantern, middle of the path |
+| P2 | shadow | a palm 5 cm left of centre, a point 10 cm left on the path |
+| P3 | shadow | a palm 5 cm right of centre, a point 10 cm right |
 | P4 | shadow | hand on its edge, a wall across the light |
 | P5 | shadow | flat hand lying beside the path |
-| P6 | shadow | a fist held up near the lantern |
+| P6 | shadow | a fist held up 8 cm in front of the lantern |
 | P7 | shadow (left hand reported) | two hands, the left one covers |
 | P8 | shadow (right hand reported) | two hands, the right one covers |
 | P9 | shadow (object) | a registered 9 cm mug |
@@ -62,14 +70,19 @@ home unspotted, and a 10× faster slide outruns it.
 
 Day 5 (`tests/day5.test.ts`), all in the same model:
 - **Slide speed:** from the ghost's spot every slide from 1 to 9 cm/s leads
-  the creature home unspotted; 10, 12 and 15 cm/s outrun it.
+  the creature home unspotted; 10, 12 and 15 cm/s outrun it (7 mm joints).
+  Day 7 repeats it at 9, 11 and 13 mm with the dwell (below): 1–9 cm/s home
+  at every radius; 10 cm/s outruns it at 7–11 mm and still gets home at
+  13 mm; 11 cm/s and faster outrun it at every radius (`tests/day7.test.ts`;
+  the day-6 outside sweep, before the dwell, had 10 cm/s home at 9–13 mm).
 - **The keeper wakes:** a hand right at the lantern shades nearly the whole
   light, so a hand with any joint within 6.3 cm of the lantern wakes the
   keeper, who then sees the whole path. The radius comes from a bisection:
   for each column of x (−5 … +5 cm in 2.5 mm steps) the farthest still
-  "stop" hand that got the creature home without a slide; the largest of
-  them had its nearest joint 6.1 cm from the lantern (6.08 cm at the test's
-  step). The ghost's spot moved 1 cm toward the lantern is 6.5 cm away. With
+  left-hand "stop" pose 2 cm up that got the creature home without a slide;
+  the largest of them had its nearest joint between 5.5 and 6.2 cm from the
+  lantern (the test's bound; the author's sweep read 6.1 cm, output not
+  kept). The ghost's spot moved 1 cm toward the lantern is 6.5 cm away. With
   the rule, cupping the lantern never crosses, still or sliding.
 - **Known, not closed:** a hand laid on its edge along the path, as a 17 cm
   wall a few centimetres before it, shades the whole lit path; the creature
@@ -101,6 +114,27 @@ Day 6, level 2 (`tests/day6.test.ts`, `src/level2.ts`), same model:
   touches it (pinned by the test).
 - **Two objects** can shade the whole path in the model, so level 2 counts
   one (a test pins both).
+- **Registered, not sensed:** registration has no "something under the
+  finger" test (WebXR doesn't say whether a finger rests on something), so
+  a still pointing finger in mid-air over the ghost mug registers an object
+  too; the day-7 wiring check shows it in the emulator (`register-gate`),
+  and the tester steps ask for one deliberate mid-air hold to measure it.
+
+Day 7 (`tests/day7.test.ts`), same model:
+- **Post-win flow:** the next round waits for a hand back at the start
+  (no sooner than 3.5 s) or 10 s; until then the "again" card and the
+  ghost stay, and level 2's gaze and card wait for them.
+- **Wake hysteresis:** wakes inside 6.3 cm, sleeps again beyond 7 cm; a
+  hand jittering ±4 mm around 6.3 cm gives one rising edge in 300 frames
+  (without hysteresis, more than 30).
+- **Jittering still hand:** a "stop" hand at the ghost's spot whose joints
+  jitter up to ±7 mm at 30 Hz, ten 30 s runs: 0 spots with the creature's
+  0.1 s dwell, 10 without it; never a win.
+- **Lift-over as a motion:** from the left ghost, up 10 cm in 0.2 s, over
+  in 0.4 s, down in 0.2 s, mug on its ghost: home, the keeper never woke,
+  either hand (11 mm joints; at the 7 mm floor the hand edges toward the
+  mug, comes down just past the gaze and slides on). A 1 cm lift wakes the
+  keeper; the lowest lift that wakes nothing, both hands, is 5 cm.
 
 ## Mutation table
 
@@ -245,6 +279,9 @@ build's wiring check, run after the network came back, had none.
 - Day 6, the wiring check with a level-2 phase on the built `/emu/`, and
   `tools/emu/replay.mjs` on the live URL; details and outputs in
   `devlog/DAY6.md`.
+- Day 7, the wiring check with the post-win wait and the checks for the
+  outside run's surviving glue mutations, run twice on the clean build;
+  details and outputs in `devlog/DAY7.md`.
 
 ## Not shown yet (needs a Quest)
 
@@ -260,6 +297,8 @@ build's wiring check, run after the network came back, had none.
 - The log's download and the report form on Quest Browser.
 - Level 2 with a real mug: registration on a real mug top, whether players
   find the gaze and the lift-over, and whether real joint radii keep the
-  ghost spots clear of the gaze.
+  ghost spots clear of the gaze; whether a mid-air finger registers on a
+  Quest; whether the object's depth-only column hides the virtual things
+  behind the real object.
 - No labelled case set on real tracked hands exists yet; a returned tester
   log is what would make one.

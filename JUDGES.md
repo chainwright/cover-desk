@@ -17,20 +17,23 @@
    the path.)
 4. Slide your hand toward the trinket, about a hand's width every 2 seconds.
    The creature follows your shadow home: it hops with the trinket, the
-   light flares, a chime, a bead pops in; then the ghost shows where to put
-   your hand for the next round. Lift your hand while it is in the light and
+   light flares, a chime, a bead pops in; then the ghost and a card show
+   where to put your hand, and the next round waits for it (or about 10 s). Lift your hand while it is in the light and
    the keeper wakes and spots it (a card says why). Cup the lantern and the
    keeper wakes too: that shortcut is closed.
-5. Point down onto the top of a mug standing between the lantern and the
-   path and hold still for a second: the mug becomes cover too and throws
-   its own shadow.
-6. **Level 2 (needs a real mug or book).** After your first win the keeper's
-   gaze appears, a pale wedge across the middle of the path, with a ghost
-   mug in it. Stand the mug on the ghost mug, point onto its top and hold.
-   Your hand alone can't cross the gaze (a hand there wakes the keeper); the
-   mug alone leaves both ends lit. Hand at the left ghost, edge it to the
-   mug; when the creature waits in the mug's shadow, lift your hand over to
-   the right ghost. (`?level=2` starts here directly.)
+5. Point down onto the middle of the top of a mug (a book or a closed box
+   is easier) standing between the lantern and the path and hold still for
+   a second: it becomes cover too and throws its own shadow.
+6. **Level 2 (needs a registered object).** After your first win, once the
+   win's card is done, the keeper's gaze appears, a pale wedge across the
+   middle of the path, with a ghost mug in it. Stand the mug or book on the
+   ghost mug, point onto its top and hold. (The headset doesn't see the
+   object; a still finger in mid-air can register one too.) Your hand alone
+   can't cross the gaze (a hand there wakes the keeper); the object alone
+   leaves both ends lit. Hand at the left ghost, edge it to the object;
+   when the creature waits in its shadow, lift your hand well up, about a
+   hand's length, and over to the right ghost. (`?level=2` starts here
+   directly.)
 
 To leave the immersive view: look at your **left** palm at eye level and
 pinch thumb and index until the menu icon fills.
@@ -53,8 +56,8 @@ Open **https://chainwright.github.io/cover-desk/emu/** in desktop Chrome.
    your hand along").
 3. Hold **→** to slide the hand along: the creature follows the shadow to its
    trinket (it hops with it, the light flares, a chime, a brass bead pops in
-   by the nook; a new round starts 3.5 s later, and the ghost and a card ask
-   for the hand back at the start: press **H** twice).
+   by the nook; the ghost and a card ask for the hand back at the start and
+   the next round waits for it, or about 10 s: press **H** twice).
 4. Press **L** to lift the hand while the creature is in the light: the
    keeper's eyes open and a thin line of light stares at the creature; it
    flashes and runs back, and a card says "It saw it!". **H** again takes the
@@ -68,9 +71,9 @@ Open **https://chainwright.github.io/cover-desk/emu/** in desktop Chrome.
    is the keeper's gaze. Without an object the card says "Level 2 needs a
    real mug or book"; **H** then hold **→**: the hand reaches the gaze, the
    keeper wakes, no win.
-8. Press **O**: an emulated 10 cm mug stands on the ghost mug (the
-   emulator's room has no real one; it goes through the same registration
-   rules). Press **H** (the hand at the left ghost; if it is up, **H** twice):
+8. Press **O**: an emulated 10 cm mug stands on the ghost mug, drawn as a
+   pale paper mug (the emulator's room has no real one; it goes through the
+   same registration rules). Press **H** (the hand at the left ghost; if it is up, **H** twice):
    the creature runs through your shadow into the mug's and waits past the
    gaze, and the ghost moves right. Press **R**: the hand goes over to the
    right ghost and the creature gets home.
@@ -85,14 +88,16 @@ Chromium; on day 5, on the live URL: board on the desk, H → dash into the
 lane and stop, → held → a win, H H → the ghost's spot, L → spotted, C → the
 keeper wakes, no console errors (`devlog/DAY5.md`); day 6 adds level 2 to
 the check (unlock card, O, H, R → a level-2 win; no object → no win) and a
-replay on the live URL (`devlog/DAY6.md`).
+replay on the live URL (`devlog/DAY6.md`); day 7 adds the post-win wait and
+checks for the glue an outside run found unguarded (`devlog/DAY7.md`).
 
 ## Checking the code (about 2 minutes)
 
 ```sh
 git clone https://github.com/chainwright/cover-desk && cd cover-desk
 npm ci
-npm test           # 89 tests, including the 18-case line-of-sight set and level 2 (tests/day6.test.ts)
+npm test           # 103 tests, including the 18-case line-of-sight set, level 2 (tests/day6.test.ts) and the day-7 fixes
+npx playwright install chromium   # once, for the emulator checks below (Playwright is a dev dependency)
 npm run build      # main build without the emulator, /emu/ with it, then a check of both
 python3 tools/mutations.py unit   # deliberate bugs in the tested code (see devlog/DAY6.md)
 # the glue: serve dist/ (python3 -m http.server 8799 --directory dist), then
@@ -105,7 +110,7 @@ Node 22.18+ or 24 for `npm test`.
 
 | Criterion | Where to look |
 |---|---|
-| Innovation | Your tracked hand is a line-of-sight occluder against a watcher, not a gesture trigger: `src/hand-proxy.ts`, `src/sightline.ts`, the case set in `tests/los-cases.test.ts`; level 2 needs a real object and your hand together (`src/level2.ts`, `tests/day6.test.ts`) |
+| Innovation | Your tracked hand is a line-of-sight occluder against a watcher, not a gesture trigger: `src/hand-proxy.ts`, `src/sightline.ts`, the case set in `tests/los-cases.test.ts` (18/18 for the sight-line function on synthetic hands; every cover pose outside the wake radius); level 2 needs a registered object and your hand together (`src/level2.ts`, `tests/day6.test.ts`; registered by touch, not sensed) |
 | Experience | First-run teaching and the cards after a spot, a win and a hand at the lantern (`src/onboarding.ts`, `src/feedback.ts`), pause when the covering hand is lost (`CoverWatch` in `src/creature.ts`), `devlog/day5_*.png` (emulator) |
 | Technical | Tests, mutation check, the emulator wiring check (`tools/emu/wiring_check.mjs`), the tester log and its analyser; Quest frame rate is still open ([EVIDENCE.md](EVIDENCE.md)) |
 | Polish | Synthesised sound; untextured models in felt, wood and paper tints; video still to come |
