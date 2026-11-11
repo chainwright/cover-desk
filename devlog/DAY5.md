@@ -185,11 +185,31 @@ All gated by exit code:
 
 ## Deploy
 
-DEPLOY
+Typecheck, tests and the full build (with the dist check) ran first, gated
+by exit code; `dist/` and `dist/emu/` were built from `c90f3f6` (stamp
+`c90f3f6b1544`) and pushed to `gh-pages` as `c1955a8`, fast-forward only
+(`6f3c214..c1955a8`; `main` `10bf4ee..c90f3f6`). gitleaks 8.30.1 found no
+leaks in either commit; its output is kept this time
+(`day5_gitleaks_output.txt`). GitHub records the deploy at 2026-11-11
+11:20:56 UTC. The return address is still in older commits' history.
 
 ## Public URL
 
-PUBLIC
+- Main (Quest): https://chainwright.github.io/cover-desk/
+- Desktop emulator: https://chainwright.github.io/cover-desk/emu/
+
+After the deploy, against the live URLs (headless Chromium):
+- `tools/emu/public_check.mjs` (`day5_public_check.json`): both 200, stamp
+  `c90f3f6b1544` on both; the main bundle has no emulator code, `/emu/` has
+  it; no console errors on either; the address is not on the page;
+  `/emu/?test=1&reset=1` → board on the emulated desk, log store `ready`;
+  H → s = 0.104, waiting in the hand's shadow.
+- The day-4 replay (`day5_live_replay.txt`): H → litFraction 0.826, the
+  slide card; **30 s still → no win**; → held → a win in 11.9 s with the
+  "again" card; L → spotted with the spotted card; no console errors.
+- The wiring check (`day5_emu_wiring_live.json`): every check passed,
+  including C → the keeper wakes and the creature stays by its nook, and
+  `requiredFeatures: []`; no console errors.
 
 ## Still open
 

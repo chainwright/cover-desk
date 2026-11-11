@@ -21,6 +21,7 @@ how to check it.
 | Day-2 deploy (gh-pages `95b710f`, built from `9155473`) | 2026-11-11 07:23:58 | 01:23 | same call |
 | Day-3 deploy (gh-pages `6a08219`, built from `2f1f81a`) | 2026-11-11 08:30:35 | 02:30 | same call |
 | Day-4 deploy (gh-pages `6f3c214`, built from `80ebc13`) | 2026-11-11 09:40:22 | 03:40 | same call |
+| Day-5 deploy (gh-pages `c1955a8`, built from `c90f3f6`) | 2026-11-11 11:20:56 | 05:20 | same call |
 
 GitHub adds every later push to `gh-pages` to the same list.
 
@@ -34,7 +35,7 @@ desk anchor, the fingertip contact rules and the tester log recorder
 (`devlog/DAY1.md` lists them). The prototype's public repository is
 https://github.com/chainwright/fade-abacus.
 
-## What "day 1, day 2, day 3" means
+## What "day 1, day 2, …" means
 
 The devlogs count build sessions, not calendar days. Each session ends with
 a deploy (listed above) and an outside review (the reviews are not in this

@@ -1,0 +1,9 @@
+# gitleaks 8.30.1, run by the author on day 5
+## main: gitleaks git --log-opts=10bf4ee..c90f3f6
+5:23AM INF 1 commits scanned.
+5:23AM INF scanned ~124891 bytes (124.89 KB) in 105ms
+5:23AM INF no leaks found
+## gh-pages: gitleaks git --log-opts=6f3c214..c1955a8
+5:23AM INF 1 commits scanned.
+5:23AM INF scanned ~6060973 bytes (6.06 MB) in 3.35s
+5:23AM INF no leaks found
