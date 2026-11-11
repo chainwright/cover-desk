@@ -162,6 +162,13 @@ Screenshots:
 - `day2_05_tester_panel_step.png`: tester panel during a guided step
 - `day2_06_first_run_prompt.png`: first run after reset, plane-placed, with
   the tap prompt
+- `day2_07_public_url_tester.png`: the deployed GitHub Pages build with
+  `?test=1`, before Enter
+
+Public URL check (headless Chromium, `?test=1`): no console errors, the tester
+lines and buttons show, Enter starts the session (through the injected
+emulator), and placement resolves to `fallback` at the emulator's default
+standing pose, listening for a desk tap.
 
 Data: `day2_emulator_sweep.json` (sweep rows) and
 `day2_emulator_touch_log.json` (the log of the labelled sweep, in the tester
