@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        **This issue is public.** Anyone can read it and download what you attach. If you'd rather not, email the log file and your notes to contact@automate-ai.live instead (that is the main way back; this form is optional).
+        **This issue is public.** Anyone can read it and download what you attach. If you'd rather not, email the log file and your notes to the address in your tester instructions instead (that is the main way back; this form is optional).
 
         Thank you for testing Cover.
 

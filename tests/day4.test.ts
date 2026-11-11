@@ -9,6 +9,7 @@ import { FlushTimer, LOG_FLUSH_S, LogCursor, LogFlusher, assemble, flushOnPageHi
 import { PROMPT_LINES, firstRunCues, type CueInput } from '../src/onboarding.ts';
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look } from '../src/sightline.ts';
 import { TesterLogger } from '../src/touch-log.ts';
+import { handAtLantern } from '../src/feedback.ts';
 import { stopHand } from './hand-fixture.ts';
 
 const L = LEVEL_1.lanterns[0];
@@ -84,8 +85,9 @@ test('the taught pose shades part of the light, not all of it: 0 < litFraction <
   assert.equal(look(L, occWithStop(TEACH_SPOT.x, TEACH_SPOT.z), 0.1, CREATURE_Y, 0.064, { state: DARK, by: BY_NONE }).state, SEEN);
 });
 
-test('known, not prevented: a hand standing right at the lantern still shades (nearly) the whole light', () => {
-  assert.ok(litWithStop(0, -0.08) < 0.05, 'cupping the lantern is still an easy crossing (documented in README)');
+test('a hand standing right at the lantern shades (nearly) the whole light, so it wakes the keeper (day 5; was "known, not prevented")', () => {
+  assert.ok(litWithStop(0, -0.08) < 0.05, 'the geometry is unchanged: the light alone would let the creature cross');
+  assert.equal(handAtLantern([stopHand(0, WRIST_Y, -0.08)], [true], L), 0, 'the keeper wakes (day5.test.ts plays it out)');
 });
 
 test('the taught pose held still: the creature dashes into the lane and waits there; it never reaches the trinket', () => {

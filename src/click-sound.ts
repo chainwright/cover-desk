@@ -13,6 +13,9 @@ let buffer: AudioBuffer | null = null;
 let humGain: GainNode | null = null;
 let humFilter: BiquadFilterNode | null = null;
 
+/** How often each event sound was asked for (also when audio is locked): read back by the emulator checks. */
+export const soundCounts = { chime: 0, hm: 0, lock: 0 };
+
 export function unlockAudio(): void {
   try {
     if (!ctx) {
@@ -54,6 +57,7 @@ export function step(): void {
 
 /** The trinket's lock: a low double click. */
 export function lock(): void {
+  soundCounts.lock++;
   click(0.55, 0.6);
   setTimeout(() => click(0.75, 0.5), 110);
 }
@@ -76,6 +80,7 @@ function tone(freq: number, delay: number, decay: number, gain: number, type: Os
 
 /** A win: three rising notes (C5, E5, G5), 120 ms apart. */
 export function chime(): void {
+  soundCounts.chime++;
   tone(523.25, 0, 0.35, 0.12, 'triangle');
   tone(659.25, 0.12, 0.35, 0.12, 'triangle');
   tone(783.99, 0.24, 0.6, 0.14, 'triangle');
@@ -83,6 +88,7 @@ export function chime(): void {
 
 /** The keeper wakes: a low "hm?", two falling notes. */
 export function hm(): void {
+  soundCounts.hm++;
   tone(220, 0, 0.18, 0.1, 'sine');
   tone(165, 0.16, 0.3, 0.1, 'sine');
 }

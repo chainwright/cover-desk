@@ -167,7 +167,7 @@ today; its copy check was updated to the new wording.
 
 Typecheck, tests and the full build (with the dist check) ran locally
 first; only on green were `dist/` and `dist/emu/` (built from `2f1f81a`)
-pushed to `gh-pages` as `6a08219`, fast-forward only; gitleaks found nothing
+pushed to `gh-pages` as `6a08219`, fast-forward only; gitleaks (author's run, output not kept; corrected day 5) found nothing
 in either commit. GitHub records the deploy at 2026-11-11 08:30:35 UTC.
 
 ## Public URL

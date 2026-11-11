@@ -1,0 +1,195 @@
+{
+ "checks": [
+  {
+   "name": "status",
+   "pass": true,
+   "info": 200
+  },
+  {
+   "name": "session",
+   "pass": true,
+   "info": {
+    "mode": "immersive-ar",
+    "init": {
+     "requiredFeatures": [],
+     "optionalFeatures": [
+      "local-floor",
+      "bounded-floor",
+      "layers",
+      "hand-tracking",
+      "anchors",
+      "plane-detection"
+     ]
+    }
+   }
+  },
+  {
+   "name": "flush-5s",
+   "pass": true,
+   "info": {
+    "before": 0,
+    "afterS": 9.881
+   }
+  },
+  {
+   "name": "flush-hide",
+   "pass": true,
+   "info": {
+    "n1": 2,
+    "n2": 3
+   }
+  },
+  {
+   "name": "slide-card",
+   "pass": true,
+   "info": {
+    "cue": "slide",
+    "lit": 0.826,
+    "creature": {
+     "s": 0.104,
+     "mode": "wait",
+     "spotted": 0,
+     "dashes": 2,
+     "wins": 0,
+     "length": 0.38019222021102905
+    }
+   }
+  },
+  {
+   "name": "teach-spot-not-awake",
+   "pass": true,
+   "info": {
+    "eyes": 1,
+    "stare": false,
+    "trinketCarried": false,
+    "beads": 0,
+    "awake": false,
+    "hop": 0,
+    "flare": 0,
+    "bead": 1,
+    "sounds": {
+     "chime": 0,
+     "hm": 0,
+     "lock": 0
+    }
+   }
+  },
+  {
+   "name": "win",
+   "pass": true,
+   "info": {
+    "afterS": 11.443,
+    "spotted": 0
+   }
+  },
+  {
+   "name": "win-trinket",
+   "pass": true,
+   "info": null
+  },
+  {
+   "name": "win-bead",
+   "pass": true,
+   "info": 1
+  },
+  {
+   "name": "win-chime",
+   "pass": true,
+   "info": {
+    "chime": 1,
+    "hm": 0,
+    "lock": 1
+   }
+  },
+  {
+   "name": "win-hop-flare",
+   "pass": true,
+   "info": {
+    "maxHop": 0.0228,
+    "maxFlare": 0.291,
+    "maxBead": 1.4
+   }
+  },
+  {
+   "name": "again",
+   "pass": true,
+   "info": {
+    "cue": "again",
+    "ghost": true
+   }
+  },
+  {
+   "name": "again-cleared",
+   "pass": true,
+   "info": {
+    "cue": "none",
+    "ghost": false
+   }
+  },
+  {
+   "name": "spotted-eyes-stare",
+   "pass": true,
+   "info": {
+    "eyes": 4.5,
+    "stare": true,
+    "trinketCarried": false,
+    "beads": 1,
+    "awake": false,
+    "hop": 0,
+    "flare": 0,
+    "bead": 1,
+    "sounds": {
+     "chime": 1,
+     "hm": 1,
+     "lock": 1
+    }
+   }
+  },
+  {
+   "name": "spotted-hm",
+   "pass": true,
+   "info": {
+    "chime": 1,
+    "hm": 1,
+    "lock": 1
+   }
+  },
+  {
+   "name": "spotted-card",
+   "pass": true,
+   "info": {
+    "cue": "spotted",
+    "text": "It saw it Keep your hand in the light's way"
+   }
+  },
+  {
+   "name": "wake",
+   "pass": true,
+   "info": {
+    "cue": "too-close",
+    "text": "Too close: the keeper woke up. Keep your hand off the lantern"
+   }
+  },
+  {
+   "name": "wake-holds",
+   "pass": true,
+   "info": {
+    "maxS": 0.013,
+    "wins": 1,
+    "eyes": 4.5,
+    "hm": 2
+   }
+  },
+  {
+   "name": "wake-ends",
+   "pass": true,
+   "info": null
+  },
+  {
+   "name": "errors",
+   "pass": true,
+   "info": []
+  }
+ ],
+ "failed": []
+}

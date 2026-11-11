@@ -30,10 +30,12 @@
  *
  * Events: session (frameRate, supportedFrameRates, emulator), placement
  * (method, planeLabel, localiseMs for an anchor), calibrated, line (a sight
- * line to the creature became blocked or clear, and by what), spotted, dash,
+ * line to the creature became blocked or clear, and by what), spotted (since
+ * day 5 with keeperAwake and wristMmS per hand), keeper-woke (a hand at the
+ * lantern: hand, distMm), dash,
  * home, pause/resume, cover-hand-lost, hand-lost / hand-found (with the joint
  * path that ran and the mean joint radius), register / register-rejected,
- * anchor-restore (ok, status, ms), fps (once a second: fps, worstMs, updP95Ms
+ * anchor-restore (ok, status, ms), fps (once a second: inView and viewDeg since day 5, fps, worstMs, updP95Ms
  * = 95th percentile of the app's own update() time, drops = frames longer than
  * 1.5 display frames, frameRate, redraws = tester panel redraws), label.
  */
@@ -279,6 +281,10 @@ export interface LogSummary {
     drops: number | null;
     dropsPerMin: number | null;
     frameRate: number | null;
+    /** Day 5: seconds with the board in view (within 35° of the gaze), and their median and 5th-percentile fps; null in older logs. */
+    inViewSeconds: number | null;
+    inViewMedian: number | null;
+    inViewP5: number | null;
   } | null;
   /** Joint path and mean radius per hand, from hand-found events. */
   jointPaths: Record<string, unknown>[];
@@ -300,6 +306,8 @@ export function analyseLog(log: TesterLog): LogSummary {
   const seenPaths = new Set<string>();
   const registrations = { ok: 0, rejected: {} as Record<string, number> };
   const fpsVals: number[] = [];
+  const inView: number[] = [];
+  let viewTagged = false;
   let worst = 0;
 
   for (const s of log.sessions) {
@@ -341,6 +349,10 @@ export function analyseLog(log: TesterLog): LogSummary {
         registrations.rejected[k] = (registrations.rejected[k] ?? 0) + 1;
       } else if (e.type === 'fps') {
         fpsVals.push(Number(e.fps));
+        if (typeof e.inView === 'boolean') {
+          viewTagged = true;
+          if (e.inView) inView.push(Number(e.fps));
+        }
         worst = Math.max(worst, Number(e.worstMs) || 0);
         if (typeof e.updP95Ms === 'number') updP95.push(e.updP95Ms);
         if (typeof e.drops === 'number') {
@@ -401,6 +413,7 @@ export function analyseLog(log: TesterLog): LogSummary {
   }
   labels.sort((a, b) => LABELS.indexOf(a.label as Label) - LABELS.indexOf(b.label as Label) || a.hand - b.hand);
   fpsVals.sort((a, b) => a - b);
+  inView.sort((a, b) => a - b);
   updP95.sort((a, b) => a - b);
   const lineFlips: LineFlipStats[] = [];
   for (const [label, seconds] of labelTime) {
@@ -432,6 +445,9 @@ export function analyseLog(log: TesterLog): LogSummary {
           drops: dropSeconds ? drops : null,
           dropsPerMin: dropSeconds ? r1((drops / dropSeconds) * 60) : null,
           frameRate,
+          inViewSeconds: viewTagged ? inView.length : null,
+          inViewMedian: inView.length ? inView[Math.floor(inView.length / 2)] : null,
+          inViewP5: inView.length ? inView[Math.floor(inView.length * 0.05)] : null,
         }
       : null,
     jointPaths,

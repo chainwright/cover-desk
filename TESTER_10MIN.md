@@ -17,6 +17,8 @@ exactly what we need to know.
   keeps neither the log nor the saved desk spot).
 - If the headset asks whether this page may use spatial data (your room's
   surfaces), **allow it**, and note that it asked.
+- Write down the Horizon OS version (Quest settings, About) and the Quest
+  Browser version (Browser → Settings → About).
 
 In Quest Browser open
 **https://chainwright.github.io/cover-desk/?test=1**
@@ -36,21 +38,28 @@ Press **Enter**.
 | 1 | Read the first line of the small panel above the board | Does it say **native**? If it says EMULATOR, stop and tell us. |
 | 2 | Wait 5 s. If the board floats in the air, tap the desk **beside you** (not on the board) with one finger and hold still for a second | Seconds until the board sat on your desk; did you have to tap? |
 | 3 | Stand your hand on the desk like "stop" **where the pale ghost hand shows** (between the lantern and the dotted path) | Did the creature dash into your shadow? |
-| 4 | Hold the hand still for 5 s, then slide it slowly sideways toward the trinket. Do five crossings | With the hand still, did the creature stop at the edge of your shadow? **Did you need to slide to get it home?** How many of 5 reached the trinket? Was it ever "spotted" (it flashes and runs back) while your hand stood still? |
+| 4 | Hold the hand still for 5 s, then slide it sideways toward the trinket, slowly: **about a hand's width every 2 seconds**. After each win, **put your hand back where the ghost stood** (the ghost and a card show you where). Do five crossings | With the hand still, did the creature stop at the edge of your shadow? **Did you need to slide to get it home?** How many of 5 reached the trinket? Was it ever "spotted" (it flashes and runs back) while your hand stood still? Did you notice each win (what told you)? |
 | 5 | With the creature waiting in your shadow, **keep that hand still** and hide it from the headset for 5 s: hold a book between your eyes and the hand, or look up at the ceiling. Then look back | Was the creature still where it was ("It waits for your hand" may show), or back in its nook (spotted)? Write "It waits" or "spotted". |
-| 6 | Play freely for a minute | Does the shadow edge shimmer? Anything odd? |
+| 6 | Play freely for a minute. Optional, once: cup your hand right around the lantern | Does the shadow edge shimmer? Anything odd? What happened when you cupped the lantern? (We expect the keeper to wake up.) |
 
 ## 3. Send it (3 min)
 
-1. Leave the immersive view: turn your right palm toward your face and pinch
-   thumb and index finger (the hand version of the Meta button), then choose
-   Exit or go back to the page.
+1. Leave the immersive view: look at your **left** palm at eye level, pinch
+   thumb and index finger together and hold until the menu icon fills, then
+   let go. That takes you out of the immersive view, back to the page. (The
+   same pinch on the right hand opens the Meta menu instead.)
 2. **Right away**, before any reload, press **Download log**. The file
-   `cover-tester-log-….json` goes to your Downloads.
+   `cover-tester-log-….json` goes to your Downloads. If the page or the
+   panel ever said **NOT kept**, tell us in your email: the log was not being
+   saved on the headset.
 3. Email it as an attachment to **contact@automate-ai.live**, with your notes
-   from the table above (and the casting video, if you made one, as an
-   attachment or a private link). If you can't get the file, press **Copy
-   summary** on Cover's page and paste it into the email instead.
+   from the table above, your Horizon OS and Browser versions (and the
+   casting video, if you made one, as an attachment or a private link).
+   If you can't attach the file from the headset:
+   - copy it to a computer over USB: plug the Quest in, allow file access
+     when the headset asks, and take the file from its Download folder; or
+   - press **Copy summary** on Cover's page and paste it into the email (the
+     summary only, not the full log, but much better than nothing).
 
 Optional, if you prefer GitHub: the tester report form,
 https://github.com/chainwright/cover-desk/issues/new?template=tester-report.yml

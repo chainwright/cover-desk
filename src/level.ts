@@ -46,9 +46,11 @@ export const LEVEL_1: Level = {
  *
  * Day 4: the ghost stood 7 cm in front of the lantern and the /emu/ hand 4.5
  * cm; so close, one hand shades (nearly) the whole light and the creature
- * runs home without a slide. Here a standing hand shades a lane about 10 cm
- * wide on the path: the creature dashes into it and waits at its far edge,
- * and only sliding the hand along gets it home (tests/day4.test.ts).
+ * runs home without a slide. Here a standing hand shades a lane a few cm
+ * wide on the path (the /emu/ creature waits 10.4 cm along it, having
+ * entered the light at 3.3 cm): the creature dashes into it and waits at its
+ * far edge, and only sliding the hand along gets it home (tests/day4.test.ts,
+ * tests/day5.test.ts). Day 5: a hand by the lantern now wakes the keeper.
  */
 export const TEACH_SPOT = { x: -0.065, z: -0.025 } as const;
 

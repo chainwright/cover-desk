@@ -22,11 +22,12 @@ run on a Quest yet.
      button);
    - before starting: allow the spatial-data prompt and note it, no private
      browsing, clear about 45 × 30 cm of desk;
-   - **the return channel is email** (the business address shown on
-     automate-ai.live), attachment or private link for video; the GitHub
+   - **the return channel is email** (the address is in the two tester
+     protocols only; day 5 took it off the public page and the form), attachment or private link for video; the GitHub
      form stays optional, and the form, both protocols and the tester page
-     now say at the top that **the issue is public**, with a second
-     required checkbox; no video in the form, in line with "don't post
+     now say that **the issue is public**, with a second required checkbox
+     (corrected day 5: only the form says it at the top; the protocols and
+     the tester page call it the public form further down); no video in the form, in line with "don't post
      footage publicly before 18 Nov".
    - protocol step 5 no longer claims the flicker rate comes from the log
      (that session is labelled `free`); it asks for clock times.
@@ -35,7 +36,10 @@ run on a Quest yet.
    - The geometry, checked first: in the emulator, the `/emu/` seat's "stop"
      hand was **upside down** (fingertips down into the lantern, wrist 13.7
      cm up; a −90° turn where +90° was meant) and placed by the emulator's
-     grip point, not its wrist. That is why one key press blacked out the
+     grip point, not its wrist. (Corrected day 5: the 13.7 cm and the
+     grip-to-wrist offset were read from the emulator's joint poses; no
+     record of that reading was kept. Day 5 adds a test that the seat puts
+     the wrist, not the grip, on the spot with the fingers up.) That is why one key press blacked out the
      whole light (litFraction 0). A correct synthetic "stop" hand at the
      old ghost spot (7 cm in front of the lantern, centred) leaves a lane in
      the middle of the path that misses the creature's waiting spot; nearer
@@ -56,7 +60,8 @@ run on a Quest yet.
    - Still true and stated: a hand cupped right at the lantern shades nearly
      the whole light; a test pins it as known, the README says it.
    - Tests (`tests/day4.test.ts`): the taught pose gives 0 < litFraction < 1
-     (0.83 in the model) with the creature's waiting spot in shadow and the
+     (the test checks 0.5–0.95; corrected day 5: the 0.83 was the emulator
+     run's 0.826, not a model print) with the creature's waiting spot in shadow and the
      far path lit; held still there, or 1 cm off in any direction, the
      creature dashes into the lane and never reaches home in 30 s; slid at
      the `/emu/` speed it gets home unspotted, and 10× faster outruns it.
@@ -83,7 +88,9 @@ run on a Quest yet.
      frame time, checked every frame now, not inside the once-a-second fps
      block) and `flushOnPageHide` (pagehide, hidden tab). The day-3 outside
      survivors O9 and O10 now fail a test; O12 (`/emu/` slide ×10) fails the
-     slide test.
+     slide test. (Corrected day 5: O9 and O10 were re-aimed at the new
+     helpers; removing the two call sites, the outside run's O15/O16,
+     still passed every test. Day 5 catches them with an emulator check.)
    - The log cursor advances only after a successful write
      (`LogCursor.take` + `commit`, `LogFlusher`); flushes are serialised, so
      a page-hide flush during a timed one doesn't write rows twice.
@@ -134,7 +141,8 @@ Screenshots (emulator, simulated room): `day4_01_emu_lane_slide_card.png`
 Typecheck, tests and the full build (with the dist check) ran first, gated
 by exit code; only then were `dist/` and `dist/emu/` (built from `80ebc13`,
 stamp `80ebc13bf115`) pushed to `gh-pages` as `6f3c214`, fast-forward only;
-gitleaks found nothing in either commit. GitHub records the deploy at
+gitleaks found nothing in either commit (corrected day 5: the author's
+run; its output was not kept). GitHub records the deploy at
 2026-11-11 09:40:22 UTC.
 
 ## Public URL

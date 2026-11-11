@@ -35,9 +35,15 @@ export interface CueInput {
    * never reached its trinket: the hand has to slide along to lead it.
    */
   leading: boolean;
+  /** Day 5: the creature was spotted and has not dashed again since. */
+  spotted?: boolean;
+  /** Day 5: a hand is at the lantern and the keeper is awake. */
+  awake?: boolean;
+  /** Day 5: a win, and no hand back at the ghost's spot yet. */
+  again?: boolean;
 }
 
-export type PromptKind = 'none' | 'tap-desk' | 'tap-new-spot' | 'waits' | 'teach' | 'slide';
+export type PromptKind = 'none' | 'tap-desk' | 'tap-new-spot' | 'waits' | 'teach' | 'slide' | 'spotted' | 'too-close' | 'again';
 
 export interface Cues {
   ghost: boolean;
@@ -61,6 +67,11 @@ export const PROMPT_LINES: Record<Exclude<PromptKind, 'none'>, readonly string[]
   // Day 4: a standing hand shades a lane, not the whole light, so the
   // creature waits at the lane's far edge until the hand slides along.
   slide: ['Slide your hand along, slowly:', '!it follows your shadow'],
+  // Day 5: after a spot the slide card stayed, with no reason and the wrong
+  // next step; after a win nothing said where to go.
+  spotted: ['It saw it!', "!Keep your hand in the light's way"],
+  'too-close': ['Too close: the keeper woke up.', '!Keep your hand off the lantern'],
+  again: ['Home! Bring your hand back', '!to the ghost for another round'],
 };
 
 export const KNOB_LINES: readonly string[] = ['tap & hold', '!to move'];
@@ -72,7 +83,7 @@ export function newCues(): Cues {
 /** Writes the cues for this frame into `cues` (no allocation) and returns it. */
 export function firstRunCues(i: CueInput, cues: Cues = newCues()): Cues {
   const onDesk = i.placed && i.placement !== 'fallback';
-  cues.ghost = i.placed && !i.everDashed;
+  cues.ghost = i.placed && (!i.everDashed || !!i.again);
   cues.prompt = 'none';
   cues.promptOnBoard = true;
   cues.knobLabel = onDesk && !i.everDashed && !i.moveRequested;
@@ -89,7 +100,10 @@ export function firstRunCues(i: CueInput, cues: Cues = newCues()): Cues {
   }
   if (i.moveRequested) cues.prompt = 'tap-new-spot';
   else if (i.paused) cues.prompt = 'waits';
+  else if (i.awake) cues.prompt = 'too-close';
+  else if (i.spotted) cues.prompt = 'spotted';
   else if (!i.everDashed) cues.prompt = 'teach';
+  else if (i.again) cues.prompt = 'again';
   else if (i.leading) cues.prompt = 'slide';
   return cues;
 }

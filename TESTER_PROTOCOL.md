@@ -54,7 +54,7 @@ Press **Enter** (not "Enter: guided poses"; those come later, step 7).
 | 1 | No emulator | 1 min | Load the page, read the note under the Enter button, press Enter | Note says "Sit at a desk. Hands only, no controllers."; you see your real room and your real hands; no "Remote Control Active" pill; the tester panel's first line says **native**, not EMULATOR | Emulator UI, a furnished fake room, or EMULATOR on the panel → **stop and send us a photo** |
 | 2 | Placement | 1 min | Wait 5 s: the board should sit on your desk by itself. Then point with one finger at the desk **beside the board** (a hand's width to its left or right, not on it: a tap on the board is ignored on purpose), tap and hold still for about a second | The board sits on your desk within 5 s; after the tap it moves near that spot and the panel says `touch` | Tap beside the board ignored, or the board ends up off the desk |
 | 3 | Frame rate | 2 min | Look at the board with a hand standing in the light, then put both hands down | Median ≥ 72 fps, the slowest 5% ≥ 60, no frame over 40 ms (panel and OVR overlay) | Median under 60 fps |
-| 4 | Crossings | 3 min | Five crossings: stand your hand on the desk like "stop" where the ghost hand showed (between the lantern and the dotted path), hold it still 5 s, then slide it slowly sideways to lead the creature across | With the hand still, the creature stops at the edge of your shadow (say whether you needed to slide to get it home); at least 4 of 5 reach the trinket; it is never "spotted" while your hand stays standing | Spotted twice or more with the hand standing still |
+| 4 | Crossings | 3 min | Five crossings: stand your hand on the desk like "stop" where the ghost hand showed (between the lantern and the dotted path), hold it still 5 s, then slide it sideways to lead the creature across, about a hand's width every 2 seconds. After each win put the hand back where the ghost stood (the ghost and a card come back to show you) | With the hand still, the creature stops at the edge of your shadow (say whether you needed to slide to get it home); at least 4 of 5 reach the trinket; it is never "spotted" while your hand stays standing | Spotted twice or more with the hand standing still |
 | 5 | Still hand | 2 min | Hold the edge of your hand's shadow on the waiting creature for 60 s; then a flat hand for 60 s. Note the clock time when each minute starts | Note: does the shadow edge shimmer, yes or no? | — (this session is labelled `free` in the log, so your clock times are how we find the two minutes; step 7 measures flicker per pose) |
 | 6 | Cover hand hidden | 1 min | While the creature waits in your right hand's shadow, **keep the hand still** and hide it from the headset for 5 s: hold a book between your eyes and the hand, or look up at the ceiling. Then look back | The creature is still where it was (the card may say "It waits for your hand."), not back in its nook | It was spotted (flashed and ran back to its nook). Moving the hand away while the headset still sees it counts as lifting it, which gets the creature spotted by design: keep the hand where it is |
 
@@ -65,13 +65,14 @@ Press **Enter** (not "Enter: guided poses"; those come later, step 7).
 | # | Step | What you do | We look for |
 |---|---|---|---|
 | 7 | Guided poses (1.5 min) | Leave the immersive view and press **Enter: guided poses** (they never start by themselves, so steps 1–6 are not mislabelled). Follow the panel: a "stop" hand between the lantern and the path, a hand on its edge like a wall, a flat hand (measurement only), then pointing down onto the mug | Tracked share, pose match and flicker per step (from the log) |
-| 8 | Mug (3 min) | Point down onto the top of the mug and hold still, three times. Then, with nothing under your finger, point down and pause in mid-air **beside the path**: 6–12 cm from the dotted path on your side of it (still over the board's near edge or just past it), 5–20 cm above the desk; lower the finger a few cm and stop for a second. Five times | Mug height in the log within ±10 mm of your ruler, 3 of 3. Mid-air pauses that wrongly register an object (a ring appears; the panel's `objects` count goes up): count them (we expect some; not fixed yet) |
+| 8 | Mug (3 min) | Stand the mug between the lantern and the dotted path (not on the path; on your side of the path it would shade nothing). Point down onto its top and hold still, three times. Then, with nothing under your finger, point down and pause in mid-air **beside the path**: 6–12 cm from the dotted path on your side of it (still over the board's near edge or just past it), 5–20 cm above the desk; lower the finger a few cm and stop for a second. Five times | Mug height in the log within ±10 mm of your ruler, 3 of 3. Mid-air pauses that wrongly register an object (a ring appears; the panel's `objects` count goes up): count them (we expect some; not fixed yet) |
 | 9 | Anchor (3 min) | Put a small tape mark at a board corner. Leave the immersive view, move 1 m to the side, enter again | Board back on the same spot within 4 s; how far it is from the tape mark |
 | 10 | Restart (5 min) | Optional belt and braces: press **Download log** and keep the file. Power the headset off and on, open **https://chainwright.github.io/cover-desk/?test=1** (without `reset`), check the page still says "Log: … sessions", enter | Board back on the same spot within 8 s (the app waits up to 8 s for the saved spot, then searches for the desk again), or note what happened |
 | 11 | Low light (2 min) | Dim the room to about 50 lux, repeat step 4 twice | It is not spotted because tracking dropped |
+| 11b | Cupped lantern (1 min, optional) | Once: cup your hand right around the lantern and hold it there | Write what happened (we expect the keeper to wake up and the creature not to cross) |
 | 12 | No room scan (3 min, **optional**) | Only if you don't mind redoing your Space Setup afterwards: clear Space Setup, reload the page, enter | The board floats in front of you, a tap on the desk places it, no error |
 | 13 | Hand look (1 min) | Open **https://chainwright.github.io/cover-desk/** (without `?test=1`; this session is not logged), take a headset screenshot with your hand over the board. Then go back to the `?test=1` link | Your real hand shows over the board, offset about 2 cm or less |
-| 14 | Export (1 min) | Right after leaving the immersive view (turn your right palm toward your face and pinch thumb and index, the hand version of the Meta button, then Exit), on the `?test=1` page press **Download log** (it holds every session above), then **Copy summary** | The file is saved; the page says how many sessions it holds |
+| 14 | Export (1 min) | Right after leaving the immersive view (look at your **left** palm at eye level, pinch thumb and index and hold until the menu icon fills, then let go; the same pinch on the right hand opens the Meta menu instead), on the `?test=1` page press **Download log** (it holds every session above), then **Copy summary** | The file is saved; the page says how many sessions it holds. If the page or the panel ever said **NOT kept**, write it down |
 
 ## Then a cold stranger (about 10 min)
 
@@ -99,13 +100,17 @@ Then stay silent and time each beat:
 
 Email **contact@automate-ai.live** with:
 
-1. The log file (`cover-tester-log-….json`) as an attachment and, if you
-   couldn't get the file, the copied summary pasted into the email instead.
+1. The log file (`cover-tester-log-….json`) as an attachment. If you can't
+   attach it from the headset, copy it to a computer over USB (plug the Quest
+   in, allow file access when the headset asks, take the file from its
+   Download folder), or paste the copied summary into the email instead (the
+   summary only, not the full log).
 2. The casting video, if you can (no faces, people or logos in it), as an
    attachment or a private link.
 3. Your notes: OS and browser versions, mug height, lux, whether the
-   spatial-data prompt appeared, the pass/fail column above, the stranger's
-   timings and their two answers.
+   spatial-data prompt appeared, whether the page or panel ever said **NOT
+   kept**, the pass/fail column above, the stranger's timings and their two
+   answers.
 
 Optional, without email: the tester report form
 (https://github.com/chainwright/cover-desk/issues/new?template=tester-report.yml,

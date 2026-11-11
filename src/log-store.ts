@@ -187,11 +187,32 @@ export function assemble(meta: LogMeta | null | undefined, chunks: readonly LogC
 
 export type StoreStatus = 'off' | 'opening' | 'ready' | 'failed';
 
-/** IndexedDB adapter. Every method swallows storage errors and reports them in `status`. */
+/** A write that fails this many times in a row switches storage off for the page. */
+export const MAX_WRITE_FAILURES = 3;
+
+/**
+ * IndexedDB adapter. Every method swallows storage errors and reports them in `status`.
+ *
+ * Day 5: a failed write no longer switches storage off at once (an outside
+ * review found that the first failure did, so "retried" was not true in the
+ * app). The store stays `ready`, the cursor stays where it was, and the next
+ * flush writes the same rows again; only MAX_WRITE_FAILURES failures in a row
+ * mark it `failed` (the panel then says NOT kept). A success resets the count.
+ */
 export class LogStore {
   status: StoreStatus = 'off';
   error = '';
+  /** Failed writes in a row (reset by a successful write). */
+  failures = 0;
   private db: IDBDatabase | null = null;
+
+  /** `db`: an already open database (tests pass a fake one); otherwise call `open()`. */
+  constructor(db?: IDBDatabase) {
+    if (db) {
+      this.db = db;
+      this.status = 'ready';
+    }
+  }
 
   async open(): Promise<boolean> {
     if (typeof indexedDB === 'undefined') {
@@ -243,16 +264,31 @@ export class LogStore {
         tx.objectStore('meta').put(meta, META_KEY);
         const store = tx.objectStore('chunks');
         for (const c of chunks) store.add(c);
-        tx.oncomplete = () => resolve(true);
+        let settled = false;
+        tx.oncomplete = () => {
+          if (settled) return;
+          settled = true;
+          this.failures = 0;
+          resolve(true);
+        };
         tx.onerror = tx.onabort = () => {
-          this.fail(tx.error);
+          if (settled) return;
+          settled = true;
+          this.writeFailed(tx.error);
           resolve(false);
         };
       } catch (e) {
-        this.fail(e);
+        this.writeFailed(e);
         resolve(false);
       }
     });
+  }
+
+  /** One failed write: keep going (the next flush retries it) until MAX_WRITE_FAILURES in a row. */
+  private writeFailed(e: unknown): void {
+    this.failures++;
+    this.error = e instanceof Error ? e.message : String(e ?? 'unknown error');
+    if (this.failures >= MAX_WRITE_FAILURES) this.status = 'failed';
   }
 
   /** Forgets the stored log (the tester pressed "Start a new log"). */
@@ -268,6 +304,7 @@ export class LogStore {
         tx.onerror = tx.onabort = () => reject(tx.error);
       });
       if (this.status === 'failed') this.status = 'ready';
+      this.failures = 0;
     } catch (e) {
       this.fail(e);
     }
@@ -276,6 +313,54 @@ export class LogStore {
   private fail(e: unknown): void {
     this.status = 'failed';
     this.error = e instanceof Error ? e.message : String(e ?? 'unknown error');
+  }
+}
+
+/** What LogKeeper needs from a store (LogStore, or a fake in the tests). */
+export interface WritableStore {
+  readonly status: StoreStatus;
+  write(meta: LogMeta, chunks: readonly LogChunk[]): Promise<boolean>;
+}
+
+/**
+ * The tester log's whole write path, so the frame loop makes one call:
+ * `frame(time)` every frame flushes when the 5 s timer is due; `flush()` also
+ * runs at session end and when the page is hidden. A flush writes only while
+ * the store is `ready`; a failed write leaves the cursor where it was, so the
+ * next flush writes the same rows again (see LogStore for when it gives up).
+ */
+export class LogKeeper {
+  readonly cursor = new LogCursor();
+  readonly timer: FlushTimer;
+  private flusher: LogFlusher;
+  private store: WritableStore | null = null;
+  private getLog: () => TesterLog | null;
+
+  constructor(getLog: () => TesterLog | null, every = LOG_FLUSH_S) {
+    this.getLog = getLog;
+    this.timer = new FlushTimer(every);
+    this.flusher = new LogFlusher(this.cursor, (meta, chunks) => this.store?.write(meta, chunks) ?? Promise.resolve(false));
+  }
+
+  /** The store to write to (once it is open), or null. */
+  attach(store: WritableStore | null): void {
+    this.store = store;
+  }
+
+  /** Storage is on: the log is being kept on the headset. */
+  get kept(): boolean {
+    return this.store?.status === 'ready';
+  }
+
+  /** Call every frame with the frame time (s). Returns the flush when one started (for tests), else null. */
+  frame(time: number): Promise<boolean> | null {
+    return this.timer.due(time) ? this.flush() : null;
+  }
+
+  flush(): Promise<boolean> {
+    const log = this.getLog();
+    if (!log || !this.kept) return Promise.resolve(false);
+    return this.flusher.flush(log);
   }
 }
 

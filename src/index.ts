@@ -43,7 +43,7 @@ World.create(document.getElementById('scene-container') as HTMLDivElement, proje
   if (supported && emulator) {
     enter.disabled = false;
     note.textContent =
-      'Desktop emulator: a simulated room and hands. Enter seats you at its desk with hands; then H stands your hand where the ghost hand shows, between the lantern and the path, and holding → slides it to lead the creature. On a Quest, open the main link instead.';
+      'Desktop emulator: a simulated room and hands. Enter seats you at its desk with hands; then H stands your hand where the ghost hand shows, between the lantern and the path, holding → slides it to lead the creature, L lifts it, C cups the lantern. On a Quest, open the main link instead.';
     installEmuSeat(cover);
   } else if (supported) {
     enter.disabled = false;

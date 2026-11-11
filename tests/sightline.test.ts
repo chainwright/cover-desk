@@ -213,7 +213,7 @@ test('light map: two half refreshes equal one full refresh', () => {
   assert.deepEqual(Array.from(b.data), Array.from(a.data));
 });
 
-test('light map cost: a full refresh with two hands and four objects stays well under a frame', () => {
+test('light map cost: the per-frame half refresh with two hands and four objects stays under 2 ms', () => {
   const occ = new Occluders();
   addHandCapsules(stopHand(0.02, 0.02, -0.06), null, 1, occ);
   addHandCapsules(flatHand(-0.12, 0.015, 0.0), null, 0, occ);

@@ -10,13 +10,14 @@
  *   H        stand the hand like 'stop' between the lantern and the path / take it away
  *   ← →      hold to slide it along (at a speed the creature can follow)
  *   L        lift it 20 cm (the light passes under it: the creature is spotted)
+ *   C        stand it right at the lantern, cupping it (day 5: the keeper wakes)
  *   M        hand the emulator back to its own controls (its menus and gizmos)
  *
  * Inert anywhere else: it does nothing unless the emulator is present
  * (`window.IWER_DEVICE`), and the main build never contains the emulator.
  */
 import type { CoverDebug } from './cover-system.ts';
-import { TEACH_SPOT } from './level.ts';
+import { LEVEL_1, TEACH_SPOT } from './level.ts';
 
 interface V3 { x: number; y: number; z: number; set(x: number, y: number, z: number): unknown }
 interface Q4 { set(x: number, y: number, z: number, w: number): unknown }
@@ -42,9 +43,11 @@ export const STOP = { x: TEACH_SPOT.x, z: TEACH_SPOT.z, y: 0.02, lift: 0.2, minX
 /**
  * Where the emulator puts the wrist relative to the hand position we set, in
  * the board frame, for the pose used here (its 'flat' hand turned fingers-up,
- * back of the hand toward the player). Measured in the emulator on day 4: the
- * position is the grip, inside the hand, so setting it to the wrist spot put
- * the wrist 11.7 cm under the desk. Day 1-3 also turned the hand the wrong
+ * back of the hand toward the player). Read from the emulator's joint poses
+ * on day 4 (no record of that reading was kept; the /emu/ runs since show the
+ * hand casting the expected lane, litFraction 0.826): the position is the
+ * grip, inside the hand, so setting it to the wrist spot put the wrist 11.7
+ * cm under the desk. Day 1-3 also turned the hand the wrong
  * way (fingertips down into the lantern).
  */
 export const GRIP_TO_WRIST = { x: 0.049, y: -0.117, z: 0.002 };
@@ -57,9 +60,43 @@ export const GRIP_TO_WRIST = { x: 0.049, y: -0.117, z: 0.002 };
  */
 export const SLIDE_SPEED = 0.03;
 
+/** C: the hand stands right in front of the lantern, cupping it (wrist 2.5 cm in front, centred). */
+export const CUP = { x: LEVEL_1.lanterns[0].x, z: LEVEL_1.lanterns[0].z + 0.025 } as const;
+
+type Q = [number, number, number, number];
+type V = [number, number, number];
+
+export interface SeatPose {
+  /** Where to put the emulator's hand position (its grip), world. */
+  position: V;
+  /** The emulator hand's orientation, world (x, y, z, w). */
+  quaternion: Q;
+}
+
+/**
+ * The emulator hand pose that stands the right hand like 'stop' with its
+ * wrist at board point (x, y, z): fingertips up, back of the hand toward the
+ * player (palm toward the lantern). Pure, so it is unit-tested (an outside
+ * run turned the hand the wrong way and dropped the grip offset, and no test
+ * noticed). `boardPoint` maps a board-frame point to the world.
+ */
+export function seatHandPose(x: number, y: number, z: number, boardPoint: (x: number, z: number, y: number) => V): SeatPose {
+  // Set the grip so that the wrist lands on (x, y, z).
+  const position = boardPoint(x - GRIP_TO_WRIST.x, z - GRIP_TO_WRIST.z, y - GRIP_TO_WRIST.y);
+  // Board axes in the world: across (+x) and toward the player (+z).
+  const o = boardPoint(0, 0, 0);
+  const ax = boardPoint(1, 0, 0);
+  const yaw = Math.atan2(ax[2] - o[2], ax[0] - o[0]); // rotation of board +x about world up
+  // Hand joint frame (WebXR): −Z toward the fingertips, +Y out of the back of the hand.
+  // 'stop': fingertips up (−Z = world up), back of the hand toward the player (+Y = board +z).
+  // That is a +90° turn about x (day 1-3 had −90°: fingertips down), then the board's own turn about y.
+  const quaternion = mul(rotY(-yaw), rotX(Math.PI / 2));
+  return { position, quaternion };
+}
+
 const KEYS_HTML =
   '<b>Emulator seat</b> · <b>H</b> stand your hand like \'stop\' between the lantern and the path, again to take it away' +
-  ' · hold <b>← →</b> to slide it along and lead the creature · <b>L</b> lift it · <b>M</b> emulator\'s own controls';
+  ' · hold <b>← →</b> to slide it along and lead the creature · <b>L</b> lift it · <b>C</b> cup the lantern (it wakes the keeper) · <b>M</b> emulator\'s own controls';
 
 export function installEmuSeat(cover: () => CoverDebug | undefined): void {
   const device = (window as unknown as { IWER_DEVICE?: EmuDevice }).IWER_DEVICE;
@@ -79,11 +116,12 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
   let seated = false;
   let raised = false;
   let lifted = false;
+  let cupped = false;
   let x: number = STOP.x;
   let dir = 0;
   let last = 0;
   const slide = (now: number) => {
-    if (dir !== 0 && raised) {
+    if (dir !== 0 && raised && !cupped) {
       const dt = Math.min(0.05, (now - last) / 1000);
       x = Math.min(STOP.maxX, Math.max(STOP.minX, x + dir * SLIDE_SPEED * dt));
       placeRight();
@@ -98,27 +136,16 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
     h.quaternion.set(0, 0, 0, 1);
   };
 
-  /** Puts the right hand at board point (x, y, z), fingers up, palm toward the lantern. */
+  /** Puts the right hand, fingers up, palm toward the lantern: at the slide position, or cupping the lantern. */
   const placeRight = () => {
     const f = cover();
     if (!f) return;
     const r = device.hands.right;
     const y = STOP.y + (lifted ? STOP.lift : 0);
-    // Set the grip so that the wrist lands on (x, y, STOP.z).
-    const [wx, wy, wz] = f.boardPoint(x - GRIP_TO_WRIST.x, STOP.z - GRIP_TO_WRIST.z, y - GRIP_TO_WRIST.y);
-    // Board axes in the world: across (+x) and toward the player (+z).
-    const o = f.boardPoint(0, 0, 0);
-    const ax = f.boardPoint(1, 0, 0);
-    const yaw = Math.atan2(ax[2] - o[2], ax[0] - o[0]); // rotation of board +x about world up
-    // Hand joint frame (WebXR): −Z toward the fingertips, +Y out of the back of the hand.
-    // 'stop': fingertips up (−Z = world up), back of the hand toward the player (+Y = board +z).
-    // That is a +90° turn about x (day 1-3 had −90°: fingertips down), then the board's own turn about y.
-    const qx = rotX(Math.PI / 2);
-    const qy = rotY(-yaw);
-    const q = mul(qy, qx);
+    const p = cupped ? seatHandPose(CUP.x, STOP.y, CUP.z, f.boardPoint) : seatHandPose(x, y, STOP.z, f.boardPoint);
     r.poseId = 'flat';
-    r.quaternion.set(q[0], q[1], q[2], q[3]);
-    r.position.set(wx, wy, wz);
+    r.quaternion.set(p.quaternion[0], p.quaternion[1], p.quaternion[2], p.quaternion[3]);
+    r.position.set(p.position[0], p.position[1], p.position[2]);
     device.notifyStateChange?.();
   };
 
@@ -130,7 +157,7 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
     device.quaternion.set(q[0], q[1], q[2], q[3]);
     park(device.hands.left, -1);
     park(device.hands.right, 1);
-    raised = lifted = false;
+    raised = lifted = cupped = false;
     x = STOP.x;
     device.notifyStateChange?.();
     seated = true;
@@ -149,13 +176,22 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
     if (!seated || device.controlMode !== 'programmatic') return;
     const k = e.key.toLowerCase();
     if (k === 'h') {
+      // H stands the hand where the ghost stands (again after a win), or takes it away.
       raised = !raised;
+      lifted = cupped = false;
+      x = STOP.x;
+      if (raised) placeRight();
+      else park(device.hands.right, 1);
+    } else if (k === 'c') {
+      cupped = !cupped;
+      raised = cupped;
       lifted = false;
+      x = STOP.x;
       if (raised) placeRight();
       else park(device.hands.right, 1);
     } else if (k === 'arrowleft' || k === 'arrowright') {
       dir = k === 'arrowleft' ? -1 : 1;
-    } else if (k === 'l' && raised) {
+    } else if (k === 'l' && raised && !cupped) {
       lifted = !lifted;
       placeRight();
     } else if (k === 'm') {
@@ -171,7 +207,6 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
   });
 }
 
-type Q = [number, number, number, number];
 function rotX(a: number): Q {
   return [Math.sin(a / 2), 0, 0, Math.cos(a / 2)];
 }

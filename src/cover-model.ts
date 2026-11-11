@@ -41,7 +41,8 @@ import type { Lantern } from './sightline.ts';
 
 export const PATH_DOTS = 26;
 export const MAX_OBJECT_MARKERS = 4;
-export const WIN_BEADS = 10;
+export { WIN_BEADS } from './feedback.ts';
+import { WIN_BEADS } from './feedback.ts';
 export const KNOB = { x: -(BOARD.halfX + 0.02), z: BOARD.zMax - 0.02, r: 0.014 } as const;
 
 const FELT = (color: number) => new MeshStandardMaterial({ color, roughness: 1, metalness: 0 });
@@ -73,6 +74,8 @@ export interface CoverModel {
   objectMarkers: Group[];
   /** One brass bead per win along the near edge (up to WIN_BEADS). */
   winBeads: InstancedMesh;
+  /** Sets bead i's scale (the newest one pops in after a win); i < 0 does nothing. */
+  setBead(i: number, scale: number): void;
   knob: Mesh;
   ghostHand: Group;
   ghostMat: MeshBasicMaterial;
@@ -100,6 +103,7 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
       uWarm: { value: new Color(0xffc46b) },
       uShade: { value: new Color(0x1b2140) },
       uFlicker: { value: 1 },
+      uFlare: { value: 0 },
     },
     vertexShader: /* glsl */ `
       varying vec2 vPos;
@@ -110,7 +114,7 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
     fragmentShader: /* glsl */ `
       uniform sampler2D tMap;
       uniform vec2 uL;
-      uniform float uYaw, uHalf, uMinD, uRange, uFlicker;
+      uniform float uYaw, uHalf, uMinD, uRange, uFlicker, uFlare;
       uniform vec3 uWarm, uShade;
       varying vec2 vPos;
       void main() {
@@ -124,8 +128,8 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
         float lit = texture2D(tMap, vec2(u, v)).r;
         float edge = smoothstep(1.0, 0.8, abs(az) / uHalf) * smoothstep(1.0, 0.72, v) * smoothstep(0.0, 0.08, v);
         float fall = clamp(0.16 / (0.1 + d), 0.0, 1.0);
-        vec3 col = mix(uShade, uWarm, lit);
-        float a = edge * mix(0.5, 0.55 * fall * uFlicker, lit);
+        vec3 col = mix(uShade, uWarm * (1.0 + uFlare), lit);
+        float a = edge * mix(0.5, min(1.0, 0.55 * fall * uFlicker * (1.0 + uFlare)), lit);
         gl_FragColor = vec4(col, a);
       }`,
     transparent: true,
@@ -250,8 +254,16 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
   winBeads.count = 0;
   winBeads.frustumCulled = false;
   const bead = new Matrix4();
-  for (let i = 0; i < WIN_BEADS; i++) setInstance(winBeads, i, r[0] + 0.004 + i * 0.013, 0.0045, BOARD.zMax - 0.02, 1, bead);
+  const beadX = (i: number) => r[0] + 0.004 + i * 0.013;
+  for (let i = 0; i < WIN_BEADS; i++) setInstance(winBeads, i, beadX(i), 0.0045, BOARD.zMax - 0.02, 1, bead);
   root.add(winBeads);
+  const beadScale = new Float32Array(WIN_BEADS).fill(1);
+  const setBead = (i: number, scale: number) => {
+    if (i < 0 || i >= WIN_BEADS || beadScale[i] === scale) return;
+    beadScale[i] = scale;
+    setInstance(winBeads, i, beadX(i), 0.0045 * scale, BOARD.zMax - 0.02, scale, bead);
+    winBeads.instanceMatrix.needsUpdate = true;
+  };
 
   // ------------------------------------------------------------ move knob
   const knob = new Mesh(new CylinderGeometry(KNOB.r, KNOB.r, 0.01, 20), darkWood);
@@ -278,7 +290,7 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
 
   return {
     root, pool, poolMat, shadowTex, keeper, keeperEyes, beam, lanternGlow, creature, trinket, nook, pathDots,
-    objectMarkers, winBeads, knob, ghostHand, ghostMat, proxyDots,
+    objectMarkers, winBeads, setBead, knob, ghostHand, ghostMat, proxyDots,
   };
 }
 
