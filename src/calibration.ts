@@ -151,7 +151,7 @@ export class TapCalibrator {
 }
 
 export interface PlaceParams {
-  /** Aim: abacus centre no further than this from the eyes (3D). */
+  /** Aim: centre of the placed thing (abacus or board) no further than this from the eyes (3D). */
   maxEyeDistance: number;
   /** Never closer than this horizontally (keeps the frame out of the chest). */
   minReach: number;
@@ -169,7 +169,7 @@ export interface DeskSpot {
   x: number;
   y: number;
   z: number;
-  /** Rotation about +y so the abacus's +z (near rail) points at the viewer. */
+  /** Rotation about +y so the placed thing's +z points at the viewer. */
   yaw: number;
   /** Centre-to-eye distance after clamping. */
   eyeDistance: number;
@@ -178,7 +178,7 @@ export interface DeskSpot {
 }
 
 /**
- * Where the abacus goes for a desk touch at (tx, deskY, tz): under the finger,
+ * Where the placed thing goes for a desk touch at (tx, deskY, tz): under the finger,
  * facing the viewer, pulled in along the eye→touch line when the touch is
  * beyond comfortable reach (by at most maxPull), pushed out to minReach when
  * it is under the chin. When the desk is more than maxEyeDistance below the

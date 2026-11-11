@@ -1,16 +1,16 @@
 /**
- * Keeps the abacus on the same spot of the desk across sessions.
+ * Keeps the board on the same spot of the desk across sessions.
  *
- * We create our own WebXR anchor exactly at the abacus pose and ask the
+ * We create our own WebXR anchor exactly at the board pose and ask the
  * browser for a persistent handle (a UUID). Next session we restore that UUID
  * and follow the anchor's pose. Only one persistent anchor of ours exists at a
- * time: the old one is deleted when the abacus is placed again (browsers cap
+ * time: the old one is deleted when the board is placed again (browsers cap
  * persistent anchors per site; the Quest browser allows 8, and none survive
  * private browsing).
  */
 import { Quaternion, Vector3 } from '@iwsdk/core';
 
-const KEY = 'fade.desk-anchor.v1';
+const KEY = 'cover.desk-anchor.v1';
 
 interface Saved {
   uuid: string;
@@ -110,7 +110,7 @@ export class DeskAnchor {
   }
 
   /**
-   * Anchors the abacus at (x, y, z) with rotation `yaw` about +y and makes the
+   * Anchors the board at (x, y, z) with rotation `yaw` about +y and makes the
    * anchor persistent. Must be called inside the XR frame callback.
    */
   save(

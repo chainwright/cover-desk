@@ -1,0 +1,1121 @@
+/**
+ * Cover, level 1: the board on the desk, the keeper's light, your hand as
+ * cover, the creature crossing through your shadow.
+ *
+ * Placement of the board (carried over from the desk prototype), in order of
+ * preference:
+ *   1. anchor   — the spot saved last session (persistent WebXR anchor);
+ *   2. touch    — one-touch calibration: point at the desk with one fingertip,
+ *                 tap and hold still; the board goes under that hand;
+ *   3. desk     — a detected horizontal plane at desk height (automatic);
+ *   4. fallback — a comfortable spot in the air when there is no desk.
+ * Hold a fingertip on the small knob at the near-left corner to move it.
+ *
+ * Every frame: read both hands' 25 joints → capsules in the board frame →
+ * with the registered real objects, they are the occluders → the light map
+ * (what the keeper sees on the desk, drawn as the light pool with your
+ * shadow in it) and the creature's own sight test.
+ */
+import {
+  Color,
+  DepthOccludable,
+  Matrix4,
+  Mesh,
+  MeshBasicMaterial,
+  Quaternion,
+  RingGeometry,
+  Vector3,
+  VisibilityState,
+  XRPlane as XRPlaneComponent,
+  createSystem,
+  type Object3D,
+} from '@iwsdk/core';
+import { PLACE, TapCalibrator, spotFromTouch, type CalibResult, type PlaceParams } from './calibration.ts';
+import { click, lock, setHum, step } from './click-sound.ts';
+import { REGISTER, REGISTER_HOLD, TIP_PAD, distanceToPolyline, judgeRegistration } from './contact.ts';
+import { KNOB, MAX_OBJECT_MARKERS, PATH_DOTS, buildCover, setInstance, type CoverModel } from './cover-model.ts';
+import {
+  CREATURE,
+  EV_BACK_IN_NOOK,
+  EV_DASH_START,
+  EV_HOME,
+  EV_PAUSE,
+  EV_RESUME,
+  EV_SPOTTED,
+  MODE_DASH,
+  MODE_HOME,
+  MODE_NAMES,
+  MODE_PAUSED,
+  MODE_RETREAT,
+  MODE_SPOTTED,
+  newCreature,
+  stepCreature,
+  type CreatureState,
+  type CreatureWorld,
+} from './creature.ts';
+import { DeskAnchor } from './desk-anchor.ts';
+import { flags } from './flags.ts';
+import { HandJoints } from './hand-joints.ts';
+import { HAND_SIDES, HandMask } from './hand-mask.ts';
+import {
+  INDEX_TIP,
+  JOINTS,
+  POSE_LOST,
+  POSE_NAMES,
+  WRIST,
+  addHandCapsules,
+  classifyPose,
+  isPointingDown,
+  type PoseInfo,
+} from './hand-proxy.ts';
+import { BOARD, CREATURE_Y, LEVEL_1, Route } from './level.ts';
+import { LightMap } from './light-map.ts';
+import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightResult } from './sightline.ts';
+import { TextCard } from './text-card.ts';
+import { LABELS, TesterLogger, analyseLog, logSettings, type Label } from './touch-log.ts';
+
+/** How long to wait for a desk plane before using the fallback spot. */
+const DESK_WAIT_S = 2.5;
+/** After a fallback, a desk found within this window still wins (once). */
+const LATE_DESK_S = 10;
+/** How long to wait for last session's anchor before searching again. */
+const RESTORE_WAIT_S = 4;
+/** Inset from desk edges so the whole board stays on the desk, whichever way it is turned. */
+const DESK_INSET = Math.max(BOARD.halfX, (BOARD.zMax - BOARD.zMin) / 2) + 0.01;
+/** A hold this far above a detected desk is a pause in the air, not a tap. */
+const AIR_TAP = 0.03;
+/** Board placement: centre a little further than the soroban's (the board is bigger). */
+const BOARD_PLACE: PlaceParams = { ...PLACE, maxEyeDistance: 0.5, minReach: 0.28 };
+const KNOB_HOLD_S = 0.8;
+/** Owner tags for cover: hands 0/1, objects 10 + n. */
+const OBJECT_OWNER = 10;
+/** After a win, the next round starts this much later. */
+const NEXT_ROUND_S = 3.5;
+/** The ghost hand shows until the first dash, or this long. */
+const GHOST_MAX_S = 25;
+
+export type Placement = 'preview' | 'restoring' | 'searching' | 'desk' | 'fallback' | 'touch' | 'anchor';
+
+const GUIDE: { label: Label; seconds: number; text: [string, string] }[] = [
+  { label: 'flat', seconds: 20, text: ['Rest one hand flat on the desk,', 'in the light. Keep it there.'] },
+  { label: 'edge', seconds: 20, text: ['Rest your hand on its little-finger', 'side, like a wall. Keep it there.'] },
+  { label: 'stop', seconds: 20, text: ['Hold your palm up toward the lantern,', 'like "stop". Keep it there.'] },
+  { label: 'register', seconds: 15, text: ['Point down onto the top of a mug or', 'book next to the path. Hold still.'] },
+];
+const GUIDE_PREP_S = 3;
+const GUIDE_DELAY_S = 3;
+
+/** Read-only state for tests, the emulator scripts and tester mode. */
+export interface CoverDebug {
+  placement: Placement;
+  listening: boolean;
+  creature: { s: number; mode: string; spotted: number; dashes: number; wins: number; length: number };
+  line: { state: string; by: number };
+  hands: { tracked: boolean; pose: string; normalY: number; pointing: boolean }[];
+  objects: { x: number; z: number; top: number }[];
+  litFraction: number;
+  fps: number;
+  anchorStatus: string;
+  placementInfo: Record<string, unknown> | null;
+  /** World position of a board-frame point. */
+  boardPoint(x: number, z: number, y: number): [number, number, number];
+  /** Board-frame position of a world point. */
+  toBoard(x: number, y: number, z: number): [number, number, number];
+  /** World positions of a hand's 25 joints (null if not tracked). */
+  joints(hand: number): number[] | null;
+  lantern: Lantern;
+  route: number[];
+  logSamples(): number;
+  exportLog(): string | null;
+  summary(): unknown;
+  setLabel(label: string): void;
+  requestMove(): void;
+  /** Starts a fresh round (creature back in its nook). */
+  restart(): void;
+  /** What the keeper makes of a creature standing at board point (x, z): 'seen' | 'shadow:<by>' | 'dark'. */
+  sightAt(x: number, z: number): string;
+  /** Forgets every registered object. */
+  clearObjects(): void;
+}
+
+export class CoverSystem extends createSystem({
+  planes: { required: [XRPlaneComponent] },
+}) {
+  private model!: CoverModel;
+  private level = LEVEL_1;
+  private lantern: Lantern = LEVEL_1.lanterns[0];
+  private route = new Route(LEVEL_1.route);
+  private occ = new Occluders();
+  private lightMap = new LightMap();
+  private sight: SightResult = { state: DARK, by: BY_NONE };
+  private lineState = DARK;
+  private lineBy = BY_NONE;
+  private creature: CreatureState = newCreature();
+  private cw!: CreatureWorld;
+  private wins = 0;
+  private homeAt = -1;
+  private everDashed = false;
+  private stepAt = 0;
+
+  private joints = new HandJoints();
+  private local = [new Float32Array(JOINTS * 3), new Float32Array(JOINTS * 3)];
+  private pose: PoseInfo[] = [
+    { pose: POSE_LOST, normalY: 0, fingerY: 0 },
+    { pose: POSE_LOST, normalY: 0, fingerY: 0 },
+  ];
+  private pointing = [false, false];
+  private objects = new Float32Array(MAX_OBJECT_MARKERS * 3); // x, z, top
+  private objectCount = 0;
+  private handMask = new HandMask(flags.hands);
+
+  private prompt!: TextCard;
+  private panel: TextCard | null = null;
+  private logger: TesterLogger | null = null;
+  private ring!: Mesh;
+  private ringMat!: MeshBasicMaterial;
+
+  private placement: Placement = 'preview';
+  private placementInfo: Record<string, unknown> | null = null;
+  private listening = false;
+  private followAnchor = false;
+  private searchStart = 0;
+  private restoreStart = 0;
+  private placedAt = 0;
+  private resetDone = false;
+  private deskAnchor = new DeskAnchor();
+  private calibrators = [new TapCalibrator(), new TapCalibrator()];
+  private registrars = [new TapCalibrator(REGISTER_HOLD), new TapCalibrator(REGISTER_HOLD)];
+  private holdProgress = new Float32Array(2);
+  private knobSince = new Float32Array(2).fill(-1);
+  private knobArmed = [true, true];
+  private guideStart = -1;
+  private panelAt = 0;
+  private lastTime = 0;
+
+  // fps
+  private fpsFrames = 0;
+  private fpsStart = -1;
+  private fpsWorst = 0;
+  private fps = 0;
+
+  private head = new Vector3();
+  private forward = new Vector3();
+  private target = new Vector3();
+  private best = new Vector3();
+  private tmp = new Vector3();
+  private up = new Vector3();
+  private quat = new Quaternion();
+  private tilt = new Quaternion();
+  private xAxis = new Vector3(1, 0, 0);
+  private yAxis = new Vector3(0, 1, 0);
+  private inv = new Matrix4();
+  private mtx = new Matrix4();
+  private at3 = new Float32Array(3);
+  private colLit = new Color(0xffd27a);
+  private colShadow = new Color(0x7d93d8);
+  private colDark = new Color(0xe9dfcc);
+  private toWorld!: (p: Float32Array, i: number) => void;
+
+  init(): void {
+    this.model = buildCover(this.level, this.lightMap.data);
+    const entity = this.world.createTransformEntity(this.model.root, { persistent: true });
+    if (flags.depth) entity.addComponent(DepthOccludable);
+
+    this.cw = {
+      routeLength: this.route.length,
+      handPresent: false,
+      seen: (s: number) => this.seenAt(s),
+    };
+    this.toWorld = (p: Float32Array, i: number) => {
+      this.tmp.set(p[i * 3], p[i * 3 + 1], p[i * 3 + 2]).applyMatrix4(this.player.matrixWorld);
+      p[i * 3] = this.tmp.x;
+      p[i * 3 + 1] = this.tmp.y;
+      p[i * 3 + 2] = this.tmp.z;
+    };
+
+    // path dots along the route
+    for (let i = 0; i < PATH_DOTS; i++) {
+      this.route.at((i / (PATH_DOTS - 1)) * this.route.length, this.at3);
+      setInstance(this.model.pathDots, i, this.at3[0], 0, this.at3[1], 1, this.mtx);
+      this.model.pathDots.setColorAt(i, this.colDark);
+    }
+    this.model.pathDots.instanceMatrix.needsUpdate = true;
+
+    // Progress ring for a calibration, registration or knob hold.
+    this.ringMat = new MeshBasicMaterial({ color: 0xffd08a, depthTest: false, transparent: true, opacity: 0 });
+    this.ring = new Mesh(new RingGeometry(0.011, 0.015, 32), this.ringMat);
+    this.ring.name = 'hold-ring';
+    this.ring.rotation.x = -Math.PI / 2;
+    this.ring.renderOrder = 11;
+    this.ring.visible = false;
+    this.world.createTransformEntity(this.ring, { persistent: true });
+
+    this.prompt = new TextCard('prompt', {
+      widthM: 0.3,
+      heightM: 0.07,
+      px: 900,
+      font: 52,
+      background: 'rgba(23,17,12,0.82)',
+      color: '#f4ead8',
+      accent: '#ffc27a',
+    });
+    this.prompt.mesh.visible = false;
+    this.world.createTransformEntity(this.prompt.mesh, { persistent: true });
+
+    if (flags.test) {
+      this.panel = new TextCard('tester-panel', {
+        widthM: 0.38,
+        heightM: 0.2,
+        px: 1140,
+        font: 46,
+        background: 'rgba(12,16,20,0.88)',
+        color: '#e8eef2',
+        accent: '#ffc27a',
+      });
+      this.panel.mesh.visible = false;
+      this.world.createTransformEntity(this.panel.mesh, { persistent: true });
+      const build = typeof __COVER_BUILD__ === 'string' ? __COVER_BUILD__ : 'dev';
+      this.logger = new TesterLogger(
+        logSettings({ hands: flags.depth ? `${flags.hands}+depth` : flags.hands, level: this.level.id, creature: CREATURE, register: REGISTER }),
+        navigator.userAgent,
+        build,
+      );
+    }
+
+    this.placePreview();
+    this.exposeDebug();
+  }
+
+  update(delta: number, time: number): void {
+    this.lastTime = time;
+    const vis = this.world.visibilityState.peek();
+    if (vis === VisibilityState.NonImmersive) {
+      if (this.placement !== 'preview') this.endSession();
+      return;
+    }
+    if (this.placement === 'preview') this.startSession(time);
+    this.countFrame(delta, time);
+
+    this.player.head.getWorldPosition(this.head);
+    this.updateForward();
+    this.updatePlacement(time);
+    if (this.followAnchor && this.deskAnchor.anchor) this.applyAnchorPose();
+
+    this.handMask.apply(this.input.xr as never);
+    const root = this.model.root;
+    root.updateWorldMatrix(true, false);
+    this.inv.copy(root.matrixWorld).invert();
+    this.readHands(time);
+
+    const placed = this.isPlaced();
+    if (placed) {
+      this.buildOccluders();
+      this.lightMap.update(this.lantern, this.occ, CREATURE_Y);
+      this.model.shadowTex.needsUpdate = true;
+      this.runGame(Math.min(delta, 0.05), time);
+    } else {
+      setHum(0, false);
+    }
+    this.updateRing();
+    this.updatePrompt(time);
+    if (this.panel) this.updateTester(time);
+  }
+
+  // ------------------------------------------------------------- sessions
+
+  private startSession(time: number): void {
+    const session = this.xrManager.getSession();
+    if (flags.reset && !this.resetDone) {
+      this.deskAnchor.forget(session);
+      this.resetDone = true;
+    }
+    this.model.root.visible = false;
+    this.listening = true;
+    this.followAnchor = false;
+    this.placementInfo = null;
+    this.guideStart = -1;
+    this.fpsStart = -1;
+    for (const c of this.calibrators) c.reset();
+    for (const c of this.registrars) c.reset();
+    this.logger?.startSession(time);
+    this.logger?.setLabel('free', time);
+    if (session && this.deskAnchor.hasSaved()) {
+      this.placement = 'restoring';
+      this.restoreStart = time;
+      void this.deskAnchor.restore(session);
+    } else {
+      this.placement = 'searching';
+      this.searchStart = time;
+    }
+  }
+
+  private endSession(): void {
+    this.deskAnchor.endSession();
+    this.logger?.endSession();
+    setHum(0, false);
+    this.placePreview();
+    window.dispatchEvent(new CustomEvent('cover:session-end'));
+  }
+
+  private isPlaced(): boolean {
+    return this.model.root.visible && this.placement !== 'preview' && this.placement !== 'restoring' && this.placement !== 'searching';
+  }
+
+  // ---------------------------------------------------------------- placement
+
+  private updatePlacement(time: number): void {
+    if (this.placement === 'restoring') {
+      if (this.deskAnchor.anchor && this.applyAnchorPose()) {
+        this.model.root.visible = true;
+        this.placement = 'anchor';
+        this.placedAt = time;
+        this.followAnchor = true;
+        this.listening = false;
+        this.placementInfo = { method: 'anchor', savedBy: this.deskAnchor.savedMethod(), ...this.distanceInfo() };
+        this.logger?.setPlacement(this.placementInfo);
+        this.logger?.event(time, 'placement', this.placementInfo);
+      } else if (
+        this.deskAnchor.status === 'restore-failed' ||
+        this.deskAnchor.status === 'unsupported' ||
+        time - this.restoreStart > RESTORE_WAIT_S
+      ) {
+        this.logger?.event(time, 'anchor-restore', { ok: false, status: this.deskAnchor.status });
+        this.placement = 'searching';
+        this.searchStart = time;
+      }
+    } else if (this.placement === 'searching') {
+      if (this.head.y >= 0.3) {
+        if (this.findDesk()) this.placeAt(this.best, 'desk', time);
+        else if (time - this.searchStart > DESK_WAIT_S) this.placeFallback(time);
+      }
+    } else if (this.placement === 'fallback' && time - this.placedAt < LATE_DESK_S) {
+      if (this.findDesk()) this.placeAt(this.best, 'desk', time);
+    }
+  }
+
+  private updateForward(): void {
+    this.player.head.getWorldDirection(this.forward);
+    this.forward.negate();
+    this.forward.y = 0;
+    if (this.forward.lengthSq() < 1e-6) this.forward.set(0, 0, -1);
+    this.forward.normalize();
+  }
+
+  /** The horizontal plane at desk height in front of the viewer, within reach (writes `best`). */
+  private findDesk(): boolean {
+    let bestScore = Number.POSITIVE_INFINITY;
+    for (const entity of this.queries.planes.entities) {
+      const plane = entity.getValue(XRPlaneComponent, '_plane') as XRPlane | undefined;
+      const obj = entity.object3D;
+      if (!plane || !obj || plane.orientation !== 'horizontal') continue;
+      const label = ((plane as unknown as { semanticLabel?: string }).semanticLabel ?? '').toLowerCase();
+      if (label === 'floor' || label === 'ceiling') continue;
+      obj.updateWorldMatrix(true, false);
+      this.up.set(0, 1, 0).transformDirection(obj.matrixWorld);
+      if (this.up.y < 0.9) continue;
+      obj.getWorldPosition(this.tmp);
+      const height = this.tmp.y;
+      const drop = this.head.y - height;
+      if (height < 0.4 || drop < 0.2 || drop > 1.2) continue;
+      const reach = Math.min(0.55, Math.max(0.38, drop));
+      this.target.copy(this.head).addScaledVector(this.forward, reach);
+      this.target.y = height;
+      this.tmp.copy(this.target);
+      obj.worldToLocal(this.tmp);
+      const b = polygonBounds(plane.polygon);
+      const cx = b.maxX - b.minX > 2 * DESK_INSET
+        ? Math.min(b.maxX - DESK_INSET, Math.max(b.minX + DESK_INSET, this.tmp.x))
+        : (b.minX + b.maxX) / 2;
+      const cz = b.maxZ - b.minZ > 2 * DESK_INSET
+        ? Math.min(b.maxZ - DESK_INSET, Math.max(b.minZ + DESK_INSET, this.tmp.z))
+        : (b.minZ + b.maxZ) / 2;
+      const miss = Math.hypot(this.tmp.x - cx, this.tmp.z - cz);
+      if (miss > 0.6) continue;
+      const isDesk = label === 'table' || label === 'desk';
+      const score = miss - (isDesk ? 0.3 : 0);
+      if (score < bestScore) {
+        bestScore = score;
+        this.best.set(cx, 0, cz);
+        obj.localToWorld(this.best);
+      }
+    }
+    return bestScore < Number.POSITIVE_INFINITY;
+  }
+
+  /** The detected horizontal surface under a world point, nearest in height to y; null if none. */
+  private deskPlaneAt(x: number, y: number, z: number): { obj: Object3D; y: number; minX: number; maxX: number; minZ: number; maxZ: number } | null {
+    let best: { obj: Object3D; y: number; minX: number; maxX: number; minZ: number; maxZ: number } | null = null;
+    for (const entity of this.queries.planes.entities) {
+      const plane = entity.getValue(XRPlaneComponent, '_plane') as XRPlane | undefined;
+      const obj = entity.object3D;
+      if (!plane || !obj || plane.orientation !== 'horizontal') continue;
+      const label = ((plane as unknown as { semanticLabel?: string }).semanticLabel ?? '').toLowerCase();
+      if (label === 'floor' || label === 'ceiling') continue;
+      obj.updateWorldMatrix(true, false);
+      obj.getWorldPosition(this.up);
+      const py = this.up.y;
+      if (py < y - 0.35 || py > y + 0.08 || (best && Math.abs(py - y) >= Math.abs(best.y - y))) continue;
+      this.tmp.set(x, py, z);
+      obj.worldToLocal(this.tmp);
+      const b = polygonBounds(plane.polygon);
+      if (this.tmp.x < b.minX || this.tmp.x > b.maxX || this.tmp.z < b.minZ || this.tmp.z > b.maxZ) continue;
+      best = { obj, y: py, ...b };
+    }
+    return best;
+  }
+
+  private placeAt(point: Vector3, how: Placement, time: number): void {
+    const yaw = Math.atan2(this.head.x - point.x, this.head.z - point.z);
+    this.place(point.x, point.y, point.z, yaw, how, time);
+  }
+
+  private place(x: number, y: number, z: number, yaw: number, how: Placement, time: number, extra: Record<string, unknown> = {}): void {
+    const root = this.model.root;
+    root.position.set(x, y + 0.001, z);
+    root.quaternion.setFromAxisAngle(this.yAxis, yaw);
+    root.visible = true;
+    root.updateWorldMatrix(true, false);
+    this.inv.copy(root.matrixWorld).invert();
+    this.placement = how;
+    this.placedAt = time;
+    this.followAnchor = false;
+    if (how === 'touch') this.listening = false;
+    this.placementInfo = { method: how, ...this.distanceInfo(), ...extra };
+    this.logger?.setPlacement(this.placementInfo);
+    this.logger?.event(time, 'placement', this.placementInfo);
+    // Real objects were registered against the old spot: forget them.
+    this.clearObjects(time);
+    if (how === 'desk' || how === 'touch') {
+      const session = this.xrManager.getSession();
+      const space = this.xrManager.getReferenceSpace();
+      if (session && space && this.xrFrame) {
+        this.deskAnchor.save(session, this.xrFrame, space, x, y + 0.001, z, yaw, how);
+        this.followAnchor = true;
+      }
+    }
+  }
+
+  private distanceInfo(): Record<string, unknown> {
+    const p = this.model.root.position;
+    return {
+      eyeDistance: +Math.hypot(p.x - this.head.x, p.y - this.head.y, p.z - this.head.z).toFixed(3),
+      eyeDrop: +(this.head.y - p.y).toFixed(3),
+      deskY: +p.y.toFixed(3),
+    };
+  }
+
+  private placeFallback(time: number): void {
+    this.target.copy(this.head).addScaledVector(this.forward, 0.36);
+    this.target.y = this.head.y - 0.36;
+    this.placeAt(this.target, 'fallback', time);
+  }
+
+  private placePreview(): void {
+    const root = this.model.root;
+    root.position.set(0, 0.74, -0.45);
+    root.rotation.set(0, 0, 0);
+    root.visible = true;
+    this.placement = 'preview';
+    this.followAnchor = false;
+    this.listening = false;
+    this.ring.visible = false;
+    this.prompt.mesh.visible = false;
+    if (this.panel) this.panel.mesh.visible = false;
+  }
+
+  private applyAnchorPose(): boolean {
+    const frame = this.xrFrame;
+    const space = this.xrManager.getReferenceSpace();
+    if (!frame || !space) return false;
+    return this.deskAnchor.pose(frame, space, this.model.root.position, this.model.root.quaternion);
+  }
+
+  /** A finished desk tap-and-hold: put the board under that hand. False when it was a pause in the air. */
+  private calibrateFrom(res: CalibResult, hand: number, time: number): boolean {
+    const deskY = res.y - TIP_PAD;
+    const plane = this.deskPlaneAt(res.x, deskY, res.z);
+    if (plane && deskY - plane.y > AIR_TAP) {
+      this.logger?.event(time, 'calibration-rejected', { hand: HAND_SIDES[hand], aboveDeskMm: Math.round((deskY - plane.y) * 1000) });
+      return false;
+    }
+    const spot = spotFromTouch(res.x, deskY, res.z, this.head.x, this.head.y, this.head.z,
+      plane ? { ...BOARD_PLACE, maxPull: Number.POSITIVE_INFINITY } : BOARD_PLACE);
+    let keptOnDesk = false;
+    if (plane) {
+      this.tmp.set(spot.x, plane.y, spot.z);
+      plane.obj.worldToLocal(this.tmp);
+      const cx = plane.maxX - plane.minX > 2 * DESK_INSET
+        ? Math.min(plane.maxX - DESK_INSET, Math.max(plane.minX + DESK_INSET, this.tmp.x))
+        : (plane.minX + plane.maxX) / 2;
+      const cz = plane.maxZ - plane.minZ > 2 * DESK_INSET
+        ? Math.min(plane.maxZ - DESK_INSET, Math.max(plane.minZ + DESK_INSET, this.tmp.z))
+        : (plane.minZ + plane.maxZ) / 2;
+      if (Math.abs(cx - this.tmp.x) > 1e-4 || Math.abs(cz - this.tmp.z) > 1e-4) {
+        this.tmp.set(cx, 0, cz);
+        plane.obj.localToWorld(this.tmp);
+        spot.x = this.tmp.x;
+        spot.z = this.tmp.z;
+        spot.yaw = Math.atan2(this.head.x - spot.x, this.head.z - spot.z);
+        keptOnDesk = true;
+      }
+    }
+    const calib = {
+      hand: HAND_SIDES[hand],
+      deskY: +deskY.toFixed(4),
+      spreadMm: +(res.spread * 1000).toFixed(1),
+      samples: res.samples,
+      planeDeltaMm: plane ? +((plane.y - deskY) * 1000).toFixed(1) : null,
+      pulledIn: spot.moved,
+      keptOnDesk,
+    };
+    this.logger?.setCalibration(calib);
+    this.logger?.event(time, 'calibrated', calib);
+    for (const c of this.calibrators) c.reset();
+    this.place(spot.x, spot.y, spot.z, spot.yaw, 'touch', time, { touch: calib });
+    this.restart();
+    click(0.7, 0.6);
+    return true;
+  }
+
+  /** A world point over the board (plus a margin)? */
+  private overBoard(lx: number, lz: number, margin: number): boolean {
+    return Math.abs(lx) < BOARD.halfX + margin && lz > BOARD.zMin - margin && lz < BOARD.zMax + margin;
+  }
+
+  // -------------------------------------------------------------- hands
+
+  private readHands(time: number): void {
+    const frame = this.xrFrame;
+    const ref = this.xrManager.getReferenceSpace();
+    for (let h = 0; h < 2; h++) {
+      this.holdProgress[h] = 0;
+      const source = this.input.xr.getPrimaryInputSource(HAND_SIDES[h]) as XRInputSource | undefined;
+      const was = this.joints.tracked[h];
+      const ok = this.joints.read(h, frame, ref, source, this.toWorld);
+      if (!ok) {
+        if (was) this.logger?.event(time, 'hand-lost', { hand: h });
+        this.pose[h].pose = POSE_LOST;
+        this.pointing[h] = false;
+        this.calibrators[h].reset();
+        this.registrars[h].reset();
+        this.knobSince[h] = -1;
+        this.knobArmed[h] = true;
+        this.logger?.sample(time, h, 0, 0, 0, 0, POSE_LOST, 0);
+        continue;
+      }
+      if (!was) this.logger?.event(time, 'hand-found', { hand: h });
+      const w = this.joints.world[h];
+      const l = this.local[h];
+      for (let i = 0; i < JOINTS; i++) {
+        this.tmp.set(w[i * 3], w[i * 3 + 1], w[i * 3 + 2]).applyMatrix4(this.inv);
+        l[i * 3] = this.tmp.x;
+        l[i * 3 + 1] = this.tmp.y;
+        l[i * 3 + 2] = this.tmp.z;
+      }
+      classifyPose(l, this.pose[h]);
+      this.pointing[h] = isPointingDown(l);
+      const tx = w[INDEX_TIP * 3], ty = w[INDEX_TIP * 3 + 1], tz = w[INDEX_TIP * 3 + 2];
+      const lx = l[INDEX_TIP * 3], ly = l[INDEX_TIP * 3 + 1], lz = l[INDEX_TIP * 3 + 2];
+      const placed = this.isPlaced();
+
+      // Desk tap (calibration): a pointing fingertip, outside the board once it is placed.
+      if (this.listening) {
+        const res = this.calibrators[h].push(time, tx, ty, tz, this.head.x, this.head.y, this.head.z);
+        const blocked = !this.pointing[h] || (placed && this.placement !== 'fallback' && this.overBoard(lx, lz, 0.03));
+        this.holdProgress[h] = blocked ? 0 : this.calibrators[h].progress;
+        if (res && !blocked) {
+          if (this.calibrateFrom(res, h, time)) {
+            this.inv.copy(this.model.root.matrixWorld).invert();
+            continue;
+          }
+          this.calibrators[h].reset();
+        } else if (res) {
+          this.calibrators[h].reset();
+        }
+      }
+
+      if (!placed) continue;
+
+      this.updateKnob(h, lx, ly, lz, time);
+
+      // Registration of a real object: a pointing fingertip held on top of something.
+      if (!this.listening) {
+        const res = this.registrars[h].push(time, tx, ty, tz, this.head.x, this.head.y, this.head.z);
+        const top = ly - TIP_PAD;
+        const plausible = this.pointing[h] && top >= REGISTER.minHeight && top <= REGISTER.maxHeight;
+        if (plausible) this.holdProgress[h] = Math.max(this.holdProgress[h], this.registrars[h].progress);
+        if (res) {
+          this.registrars[h].reset();
+          this.tryRegister(h, time);
+        }
+      }
+
+      if (this.logger) {
+        this.logger.sample(time, h, l[WRIST * 3], l[WRIST * 3 + 1], l[WRIST * 3 + 2], ly - TIP_PAD, this.pose[h].pose, this.pose[h].normalY);
+      }
+    }
+  }
+
+  private tryRegister(h: number, time: number): void {
+    const l = this.local[h];
+    const x = l[INDEX_TIP * 3], y = l[INDEX_TIP * 3 + 1], z = l[INDEX_TIP * 3 + 2];
+    let keeperDistance = Infinity;
+    for (const k of this.level.keepers) keeperDistance = Math.min(keeperDistance, Math.hypot(x - k.x, z - k.z));
+    keeperDistance = Math.min(keeperDistance, Math.hypot(x - this.lantern.x, z - this.lantern.z));
+    const verdict = judgeRegistration({
+      x, y, z,
+      pointing: this.pointing[h],
+      board: BOARD,
+      routeDistance: distanceToPolyline(x, z, this.level.route),
+      keeperDistance,
+    });
+    const info = { hand: h, xMm: Math.round(x * 1000), zMm: Math.round(z * 1000), topMm: Math.round((y - TIP_PAD) * 1000) };
+    if (verdict !== 'ok') {
+      // Holds at desk height or by a hand that isn't pointing are ordinary play: don't log them.
+      if (verdict !== 'too-low' && verdict !== 'not-pointing') {
+        this.logger?.event(time, 'register-rejected', { reason: verdict, ...info });
+        click(1.3, 0.2);
+      }
+      return;
+    }
+    // Replace an object touched again (or the oldest when full).
+    let slot = -1;
+    for (let i = 0; i < this.objectCount; i++) {
+      if (Math.hypot(this.objects[i * 3] - x, this.objects[i * 3 + 1] - z) < REGISTER.replace) slot = i;
+    }
+    if (slot < 0) {
+      if (this.objectCount < MAX_OBJECT_MARKERS) slot = this.objectCount++;
+      else {
+        this.objects.copyWithin(0, 3);
+        slot = MAX_OBJECT_MARKERS - 1;
+      }
+    }
+    this.objects[slot * 3] = x;
+    this.objects[slot * 3 + 1] = z;
+    this.objects[slot * 3 + 2] = y - TIP_PAD;
+    this.syncObjectMarkers();
+    this.logger?.event(time, 'register', { slot, ...info });
+    click(0.9, 0.5);
+  }
+
+  private clearObjects(time: number): void {
+    if (this.objectCount) this.logger?.event(time, 'objects-cleared', { count: this.objectCount });
+    this.objectCount = 0;
+    this.syncObjectMarkers();
+  }
+
+  private syncObjectMarkers(): void {
+    for (let i = 0; i < MAX_OBJECT_MARKERS; i++) {
+      const g = this.model.objectMarkers[i];
+      g.visible = i < this.objectCount;
+      if (!g.visible) continue;
+      g.position.set(this.objects[i * 3], 0, this.objects[i * 3 + 1]);
+      g.getObjectByName('top')!.position.y = this.objects[i * 3 + 2] + 0.002;
+    }
+  }
+
+  private buildOccluders(): void {
+    this.occ.clear();
+    for (let h = 0; h < 2; h++) {
+      if (this.joints.tracked[h]) addHandCapsules(this.local[h], this.joints.radii[h], h, this.occ);
+    }
+    for (let i = 0; i < this.objectCount; i++) {
+      this.occ.addCylinder(this.objects[i * 3], this.objects[i * 3 + 1], REGISTER.radius, this.objects[i * 3 + 2], OBJECT_OWNER + i);
+    }
+  }
+
+  /** Hold a fingertip on the knob to move the board somewhere else. */
+  private updateKnob(h: number, lx: number, ly: number, lz: number, time: number): void {
+    const on = Math.hypot(lx - KNOB.x, lz - KNOB.z) < KNOB.r + 0.006 && ly < 0.01 + TIP_PAD + 0.015;
+    if (!on) {
+      this.knobSince[h] = -1;
+      this.knobArmed[h] = true;
+      return;
+    }
+    if (!this.knobArmed[h]) return;
+    if (this.knobSince[h] < 0) this.knobSince[h] = time;
+    const held = time - this.knobSince[h];
+    this.holdProgress[h] = Math.max(this.holdProgress[h], Math.min(1, held / KNOB_HOLD_S));
+    if (held >= KNOB_HOLD_S) {
+      this.knobArmed[h] = false;
+      this.requestMove(time);
+    }
+  }
+
+  private requestMove(time: number): void {
+    this.listening = true;
+    for (const c of this.calibrators) c.reset();
+    this.logger?.event(time, 'move-requested');
+    click(0.7, 0.4);
+  }
+
+  // -------------------------------------------------------------- the game
+
+  private seenAt(s: number): boolean {
+    this.route.at(s, this.at3);
+    return look(this.lantern, this.occ, this.at3[0], CREATURE_Y, this.at3[1], this.sight).state === SEEN;
+  }
+
+  private restart(): void {
+    const keep = this.creature;
+    this.creature = newCreature();
+    this.creature.spottedCount = keep.spottedCount;
+    this.creature.dashes = keep.dashes;
+    this.homeAt = -1;
+  }
+
+  private runGame(dt: number, time: number): void {
+    const c = this.creature;
+    const m = this.model;
+    this.cw.handPresent = this.joints.tracked[0] || this.joints.tracked[1];
+
+    if (c.mode === MODE_HOME && this.homeAt >= 0 && time - this.homeAt > NEXT_ROUND_S) this.restart();
+
+    const ev = stepCreature(c, dt, this.cw);
+    const s = c.s;
+    switch (ev) {
+      case EV_DASH_START:
+        this.logger?.event(time, 'dash', { sMm: Math.round(s * 1000) });
+        break;
+      case EV_SPOTTED:
+        this.logger?.event(time, 'spotted', { sMm: Math.round(s * 1000) });
+        click(0.45, 0.7);
+        break;
+      case EV_HOME:
+        this.wins++;
+        this.homeAt = time;
+        this.logger?.event(time, 'home', { wins: this.wins, spotted: c.spottedCount });
+        lock();
+        break;
+      case EV_PAUSE:
+        this.logger?.event(time, 'pause');
+        break;
+      case EV_RESUME:
+        this.logger?.event(time, 'resume');
+        break;
+      case EV_BACK_IN_NOOK:
+        this.logger?.event(time, 'back-in-nook');
+        break;
+    }
+
+    // The creature's own sight line, for the log and the hum.
+    this.route.at(s, this.at3);
+    const cx = this.at3[0], cz = this.at3[1], heading = this.at3[2];
+    look(this.lantern, this.occ, cx, CREATURE_Y, cz, this.sight);
+    if (this.sight.state !== this.lineState || (this.sight.state === SHADOW && this.sight.by !== this.lineBy)) {
+      if (this.sight.state === SHADOW || this.lineState === SHADOW) {
+        this.logger?.event(time, 'line', {
+          blocked: this.sight.state === SHADOW,
+          by: this.sight.state === SHADOW ? this.ownerName(this.sight.by) : null,
+          sMm: Math.round(s * 1000),
+        });
+      }
+      this.lineState = this.sight.state;
+      this.lineBy = this.sight.by;
+    }
+    setHum(c.mode === MODE_HOME ? 0.3 : 1, this.sight.state === SHADOW);
+    // The first time it stands in a hand's shadow inside the light, the lesson is learned.
+    if (!this.everDashed && this.sight.state === SHADOW && this.sight.by < OBJECT_OWNER) {
+      this.everDashed = true;
+      this.logger?.event(time, 'first-shadow');
+    }
+
+    // Creature pose and look.
+    const cr = m.creature;
+    cr.root.position.set(cx, 0, cz);
+    cr.root.rotation.y = c.mode === MODE_RETREAT ? heading + Math.PI : heading;
+    let bob = 0;
+    let squash = 1;
+    if (c.mode === MODE_DASH || c.mode === MODE_RETREAT) {
+      bob = Math.abs(Math.sin(time * 26)) * 0.003;
+      if (time - this.stepAt > 0.13) {
+        this.stepAt = time;
+        step();
+      }
+    } else if (c.mode === MODE_PAUSED) {
+      squash = 0.9;
+    } else if (c.mode === MODE_HOME) {
+      bob = Math.max(0, Math.sin((time - this.homeAt) * 9)) * 0.008 * Math.max(0, 1 - (time - this.homeAt) / 2);
+    } else {
+      squash = 1 + Math.sin(time * 3) * 0.02; // breathing
+    }
+    cr.root.position.y = bob;
+    cr.root.scale.set(1, squash, 1);
+    const flash = c.mode === MODE_SPOTTED ? 0.5 + 0.5 * Math.sin(time * 30) : 0;
+    cr.bodyMat.emissive.setRGB(flash * 0.6, flash * 0.12, 0);
+
+    // Trinket: turns slowly; carried after a win.
+    m.trinket.rotation.y = time * 0.8;
+    m.trinket.visible = true;
+
+    // Lantern: brighter while the keeper stares at the creature.
+    const staring = this.sight.state === SEEN;
+    m.lanternGlow.emissiveIntensity = (staring ? 2.4 : 1.5) + Math.sin(time * 7) * 0.08;
+    (m.poolMat.uniforms.uFlicker as { value: number }).value = 0.94 + Math.sin(time * 5.3) * 0.04 + Math.sin(time * 13.1) * 0.02;
+
+    // Path dots: lit / shadow / dark.
+    for (let i = 0; i < PATH_DOTS; i++) {
+      const ds = (i / (PATH_DOTS - 1)) * this.route.length;
+      this.route.at(ds, this.at3);
+      const st = look(this.lantern, this.occ, this.at3[0], CREATURE_Y, this.at3[1], this.sight).state;
+      m.pathDots.setColorAt(i, st === SEEN ? this.colLit : st === SHADOW ? this.colShadow : this.colDark);
+    }
+    if (m.pathDots.instanceColor) m.pathDots.instanceColor.needsUpdate = true;
+
+    // Ghost hand: shows the "stop" palm until the first dash.
+    const since = time - this.placedAt;
+    const ghost = !this.everDashed && since < GHOST_MAX_S && !this.listening;
+    m.ghostHand.visible = ghost;
+    if (ghost) m.ghostMat.opacity = 0.18 + 0.14 * (0.5 + 0.5 * Math.sin(time * 3));
+
+    // Cover proxy (debug): one dot per joint, sized as cover.
+    if (flags.proxy) {
+      let n = 0;
+      for (let h = 0; h < 2; h++) {
+        if (!this.joints.tracked[h]) continue;
+        const l = this.local[h];
+        for (let i = 0; i < JOINTS; i++) {
+          setInstance(m.proxyDots, n++, l[i * 3], l[i * 3 + 1], l[i * 3 + 2], 0.011, this.mtx);
+        }
+      }
+      m.proxyDots.count = n;
+      m.proxyDots.instanceMatrix.needsUpdate = true;
+    }
+  }
+
+  private ownerName(by: number): string {
+    if (by === 0) return 'hand-left';
+    if (by === 1) return 'hand-right';
+    if (by >= OBJECT_OWNER) return `object-${by - OBJECT_OWNER}`;
+    return 'none';
+  }
+
+  // ---------------------------------------------------------- visuals
+
+  private updateRing(): void {
+    const h = this.holdProgress[0] >= this.holdProgress[1] ? 0 : 1;
+    const p = this.holdProgress[h];
+    if (p < 0.08 || !this.joints.tracked[h]) {
+      this.ring.visible = false;
+      return;
+    }
+    const w = this.joints.world[h];
+    this.ring.position.set(w[INDEX_TIP * 3], w[INDEX_TIP * 3 + 1] - TIP_PAD + 0.001, w[INDEX_TIP * 3 + 2]);
+    this.ring.scale.setScalar(1 + (1 - p) * 1.6);
+    this.ringMat.opacity = 0.35 + 0.65 * p;
+    this.ring.visible = true;
+  }
+
+  private updatePrompt(time: number): void {
+    const card = this.prompt.mesh;
+    let lines: string[] | null = null;
+    let onBoard = true;
+    if (this.listening && this.placement !== 'restoring') {
+      const placed = this.isPlaced() && this.placement !== 'fallback';
+      lines = placed
+        ? ['Tap the desk with one finger to move it,', '!or put your hand in the light']
+        : ['Tap your desk with one finger', '!and hold it still'];
+      onBoard = placed;
+    } else if (this.isPlaced() && this.creature.mode === MODE_PAUSED) {
+      lines = ['It waits for your hand.', '!Show me a hand.'];
+    } else if (this.isPlaced() && !this.everDashed && time - this.placedAt > 4 && time - this.placedAt < GHOST_MAX_S) {
+      lines = ['Shade its path:', '!rest your hand in the light'];
+    }
+    if (!lines) {
+      card.visible = false;
+      return;
+    }
+    this.prompt.set(lines);
+    this.placeCard(card, onBoard ? 0 : null, BOARD.zMin - 0.01, 0.13);
+    card.visible = true;
+  }
+
+  /** A card behind the board (board frame x, z, height y) tilted toward the viewer; x === null floats it in front. */
+  private placeCard(card: Mesh, x: number | null, z: number, y: number): void {
+    const root = this.model.root;
+    if (x !== null) {
+      this.tmp.set(x, y, z);
+      root.localToWorld(this.tmp);
+      card.position.copy(this.tmp);
+      this.tilt.setFromAxisAngle(this.xAxis, -0.35);
+      card.quaternion.copy(root.quaternion).multiply(this.tilt);
+    } else {
+      card.position.copy(this.head).addScaledVector(this.forward, 0.42);
+      card.position.y = this.head.y - 0.22;
+      this.quat.setFromAxisAngle(this.yAxis, Math.atan2(-this.forward.x, -this.forward.z));
+      this.tilt.setFromAxisAngle(this.xAxis, -0.45);
+      card.quaternion.copy(this.quat).multiply(this.tilt);
+    }
+  }
+
+  // ---------------------------------------------------------- tester mode
+
+  private countFrame(delta: number, time: number): void {
+    if (this.fpsStart < 0) {
+      this.fpsStart = time;
+      this.fpsFrames = 0;
+      this.fpsWorst = 0;
+      return;
+    }
+    this.fpsFrames++;
+    if (delta > this.fpsWorst) this.fpsWorst = delta;
+    const span = time - this.fpsStart;
+    if (span >= 1) {
+      this.fps = this.fpsFrames / span;
+      this.logger?.event(time, 'fps', { fps: Math.round(this.fps * 10) / 10, worstMs: Math.round(this.fpsWorst * 10000) / 10 });
+      this.fpsStart = time;
+      this.fpsFrames = 0;
+      this.fpsWorst = 0;
+    }
+  }
+
+  private updateTester(time: number): void {
+    const panel = this.panel!;
+    const placed = this.isPlaced();
+    if (placed && this.guideStart < 0) this.guideStart = time + GUIDE_DELAY_S;
+    let stepLine: [string, string] = ['', ''];
+    if (!flags.guide) {
+      stepLine = ['Free play (guided steps off)', ''];
+    } else if (this.guideStart >= 0 && time >= this.guideStart) {
+      let t = time - this.guideStart;
+      let i = 0;
+      for (; i < GUIDE.length; i++) {
+        const span = GUIDE_PREP_S + GUIDE[i].seconds;
+        if (t < span) break;
+        t -= span;
+      }
+      if (i >= GUIDE.length) {
+        this.logger?.setLabel('free', time);
+        stepLine = ['!Done. Free play: help it cross.', 'Then leave the immersive view.'];
+      } else if (t < GUIDE_PREP_S) {
+        this.logger?.setLabel('prep', time);
+        stepLine = [`!Next (${i + 1}/${GUIDE.length}): ${GUIDE[i].text[0]}`, GUIDE[i].text[1]];
+      } else {
+        this.logger?.setLabel(GUIDE[i].label, time);
+        const left = Math.ceil(GUIDE[i].seconds - (t - GUIDE_PREP_S));
+        stepLine = [`!Step ${i + 1}/${GUIDE.length} (${left}s): ${GUIDE[i].text[0]}`, GUIDE[i].text[1]];
+      }
+    } else if (!placed) {
+      stepLine = ['!Tap the desk with one finger', 'and hold it still'];
+    } else {
+      stepLine = ['!Get ready: a short guided test starts soon', ''];
+    }
+
+    if (time - this.panelAt > 0.15) {
+      this.panelAt = time;
+      const hand = (h: number) =>
+        this.joints.tracked[h] ? `${POSE_NAMES[this.pose[h].pose]}${this.pointing[h] ? '/point' : ''}` : '--';
+      const line = this.lineState === SEEN ? 'SEEN' : this.lineState === SHADOW ? `shadow:${this.ownerName(this.lineBy)}` : 'dark';
+      panel.set([
+        `TEST  ${this.placement}  anchor ${this.deskAnchor.status}  ${this.fps.toFixed(0)} fps`,
+        `R ${hand(1)}   L ${hand(0)}   objects ${this.objectCount}`,
+        `creature ${MODE_NAMES[this.creature.mode]}  line ${line}  lit ${(this.lightMap.litFraction * 100).toFixed(0)}%`,
+        stepLine[0],
+        stepLine[1],
+        `log ${this.logger?.sampleCount ?? 0} samples. Leave the view to download.`,
+      ]);
+    }
+    if (placed) this.placeCard(panel.mesh, 0, BOARD.zMin - 0.04, 0.32);
+    else {
+      this.placeCard(panel.mesh, null, 0, 0);
+      panel.mesh.position.y += 0.1;
+    }
+    panel.mesh.visible = true;
+  }
+
+  // -------------------------------------------------------------------- debug
+
+  private exposeDebug(): void {
+    const self = this;
+    const debug: CoverDebug = {
+      get placement() {
+        return self.placement;
+      },
+      get listening() {
+        return self.listening;
+      },
+      get creature() {
+        const c = self.creature;
+        return { s: +c.s.toFixed(4), mode: MODE_NAMES[c.mode], spotted: c.spottedCount, dashes: c.dashes, wins: self.wins, length: self.route.length };
+      },
+      get line() {
+        return { state: self.lineState === SEEN ? 'seen' : self.lineState === SHADOW ? 'shadow' : 'dark', by: self.lineBy };
+      },
+      get hands() {
+        return [0, 1].map((h) => ({
+          tracked: self.joints.tracked[h],
+          pose: POSE_NAMES[self.pose[h].pose],
+          normalY: +self.pose[h].normalY.toFixed(3),
+          pointing: self.pointing[h],
+        }));
+      },
+      get objects() {
+        return Array.from({ length: self.objectCount }, (_, i) => ({
+          x: +self.objects[i * 3].toFixed(4),
+          z: +self.objects[i * 3 + 1].toFixed(4),
+          top: +self.objects[i * 3 + 2].toFixed(4),
+        }));
+      },
+      get litFraction() {
+        return +self.lightMap.litFraction.toFixed(3);
+      },
+      get fps() {
+        return +self.fps.toFixed(1);
+      },
+      get anchorStatus() {
+        return self.deskAnchor.status;
+      },
+      get placementInfo() {
+        return self.placementInfo;
+      },
+      boardPoint(x, z, y) {
+        const v = new Vector3(x, y, z);
+        self.model.root.updateWorldMatrix(true, false);
+        self.model.root.localToWorld(v);
+        return [v.x, v.y, v.z];
+      },
+      toBoard(x, y, z) {
+        const v = new Vector3(x, y, z);
+        self.model.root.updateWorldMatrix(true, false);
+        self.model.root.worldToLocal(v);
+        return [v.x, v.y, v.z];
+      },
+      joints(hand) {
+        return self.joints.tracked[hand] ? Array.from(self.joints.world[hand]) : null;
+      },
+      lantern: self.lantern,
+      route: Array.from(self.level.route),
+      logSamples: () => self.logger?.sampleCount ?? 0,
+      exportLog: () => self.logger?.toJSON() ?? null,
+      summary: () => (self.logger ? analyseLog(self.logger.log) : null),
+      setLabel(label) {
+        if (self.logger && (LABELS as readonly string[]).includes(label)) self.logger.setLabel(label as Label, self.lastTime);
+      },
+      requestMove() {
+        self.requestMove(self.lastTime);
+      },
+      restart() {
+        self.restart();
+      },
+      clearObjects() {
+        self.clearObjects(self.lastTime);
+      },
+      sightAt(x, z) {
+        const r = look(self.lantern, self.occ, x, CREATURE_Y, z, { state: DARK, by: BY_NONE });
+        return r.state === SEEN ? 'seen' : r.state === SHADOW ? `shadow:${self.ownerName(r.by)}` : 'dark';
+      },
+    };
+    (window as unknown as { __cover: CoverDebug }).__cover = debug;
+  }
+}
+
+function polygonBounds(poly: readonly DOMPointReadOnly[]): { minX: number; maxX: number; minZ: number; maxZ: number } {
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+  for (const p of poly) {
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.z < minZ) minZ = p.z;
+    if (p.z > maxZ) maxZ = p.z;
+  }
+  return { minX, maxX, minZ, maxZ };
+}

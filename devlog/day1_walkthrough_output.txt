@@ -1,0 +1,51 @@
+--- calib
+PASS first run: board placed automatically on the detected desk {"method": "desk", "eyeDistance": 0.643, "eyeDrop": 0.454, "deskY": 0.726}
+PASS first run: still listening for a desk tap 
+PASS a flat hand resting on the desk does not move the board (not a one-finger tap) desk
+PASS one-finger tap + hold places the board by touch {"hand": "right", "deskY": 0.7252, "spreadMm": 2.5, "samples": 13, "planeDeltaMm": -0.2, "pulledIn": true, "keptOnDesk": true}
+PASS desk height from the fingertip within 2 mm of the detected plane -0.2
+  anchor saved
+--- idle
+PASS no hand in the light: the light map is fully lit 1
+PASS no hand in the light: the creature stays out of the light {"s": 0.0313, "mode": "wait", "spotted": 0, "dashes": 3, "wins": 0, "length": 0.38019222021102905}{"state": "dark", "by": -1}
+PASS middle of the path is seen by the keeper seen
+  shot day1_01_board_idle.png
+--- poses
+PASS stop palm near the lantern: middle of the path is shadow:hand-right shadow:hand-right pose=stop normalY=0.11
+PASS stop palm is classified "stop" stop
+PASS edge-on wall (palm toward the user): middle of the path is shadow:hand-right shadow:hand-right pose=edge normalY=0.141
+PASS edge-on wall is classified "edge" edge
+PASS flat hand right by the path: middle of the path is shadow:hand-right shadow:hand-right pose=flat normalY=0.984
+PASS flat hand is classified "flat" flat
+PASS flat hand near the lantern (light passes over it): middle of the path is seen seen pose=flat normalY=0.984
+PASS a fist held up in the light (any pose blocks): middle of the path is shadow:hand-right shadow:hand-right pose=other normalY=0.11
+PASS an open hand, fingers spread (high five): middle of the path is shadow:hand-right shadow:hand-right pose=stop normalY=0.11
+--- cross
+PASS stop palm opens a shadow lane: the creature dashes into it {"s": 0.2164, "mode": "wait", "spotted": 0, "dashes": 8, "wins": 2, "length": 0.38019222021102905}
+  shot day1_02_stop_palm_shadow_lane.png
+PASS guiding the shadow across brings the creature home, never spotted {"s": 0.0336, "mode": "wait", "spotted": 0, "dashes": 10, "wins": 3, "length": 0.38019222021102905} palm sweep + wait 8.9 s wall (headless emulator runs at ~13 fps)
+--- spotted
+PASS creature waits inside the palm's shadow {"s": 0.2435, "mode": "wait", "spotted": 0, "dashes": 12, "wins": 3, "length": 0.38019222021102905}
+PASS hand lifted while it stands in the light: spotted {"s": 0.2435, "mode": "spotted", "spotted": 1, "dashes": 12, "wins": 3, "length": 0.38019222021102905}
+PASS after being spotted it runs back out of the light {"s": 0.0348, "mode": "wait", "spotted": 1, "dashes": 13, "wins": 3, "length": 0.38019222021102905}
+--- pause
+PASS headset loses the hands: the creature waits (paused), not spotted {"s": 0.2411, "mode": "paused", "spotted": 1, "dashes": 15, "wins": 3, "length": 0.38019222021102905}
+  shot day1_04_hand_lost_waits.png
+PASS while paused nothing moves and nothing is judged {'s': 0.2411, 'mode': 'paused', 'spotted': 1, 'dashes': 15, 'wins': 3, 'length': 0.38019222021102905} -> {'s': 0.2411, 'mode': 'paused', 'spotted': 1, 'dashes': 15, 'wins': 3, 'length': 0.38019222021102905}
+PASS hand back: play resumes {"s": 0.2411, "mode": "wait", "spotted": 1, "dashes": 15, "wins": 3, "length": 0.38019222021102905}
+--- register
+PASS a hold over the path is rejected (on-route) []
+PASS a one-finger hold at desk height registers nothing 
+PASS a one-finger hold 9 cm up, beside the path, registers an object with that height {"x": 0.06, "z": -0.01, "top": 0.09}
+PASS the registered object casts a shadow the creature can use shadow:object-0 at (0.102,0.057)
+PASS touching near an old object again replaces it (no duplicate) [{"x": 0.08, "z": -0.03, "top": 0.12}]
+PASS a second object elsewhere is added [{"x": 0.08, "z": -0.03, "top": 0.12}, {"x": -0.07, "z": -0.01, "top": 0.06}]
+PASS a point on the path behind the first object is in its shadow shadow:object-0
+  shot day1_05_registered_object.png
+--- persist
+PASS anchor saved saved
+PASS next session: the board comes back to the same spot (anchor) anchor moved 0.00 mm
+--- export
+PASS log exports as cover-tester-log v1 2 sessions, 3575 samples
+PASS log has line, dash and fps events {"lines": {"blocked": 7, "cleared": 6, "byOwner": {"hand-right": 6, "object-1": 1}}, "creature": {"dashes": 17, "spotted": 2, "home": 3, "pauses": 1}, "fps": {"seconds": 130, "p5": 9.6, "median": 13.6, "worstFrameMs": 159.6}, "registrations": {"ok": 3, "rejected": {"on-route": 1}}}
+36/36 passed

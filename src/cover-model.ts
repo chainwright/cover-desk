@@ -1,0 +1,341 @@
+/**
+ * Everything drawn on the board, built in code: one material family (felt,
+ * paper, turned wood), no textures, no files to load.
+ *
+ *  - the lantern-keeper (turned wood, felt nightcap) and its paper lantern
+ *  - the light pool: the lantern's light on the desk, with the hand's shadow
+ *    cut out of it, drawn from the light map (light-map.ts)
+ *  - the felt creature, its nook, its trinket, the path as paper dots
+ *  - markers for registered real objects, a move knob, a ghost hand that shows
+ *    the "stop" palm in the first seconds
+ */
+import {
+  BufferAttribute,
+  BufferGeometry,
+  CapsuleGeometry,
+  CircleGeometry,
+  Color,
+  ConeGeometry,
+  CylinderGeometry,
+  DataTexture,
+  DoubleSide,
+  Group,
+  InstancedMesh,
+  LinearFilter,
+  Matrix4,
+  Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  Object3D,
+  RGBAFormat,
+  RingGeometry,
+  ShaderMaterial,
+  SphereGeometry,
+  UnsignedByteType,
+  BoxGeometry,
+} from '@iwsdk/core';
+import { BOARD, type Level } from './level.ts';
+import { MAP_COLS, MAP_MIN_D, MAP_ROWS } from './light-map.ts';
+import { REGISTER } from './contact.ts';
+import type { Lantern } from './sightline.ts';
+
+export const PATH_DOTS = 26;
+export const MAX_OBJECT_MARKERS = 4;
+export const KNOB = { x: -(BOARD.halfX + 0.02), z: BOARD.zMax - 0.02, r: 0.014 } as const;
+
+const FELT = (color: number) => new MeshStandardMaterial({ color, roughness: 1, metalness: 0 });
+const WOOD = (color: number) => new MeshStandardMaterial({ color, roughness: 0.55, metalness: 0 });
+const PAPER = (color: number) => new MeshStandardMaterial({ color, roughness: 0.9, metalness: 0 });
+
+export interface Creature {
+  root: Group;
+  body: Mesh;
+  bodyMat: MeshStandardMaterial;
+}
+
+export interface CoverModel {
+  /** Board root: placed on the desk, +z toward the user. */
+  root: Group;
+  pool: Mesh;
+  poolMat: ShaderMaterial;
+  shadowTex: DataTexture;
+  keeper: Group;
+  lanternGlow: MeshStandardMaterial;
+  creature: Creature;
+  trinket: Group;
+  nook: Mesh;
+  pathDots: InstancedMesh;
+  objectMarkers: Group[];
+  knob: Mesh;
+  ghostHand: Group;
+  ghostMat: MeshBasicMaterial;
+  proxyDots: InstancedMesh;
+}
+
+export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
+  const root = new Group();
+  root.name = 'cover-board';
+
+  // ------------------------------------------------------------ light pool
+  const lantern = level.lanterns[0];
+  const shadowTex = new DataTexture(mapData, MAP_COLS, MAP_ROWS, RGBAFormat, UnsignedByteType);
+  shadowTex.magFilter = LinearFilter;
+  shadowTex.minFilter = LinearFilter;
+  shadowTex.needsUpdate = true;
+  const poolMat = new ShaderMaterial({
+    uniforms: {
+      tMap: { value: shadowTex },
+      uL: { value: [lantern.x, lantern.z] },
+      uYaw: { value: lantern.yaw },
+      uHalf: { value: lantern.half },
+      uMinD: { value: MAP_MIN_D },
+      uRange: { value: lantern.range },
+      uWarm: { value: new Color(0xffc46b) },
+      uShade: { value: new Color(0x1b2140) },
+      uFlicker: { value: 1 },
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vPos;
+      void main() {
+        vPos = position.xz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D tMap;
+      uniform vec2 uL;
+      uniform float uYaw, uHalf, uMinD, uRange, uFlicker;
+      uniform vec3 uWarm, uShade;
+      varying vec2 vPos;
+      void main() {
+        vec2 r = vPos - uL;
+        float d = length(r);
+        float az = atan(r.x, r.y) - uYaw;
+        az = mod(az + 3.14159265, 6.2831853) - 3.14159265;
+        float u = (az + uHalf) / (2.0 * uHalf);
+        float v = (d - uMinD) / (uRange - uMinD);
+        if (u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0) discard;
+        float lit = texture2D(tMap, vec2(u, v)).r;
+        float edge = smoothstep(1.0, 0.8, abs(az) / uHalf) * smoothstep(1.0, 0.72, v) * smoothstep(0.0, 0.08, v);
+        float fall = clamp(0.16 / (0.1 + d), 0.0, 1.0);
+        vec3 col = mix(uShade, uWarm, lit);
+        float a = edge * mix(0.5, 0.55 * fall * uFlicker, lit);
+        gl_FragColor = vec4(col, a);
+      }`,
+    transparent: true,
+    depthWrite: false,
+    side: DoubleSide,
+  });
+  const pool = new Mesh(sectorGeometry(lantern, 48, 12), poolMat);
+  pool.name = 'light-pool';
+  pool.position.y = 0.0015;
+  pool.renderOrder = 1;
+  root.add(pool);
+
+  // ------------------------------------------------------------ keeper + lantern
+  const keeper = new Group();
+  keeper.name = 'lantern-keeper';
+  const k = level.keepers[0];
+  keeper.position.set(k.x, 0, k.z);
+  const wood = WOOD(0xb98a5a);
+  const darkWood = WOOD(0x6b4a30);
+  const body = new Mesh(new CylinderGeometry(0.015, 0.021, 0.048, 24), wood);
+  body.position.y = 0.024;
+  const collar = new Mesh(new CylinderGeometry(0.017, 0.017, 0.004, 24), darkWood);
+  collar.position.y = 0.049;
+  const head = new Mesh(new SphereGeometry(0.016, 24, 16), wood);
+  head.position.y = 0.064;
+  const cap = new Mesh(new ConeGeometry(0.016, 0.03, 20), FELT(0x3f5a7a));
+  cap.position.set(0.004, 0.086, 0);
+  cap.rotation.z = -0.5;
+  const pom = new Mesh(new SphereGeometry(0.005, 12, 8), FELT(0xefe6d2));
+  pom.position.set(0.016, 0.097, 0);
+  const eyeMat = new MeshBasicMaterial({ color: 0x2a1d14 });
+  for (const sx of [-1, 1]) {
+    const eye = new Mesh(new BoxGeometry(0.006, 0.0012, 0.001), eyeMat); // sleepy, closed
+    eye.position.set(sx * 0.006, 0.066, 0.0158);
+    keeper.add(eye);
+  }
+  keeper.add(body, collar, head, cap, pom);
+  root.add(keeper);
+
+  const post = new Mesh(new CylinderGeometry(0.0025, 0.0035, lantern.y - 0.008, 10), darkWood);
+  post.position.set(lantern.x, (lantern.y - 0.008) / 2, lantern.z);
+  const lanternGlow = new MeshStandardMaterial({ color: 0xfff1d0, emissive: 0xffb050, emissiveIntensity: 1.6, roughness: 0.9 });
+  const lamp = new Mesh(new CylinderGeometry(0.009, 0.009, 0.016, 16), lanternGlow);
+  lamp.position.set(lantern.x, lantern.y, lantern.z);
+  const lid = new Mesh(new ConeGeometry(0.012, 0.008, 16), darkWood);
+  lid.position.set(lantern.x, lantern.y + 0.012, lantern.z);
+  root.add(post, lamp, lid);
+
+  // ------------------------------------------------------------ path, nook, trinket
+  const r = level.route;
+  const dotMat = new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+  const dotGeo = new CircleGeometry(0.0035, 14);
+  dotGeo.rotateX(-Math.PI / 2);
+  const pathDots = new InstancedMesh(dotGeo, dotMat, PATH_DOTS);
+  pathDots.name = 'path-dots';
+  pathDots.position.y = 0.002;
+  pathDots.renderOrder = 2;
+  root.add(pathDots); // positions set by the system (it owns the Route)
+
+  const nook = new Mesh(new SphereGeometry(0.028, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), FELT(0x4f6b45));
+  nook.name = 'nook';
+  nook.position.set(r[0] - 0.012, 0, r[1]);
+  nook.scale.set(1, 0.9, 1);
+  const door = new Mesh(new CircleGeometry(0.012, 20, 0, Math.PI), FELT(0x1e2418));
+  door.position.set(0.0285, 0, 0);
+  door.rotation.y = Math.PI / 2;
+  nook.add(door);
+  root.add(nook);
+
+  const trinket = new Group();
+  trinket.name = 'trinket';
+  const n = r.length;
+  trinket.position.set(r[n - 2] + 0.008, 0, r[n - 1]);
+  const mat = new Mesh(new CircleGeometry(0.016, 24), PAPER(0xf1e6cf));
+  mat.rotation.x = -Math.PI / 2;
+  mat.position.y = 0.001;
+  const brass = new MeshStandardMaterial({ color: 0xd9a441, roughness: 0.35, metalness: 0.6 });
+  const top = new Mesh(new ConeGeometry(0.008, 0.012, 20), brass);
+  top.rotation.x = Math.PI;
+  top.position.y = 0.007;
+  const spindle = new Mesh(new CylinderGeometry(0.0015, 0.0015, 0.008, 8), darkWood);
+  spindle.position.y = 0.016;
+  trinket.add(mat, top, spindle);
+  root.add(trinket);
+
+  // ------------------------------------------------------------ creature
+  const creature = buildCreature();
+  root.add(creature.root);
+
+  // ------------------------------------------------------------ registered objects
+  const objectMarkers: Group[] = [];
+  const paper = PAPER(0xf3ead6);
+  for (let i = 0; i < MAX_OBJECT_MARKERS; i++) {
+    const g = new Group();
+    g.name = `object-${i}`;
+    const foot = new Mesh(new RingGeometry(REGISTER.radius - 0.004, REGISTER.radius, 40), paper);
+    foot.rotation.x = -Math.PI / 2;
+    foot.position.y = 0.002;
+    const topRing = new Mesh(new RingGeometry(0.012, 0.016, 24), FELT(0xffb050));
+    topRing.rotation.x = -Math.PI / 2;
+    topRing.name = 'top';
+    g.add(foot, topRing);
+    g.visible = false;
+    root.add(g);
+    objectMarkers.push(g);
+  }
+
+  // ------------------------------------------------------------ move knob
+  const knob = new Mesh(new CylinderGeometry(KNOB.r, KNOB.r, 0.01, 20), darkWood);
+  knob.name = 'move-knob';
+  knob.position.set(KNOB.x, 0.005, KNOB.z);
+  root.add(knob);
+
+  // ------------------------------------------------------------ ghost hand (teaches the "stop" palm)
+  const ghostMat = new MeshBasicMaterial({ color: 0xfff4e0, transparent: true, opacity: 0.35, depthWrite: false, side: DoubleSide });
+  const ghostHand = buildGhostHand(ghostMat);
+  ghostHand.position.set(lantern.x, 0, lantern.z + 0.07);
+  root.add(ghostHand);
+
+  // ------------------------------------------------------------ cover proxy (debug)
+  const proxyDots = new InstancedMesh(
+    new SphereGeometry(1, 10, 6),
+    new MeshBasicMaterial({ color: 0x7fd4ff, transparent: true, opacity: 0.35, depthWrite: false }),
+    50,
+  );
+  proxyDots.name = 'hand-proxy';
+  proxyDots.count = 0;
+  proxyDots.frustumCulled = false;
+  root.add(proxyDots);
+
+  return {
+    root, pool, poolMat, shadowTex, keeper, lanternGlow, creature, trinket, nook, pathDots,
+    objectMarkers, knob, ghostHand, ghostMat, proxyDots,
+  };
+}
+
+function buildCreature(): Creature {
+  const root = new Group();
+  root.name = 'creature';
+  const bodyMat = FELT(0xd2764b);
+  const body = new Mesh(new SphereGeometry(0.0115, 24, 16), bodyMat);
+  body.scale.set(1, 0.9, 1.15);
+  body.position.y = 0.012;
+  const belly = new Mesh(new SphereGeometry(0.0072, 16, 10), FELT(0xf0d2b0));
+  belly.position.set(0, 0.0105, 0.0072);
+  const earMat = FELT(0xa8553a);
+  for (const sx of [-1, 1]) {
+    const ear = new Mesh(new ConeGeometry(0.004, 0.009, 12), earMat);
+    ear.position.set(sx * 0.0055, 0.0235, -0.001);
+    ear.rotation.z = -sx * 0.35;
+    root.add(ear);
+    const eye = new Mesh(new SphereGeometry(0.0017, 10, 6), new MeshBasicMaterial({ color: 0x1a120c }));
+    eye.position.set(sx * 0.0045, 0.0155, 0.0115);
+    root.add(eye);
+    const foot = new Mesh(new SphereGeometry(0.0032, 10, 6), earMat);
+    foot.position.set(sx * 0.005, 0.0022, 0.003);
+    foot.scale.set(1, 0.6, 1.3);
+    root.add(foot);
+  }
+  const tail = new Mesh(new SphereGeometry(0.0035, 10, 6), FELT(0xf0d2b0));
+  tail.position.set(0, 0.011, -0.0125);
+  root.add(body, belly, tail);
+  return { root, body, bodyMat };
+}
+
+function buildGhostHand(mat: MeshBasicMaterial): Group {
+  // An upright open hand, palm toward the lantern (−z), wrist on the desk.
+  const g = new Group();
+  g.name = 'ghost-hand';
+  const palm = new Mesh(new BoxGeometry(0.075, 0.08, 0.018), mat);
+  palm.position.y = 0.06;
+  g.add(palm);
+  const fingers = [
+    [-0.027, 0.062], [-0.009, 0.072], [0.009, 0.07], [0.027, 0.058],
+  ];
+  for (const [x, len] of fingers) {
+    const f = new Mesh(new CapsuleGeometry(0.0085, len - 0.017, 4, 10), mat);
+    f.position.set(x, 0.1 + len / 2, 0);
+    g.add(f);
+  }
+  const thumb = new Mesh(new CapsuleGeometry(0.009, 0.035, 4, 10), mat);
+  thumb.position.set(0.05, 0.062, 0.004);
+  thumb.rotation.z = -0.7;
+  g.add(thumb);
+  return g;
+}
+
+/** A flat annular sector in the xz plane covering the lantern's light. */
+function sectorGeometry(l: Lantern, segs: number, rings: number): BufferGeometry {
+  const verts: number[] = [];
+  const idx: number[] = [];
+  for (let i = 0; i <= rings; i++) {
+    const d = MAP_MIN_D + ((l.range - MAP_MIN_D) * i) / rings;
+    for (let j = 0; j <= segs; j++) {
+      const a = l.yaw - l.half + (2 * l.half * j) / segs;
+      verts.push(l.x + Math.sin(a) * d, 0, l.z + Math.cos(a) * d);
+    }
+  }
+  const w = segs + 1;
+  for (let i = 0; i < rings; i++) {
+    for (let j = 0; j < segs; j++) {
+      const a = i * w + j;
+      idx.push(a, a + w, a + 1, a + 1, a + w, a + w + 1);
+    }
+  }
+  const g = new BufferGeometry();
+  g.setAttribute('position', new BufferAttribute(new Float32Array(verts), 3));
+  g.setIndex(idx);
+  g.computeBoundingSphere();
+  return g;
+}
+
+/** Sets instance i of an InstancedMesh to a translation + uniform scale (no allocation). */
+export function setInstance(mesh: InstancedMesh, i: number, x: number, y: number, z: number, s: number, m: Matrix4): void {
+  m.makeScale(s, s, s);
+  m.setPosition(x, y, z);
+  mesh.setMatrixAt(i, m);
+}
+
+export type { Object3D };

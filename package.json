@@ -1,5 +1,5 @@
 {
-  "name": "fade",
+  "name": "cover",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,9 +11,8 @@
     "typecheck": "tsc --noEmit",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test tests/*.test.ts",
+    "test": "node --test tests/sightline.test.ts tests/game.test.ts",
     "check": "npm run typecheck && npm test && npm run build",
-    "sweep": "node tools/sweep-thresholds.mjs",
     "analyze": "node tools/analyze-log.mjs"
   },
   "dependencies": {

@@ -1,8 +1,8 @@
 import { DepthSensingSystem, VisibilityState, World } from '@iwsdk/core';
 import projectOptions from 'virtual:iwsdk-project';
-import { unlockAudio } from './click-sound.js';
+import { unlockAudio } from './click-sound.ts';
+import { CoverSystem, type CoverDebug } from './cover-system.ts';
 import { flags } from './flags.ts';
-import { SorobanSystem, type FadeDebug } from './soroban-system.js';
 
 const intro = document.getElementById('intro') as HTMLDivElement;
 const enter = document.getElementById('enter') as HTMLButtonElement;
@@ -21,19 +21,15 @@ if (flags.depth && projectOptions.xr) {
   };
 }
 
-World.create(
-  document.getElementById('scene-container') as HTMLDivElement,
-  projectOptions,
-).then(async (world) => {
+World.create(document.getElementById('scene-container') as HTMLDivElement, projectOptions).then(async (world) => {
   if (flags.depth) {
     world.registerSystem(DepthSensingSystem, {
       configData: { enableDepthTexture: true, enableOcclusion: true, useFloat32: true, blurRadius: 20 },
     });
   }
-  world.registerSystem(SorobanSystem);
+  world.registerSystem(CoverSystem);
 
-  const supported =
-    (await navigator.xr?.isSessionSupported('immersive-ar').catch(() => false)) ?? false;
+  const supported = (await navigator.xr?.isSessionSupported('immersive-ar').catch(() => false)) ?? false;
   if (supported) {
     enter.disabled = false;
     note.textContent = 'Sit at a desk. Hands only, no controllers.';
@@ -45,7 +41,6 @@ World.create(
     unlockAudio();
     world.launchXR();
   });
-  // A native "enter" prompt can also start the session; any tap unlocks audio.
   document.addEventListener('pointerdown', unlockAudio, { once: true });
 
   world.visibilityState.subscribe((state) => {
@@ -58,22 +53,22 @@ World.create(
 
 function setUpTester(): void {
   tester.hidden = false;
-  const fade = () => (window as unknown as { __fade?: FadeDebug }).__fade;
+  const cover = () => (window as unknown as { __cover?: CoverDebug }).__cover;
   const refresh = () => {
-    const n = fade()?.logSamples() ?? 0;
+    const n = cover()?.logSamples() ?? 0;
     download.disabled = copy.disabled = n === 0;
     logInfo.textContent = n ? `Log ready: ${n} samples.` : 'No log yet.';
   };
   refresh();
-  window.addEventListener('fade:session-end', refresh);
+  window.addEventListener('cover:session-end', refresh);
 
   download.addEventListener('click', () => {
-    const json = fade()?.exportLog();
+    const json = cover()?.exportLog();
     if (!json) return;
     const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-    a.download = `fade-touch-log-${stamp}.json`;
+    a.download = `cover-tester-log-${stamp}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -81,12 +76,12 @@ function setUpTester(): void {
   });
 
   copy.addEventListener('click', async () => {
-    const summary = JSON.stringify(fade()?.summary());
+    const summary = JSON.stringify(cover()?.summary());
     try {
       await navigator.clipboard.writeText(summary);
       logInfo.textContent = 'Summary copied. Paste it in a message to us.';
     } catch {
-      logInfo.textContent = summary; // clipboard blocked: show it to select by hand
+      logInfo.textContent = summary;
     }
   });
 }

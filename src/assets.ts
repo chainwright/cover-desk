@@ -1,5 +1,5 @@
 import { defineAssets } from '@iwsdk/core';
 
-// The soroban is built in code at runtime (its beads move every frame), so the
+// Everything on the board is built in code at runtime (cover-model.ts), so the
 // scene needs no manifest assets.
 export default defineAssets({});

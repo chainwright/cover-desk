@@ -41,7 +41,7 @@ export default defineConfig({
     esbuildOptions: { target: 'esnext' },
   },
   // Build id written into tester logs (the commit on CI, 'dev' locally).
-  define: { __FADE_BUILD__: JSON.stringify((process.env.GITHUB_SHA ?? 'dev').slice(0, 12)) },
+  define: { __COVER_BUILD__: JSON.stringify((process.env.GITHUB_SHA ?? 'dev').slice(0, 12)) },
   publicDir: 'public',
   base: './',
 });
