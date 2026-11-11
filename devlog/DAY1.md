@@ -222,6 +222,19 @@ Screenshots (emulator, leaning over the board):
    judges without a headset can try it on a desktop. The Quest browser skips
    it, but it still downloads it.
 
+## Public URL
+
+https://chainwright.github.io/cover-desk/ (repository
+https://github.com/chainwright/cover-desk).
+
+Checked in headless Chromium with `?test=1&reset=1`: HTTP 200, no console
+errors, title and intro card "Cover", tester block shown; Enter starts the
+session through the bundled emulator, the intro hides, placement resolves to
+`fallback` at the emulator's default standing pose and listens for a desk tap.
+The creature is `paused` because the emulator starts with controllers and no
+tracked hands, which is the intended "it waits for your hand". The log's build
+stamp matches the deployed commit (`d5dd39c32d95`).
+
 ## Deploy
 
 Public repository `chainwright/cover-desk`, GitHub Pages from the `gh-pages`
