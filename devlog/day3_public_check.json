@@ -1,0 +1,76 @@
+{
+ "static": {
+  "mainStatus": 200,
+  "emuStatus": 200,
+  "mainHasEmulator": false,
+  "emuHasEmulator": true,
+  "stamp": "\"2f1f81a5086c\"",
+  "emuStamp": "\"2f1f81a5086c\""
+ },
+ "main": {
+  "before": {
+   "status": 200,
+   "emulatorFlag": "false",
+   "iwer": false,
+   "intro": "A sleepy keeper's lantern lights your desk. Stand your hand on the desk between the lantern and the path, like 'stop', and a tiny felt creature dashes through your shadow.",
+   "note": "Open this page in the browser of a Meta Quest 3 or 3S. No headset? Try it in the desktop emulator.",
+   "emuLink": "./emu/",
+   "enterDisabled": true,
+   "reportLink": "https://github.com/chainwright/cover-desk/issues/new?template=tester-report.yml"
+  },
+  "after": null,
+  "errors": []
+ },
+ "emu": {
+  "before": {
+   "status": 200,
+   "emulatorFlag": "true",
+   "iwer": true,
+   "intro": "A sleepy keeper's lantern lights your desk. Stand your hand on the desk between the lantern and the path, like 'stop', and a tiny felt creature dashes through your shadow.",
+   "note": "Desktop emulator: a simulated room and hands. Enter seats you at its desk with hands; then H stands your hand between the lantern and the path, holding → slides it. On a Quest, open the main link instead.",
+   "emuLink": null,
+   "enterDisabled": false,
+   "reportLink": "https://github.com/chainwright/cover-desk/issues/new?template=tester-report.yml"
+  },
+  "after": {
+   "introHidden": true,
+   "placement": "desk",
+   "planeLabel": "desk",
+   "emulator": true,
+   "cues": {
+    "ghost": true,
+    "prompt": "teach",
+    "knobLabel": true,
+    "canRegister": true,
+    "ghostVisible": true,
+    "promptVisible": true,
+    "promptText": "Stand your hand like 'stop' between the lantern and the path"
+   },
+   "emuKeys": true,
+   "logStore": {
+    "status": "ready",
+    "error": "",
+    "sessions": 1,
+    "full": false
+   },
+   "build": "2f1f81a5086c",
+   "logEmulator": true,
+   "deskAfterS": 6.464,
+   "afterH": {
+    "creature": {
+     "s": 0.195,
+     "mode": "dash",
+     "spotted": 0,
+     "dashes": 1,
+     "wins": 0,
+     "length": 0.38019222021102905
+    },
+    "line": {
+     "state": "shadow",
+     "by": 1
+    }
+   }
+  },
+  "errors": []
+ }
+}

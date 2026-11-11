@@ -1,10 +1,12 @@
-// Day-2 public URL check: the main build has no emulator and points desktop
-// visitors to /emu/; the /emu/ build runs the emulator and starts a session.
-//   node tools/emu/public_check.mjs [base-url]
+// Public URL check: the main build has no emulator and points desktop
+// visitors to /emu/; the /emu/ build runs the emulator and starts a session
+// (day 3: seated at the emulated desk, the board on it, the tester log kept).
+//   node tools/emu/public_check.mjs [base-url] [commit]
 import { chromium } from 'playwright';
 
 const BASE = process.argv[2] ?? 'https://chainwright.github.io/cover-desk/';
 const MARKERS = ['Activating IWER runtime', 'IWER_MCP'];
+const COMMIT = (process.argv[3] ?? '').slice(0, 7);
 const out = {};
 
 // 1) static: the served main bundle has no emulator code, /emu/ has it
@@ -21,7 +23,8 @@ out.static = {
   emuStatus: emu.status,
   mainHasEmulator: MARKERS.some((m) => main.text.includes(m)),
   emuHasEmulator: MARKERS.some((m) => emu.text.includes(m)),
-  stamp: (main.text.match(/"([0-9a-f]{12})"/g) ?? []).find((s) => s.startsWith('"9155473')) ?? null,
+  stamp: COMMIT ? (main.text.match(/"([0-9a-f]{12})"/g) ?? []).find((s) => s.startsWith('"' + COMMIT)) ?? null : null,
+  emuStamp: COMMIT ? (emu.text.match(/"([0-9a-f]{12})"/g) ?? []).find((s) => s.startsWith('"' + COMMIT)) ?? null : null,
 };
 
 const browser = await chromium.launch({ args: ['--ignore-gpu-blocklist', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -40,17 +43,25 @@ async function visit(url, enter) {
     note: document.getElementById('note').textContent,
     emuLink: document.querySelector('#note a')?.getAttribute('href') ?? null,
     enterDisabled: document.getElementById('enter').disabled,
+    reportLink: document.getElementById('report')?.getAttribute('href') ?? null,
   }));
   before.status = resp.status();
   let after = null;
   if (enter && !before.enterDisabled) {
     await page.click('#enter');
-    await page.waitForTimeout(7000);
+    const t0 = Date.now();
+    await page.waitForFunction(() => window.__cover.placement === 'desk', null, { timeout: 30000 }).catch(() => {});
+    const deskAfterS = (Date.now() - t0) / 1000;
+    await page.waitForTimeout(1500);
     after = await page.evaluate(() => {
       const f = window.__cover;
       const log = f.exportLog();
-      return { introHidden: document.getElementById('intro').hidden, placement: f.placement, emulator: f.emulator, cues: f.cues, build: log ? JSON.parse(log).build : null, logEmulator: log ? JSON.parse(log).emulator : null };
+      return { introHidden: document.getElementById('intro').hidden, placement: f.placement, planeLabel: f.placementInfo?.planeLabel ?? null, emulator: f.emulator, cues: f.cues, emuKeys: !!document.getElementById('emu-keys') && document.getElementById('emu-keys').style.display !== 'none', logStore: f.logStore, build: log ? JSON.parse(log).build : null, logEmulator: log ? JSON.parse(log).emulator : null };
     });
+    after.deskAfterS = deskAfterS;
+    await page.keyboard.press('h');
+    await page.waitForTimeout(3000);
+    after.afterH = await page.evaluate(() => ({ creature: window.__cover.creature, line: window.__cover.line }));
   }
   await page.close();
   return { before, after, errors };

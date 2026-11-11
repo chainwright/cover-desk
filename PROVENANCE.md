@@ -16,9 +16,9 @@ how to check it.
 | This repository `chainwright/cover-desk` created | 2026-11-11 06:29:27 | "Cover day 1" commit `2abc761`, 00:28:50 | `gh api repos/chainwright/cover-desk --jq .created_at` |
 | First GitHub Pages deploy of Cover (gh-pages `89486a4`) | 2026-11-11 06:30:34 | 00:30 | `gh api repos/chainwright/cover-desk/deployments --jq '.[] \| [.created_at, .sha]'` |
 | Day-2 deploy (gh-pages `95b710f`, built from `9155473`) | 2026-11-11 07:23:58 | 01:23 | same call |
+| Day-3 deploy (gh-pages `6a08219`, built from `2f1f81a`) | 2026-11-11 08:30:35 | 02:30 | same call |
 
-Later deploys are added to the same list by GitHub on every push to
-`gh-pages`; the day-3 deploy is recorded in `devlog/DAY3.md`.
+GitHub adds every later push to `gh-pages` to the same list.
 
 ## The prototype
 

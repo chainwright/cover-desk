@@ -159,5 +159,26 @@ today; its copy check was updated to the new wording.
 ## Deploy
 
 Typecheck, tests and the full build (with the dist check) ran locally
-first; only on green were `dist/` and `dist/emu/` pushed to `gh-pages`,
-fast-forward only. The public check is below.
+first; only on green were `dist/` and `dist/emu/` (built from `2f1f81a`)
+pushed to `gh-pages` as `6a08219`, fast-forward only; gitleaks found nothing
+in either commit. GitHub records the deploy at 2026-11-11 08:30:35 UTC.
+
+## Public URL
+
+- Main (Quest): https://chainwright.github.io/cover-desk/
+- Desktop emulator: https://chainwright.github.io/cover-desk/emu/
+- Tester report form: https://github.com/chainwright/cover-desk/issues/new?template=tester-report.yml
+
+Checked after the deploy with `tools/emu/public_check.mjs` (now takes the
+commit as an argument and drives the `/emu/` seat; headless Chromium; result
+in `day3_public_check.json`):
+- both return HTTP 200 and carry the build stamp `2f1f81a5086c`; the served
+  main bundle contains no emulator code, the `/emu/` bundle does; no console
+  errors on either;
+- both intros read "Stand your hand on the desk between the lantern and the
+  path, like 'stop'"; the tester block links the report form;
+- `/emu/?test=1&reset=1`, Enter: seated, board on the emulated desk after
+  6.5 s (`planeLabel: desk`), the card reads "Stand your hand like 'stop'
+  between the lantern and the path", key list shown, log store `ready`;
+  then **H**: the creature dashes into the hand's shadow (`line: shadow` by
+  the right hand).
