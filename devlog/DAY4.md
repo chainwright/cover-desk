@@ -129,6 +129,32 @@ Screenshots (emulator, simulated room): `day4_01_emu_lane_slide_card.png`
 (the lane after H and the slide card), `day4_02_emu_spotted_keeper_stares.png`
 (spotted: the stare line from the lantern, the first win's bead by the nook).
 
+## Deploy
+
+Typecheck, tests and the full build (with the dist check) ran first, gated
+by exit code; only then were `dist/` and `dist/emu/` (built from `80ebc13`,
+stamp `80ebc13bf115`) pushed to `gh-pages` as `6f3c214`, fast-forward only;
+gitleaks found nothing in either commit. GitHub records the deploy at
+2026-11-11 09:40:22 UTC.
+
+## Public URL
+
+- Main (Quest): https://chainwright.github.io/cover-desk/
+- Desktop emulator: https://chainwright.github.io/cover-desk/emu/
+
+Checked after the deploy with `tools/emu/public_check.mjs` (headless
+Chromium; `day4_public_check.json`): both return HTTP 200 with stamp
+`80ebc13bf115`; the main bundle has no emulator code, `/emu/` has it; no
+console errors on either; `/emu/?test=1&reset=1` → board on the emulated
+desk after 6.4 s, the teaching card, log store `ready`; **H** → the creature
+in the hand's shadow, waiting at s = 0.104.
+
+The same replay as above, against the live `/emu/`
+(`day4_live_replay.txt`): no card during the search; H → litFraction 0.826,
+the slide card; **30 s still → no win**; **→ held → a win** after 12.7 s,
+trinket carried, 1 bead; L → spotted, eyes open, stare line; no console
+errors.
+
 ## Still open
 
 - **A Quest run** (P0-2): one private tester with the fixed kit.
