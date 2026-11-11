@@ -138,6 +138,7 @@ OUT=[
 ]
 EMU=os.environ.get('COVER_EMU_BASE')
 ONLY=sys.argv[1] if len(sys.argv)>1 else None  # 'unit' or 'outside'
+PICK=sys.argv[2:]  # day 7: optional mutation ids to run (e.g. R1 R2 G10), so long glue runs can be split
 def emu_stage():
     b=subprocess.run(['node','tools/build-emu.mjs'],cwd=ROOT,capture_output=True,text=True)
     if b.returncode: return 'emu build failed'
@@ -147,6 +148,7 @@ def emu_stage():
     return f'emu: CAUGHT (checks failing: {", ".join(failed)})' if r.returncode else 'emu: survived'
 
 todo=[(m,False) for m in M]*(ONLY!='outside') + [(m,True) for m in OUT]*(ONLY!='unit')
+if PICK: todo=[(m,o) for m,o in todo if m[0].split(' ')[0] in PICK]
 for (name, f, a, b), outside in todo:
     p=f'{ROOT}/{f}'; src=open(p).read()
     assert src.count(a)==1, (name, src.count(a))

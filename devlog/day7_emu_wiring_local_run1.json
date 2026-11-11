@@ -1,0 +1,654 @@
+{
+ "checks": [
+  {
+   "name": "status",
+   "pass": true,
+   "info": 200
+  },
+  {
+   "name": "session",
+   "pass": true,
+   "info": {
+    "mode": "immersive-ar",
+    "init": {
+     "requiredFeatures": [],
+     "optionalFeatures": [
+      "local-floor",
+      "bounded-floor",
+      "layers",
+      "hand-tracking",
+      "anchors",
+      "plane-detection"
+     ]
+    }
+   }
+  },
+  {
+   "name": "flush-5s",
+   "pass": true,
+   "info": {
+    "before": 0,
+    "afterS": 16.684
+   }
+  },
+  {
+   "name": "flush-hide",
+   "pass": true,
+   "info": {
+    "n1": 2,
+    "n2": 3
+   }
+  },
+  {
+   "name": "slide-card",
+   "pass": true,
+   "info": {
+    "cue": "slide",
+    "lit": 0.826,
+    "creature": {
+     "s": 0.104,
+     "mode": "wait",
+     "spotted": 0,
+     "dashes": 2,
+     "wins": 0,
+     "length": 0.38019222021102905
+    }
+   }
+  },
+  {
+   "name": "teach-spot-not-awake",
+   "pass": true,
+   "info": {
+    "eyes": 1,
+    "stare": false,
+    "trinketCarried": false,
+    "beads": 0,
+    "awake": false,
+    "hop": 0,
+    "winTrace": [],
+    "flare": 0,
+    "bead": 1,
+    "sounds": {
+     "chime": 0,
+     "hm": 0,
+     "lock": 0
+    }
+   }
+  },
+  {
+   "name": "win",
+   "pass": true,
+   "info": {
+    "afterS": 18.933,
+    "spotted": 0
+   }
+  },
+  {
+   "name": "win-trinket",
+   "pass": true,
+   "info": null
+  },
+  {
+   "name": "win-bead",
+   "pass": true,
+   "info": 1
+  },
+  {
+   "name": "win-chime",
+   "pass": true,
+   "info": {
+    "chime": 1,
+    "hm": 0,
+    "lock": 1
+   }
+  },
+  {
+   "name": "win-hop-flare",
+   "pass": true,
+   "info": {
+    "frames": 5,
+    "inHop": 1,
+    "inFlare": 3,
+    "bad": [],
+    "polledMaxHop": 0.017,
+    "polledMaxFlare": 0.156,
+    "fps": 2.6
+   }
+  },
+  {
+   "name": "again",
+   "pass": true,
+   "info": {
+    "cue": "again",
+    "ghost": true
+   }
+  },
+  {
+   "name": "again-waits",
+   "pass": true,
+   "info": {
+    "mode": "home",
+    "cue": "again",
+    "ghost": true,
+    "gaze": false,
+    "sinceWinS": 6.142
+   }
+  },
+  {
+   "name": "again-cleared",
+   "pass": true,
+   "info": {
+    "cue": "unlocked",
+    "ghost": false,
+    "mode": "dash"
+   }
+  },
+  {
+   "name": "spotted-eyes-stare",
+   "pass": true,
+   "info": {
+    "eyes": 4.5,
+    "stare": true,
+    "trinketCarried": false,
+    "beads": 1,
+    "awake": false,
+    "hop": 0,
+    "winTrace": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      0.7874000072479248,
+      0.01698240637779236,
+      0.15628845989704132
+     ],
+     [
+      1.1828999519348145,
+      0,
+      0.04117690026760101
+     ],
+     [
+      1.4311000108718872,
+      0,
+      0.006752002518624067
+     ],
+     [
+      1.6848000288009644,
+      0,
+      0
+     ],
+     [
+      1.9204000234603882,
+      0,
+      0
+     ],
+     [
+      2.1679999828338623,
+      0,
+      0
+     ],
+     [
+      2.462899923324585,
+      0,
+      0
+     ],
+     [
+      2.6675000190734863,
+      0,
+      0
+     ],
+     [
+      2.9154000282287598,
+      0,
+      0
+     ],
+     [
+      3.260200023651123,
+      0,
+      0
+     ],
+     [
+      3.505500078201294,
+      0,
+      0
+     ],
+     [
+      3.712899923324585,
+      0,
+      0
+     ],
+     [
+      3.9542999267578125,
+      0,
+      0
+     ],
+     [
+      4.223400115966797,
+      0,
+      0
+     ],
+     [
+      4.466899871826172,
+      0,
+      0
+     ],
+     [
+      4.663400173187256,
+      0,
+      0
+     ],
+     [
+      4.903299808502197,
+      0,
+      0
+     ],
+     [
+      5.131499767303467,
+      0,
+      0
+     ],
+     [
+      5.38640022277832,
+      0,
+      0
+     ],
+     [
+      5.6427001953125,
+      0,
+      0
+     ],
+     [
+      5.891900062561035,
+      0,
+      0
+     ],
+     [
+      6.144700050354004,
+      0,
+      0
+     ],
+     [
+      6.375100135803223,
+      0,
+      0
+     ],
+     [
+      6.691199779510498,
+      0,
+      0
+     ],
+     [
+      6.9120001792907715,
+      0,
+      0
+     ],
+     [
+      7.093500137329102,
+      0,
+      0
+     ],
+     [
+      7.318299770355225,
+      0,
+      0
+     ]
+    ],
+    "flare": 0,
+    "bead": 1,
+    "sounds": {
+     "chime": 1,
+     "hm": 1,
+     "lock": 1
+    }
+   }
+  },
+  {
+   "name": "spotted-hm",
+   "pass": true,
+   "info": {
+    "chime": 1,
+    "hm": 1,
+    "lock": 1
+   }
+  },
+  {
+   "name": "spotted-card",
+   "pass": true,
+   "info": {
+    "cue": "spotted",
+    "text": "It saw it Keep your hand in the light's way"
+   }
+  },
+  {
+   "name": "spotted-log",
+   "pass": true,
+   "info": {
+    "t": 55.262,
+    "type": "spotted",
+    "sMm": 156,
+    "keeperAwake": false,
+    "wristMmS": [
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "name": "wake",
+   "pass": true,
+   "info": {
+    "cue": "too-close",
+    "text": "Too close: the keeper woke up. Keep your hand off the lantern"
+   }
+  },
+  {
+   "name": "wake-holds",
+   "pass": true,
+   "info": {
+    "maxS": 0.0065,
+    "wins": 1,
+    "eyes": 4.5,
+    "hm": 2
+   }
+  },
+  {
+   "name": "wake-ends",
+   "pass": true,
+   "info": null
+  },
+  {
+   "name": "woke-reason-lantern",
+   "pass": true,
+   "info": {
+    "t": 62.087,
+    "type": "keeper-woke",
+    "hand": "right",
+    "reason": "lantern",
+    "level": 1,
+    "distMm": 42
+   }
+  },
+  {
+   "name": "l2-unlocked",
+   "pass": true,
+   "info": {
+    "level": {
+     "id": 1,
+     "unlocked": true,
+     "gazeWake": false,
+     "mugCovers": false,
+     "ghostSpot": "teach",
+     "gazeShown": true,
+     "mugGhostShown": true,
+     "ghostAt": [
+      -0.065,
+      -0.025
+     ],
+     "l2Won": false
+    },
+    "cue": "unlocked",
+    "text": "Level 2: stand a mug or a book in the gaze; hold a finger on top"
+   }
+  },
+  {
+   "name": "l2-start",
+   "pass": true,
+   "info": {
+    "before2": 2,
+    "v1": "ok",
+    "level": {
+     "id": 2,
+     "unlocked": true,
+     "gazeWake": false,
+     "mugCovers": true,
+     "ghostSpot": "left",
+     "gazeShown": true,
+     "mugGhostShown": false,
+     "ghostAt": [
+      -0.065,
+      -0.025
+     ],
+     "l2Won": false
+    },
+    "objs": [
+     {
+      "x": 0.12,
+      "z": -0.04,
+      "top": 0.1
+     }
+    ],
+    "cue": "l2-teach"
+   }
+  },
+  {
+   "name": "l2-mug-off",
+   "pass": true,
+   "info": "mug-off"
+  },
+  {
+   "name": "l2-o-key",
+   "pass": true,
+   "info": {
+    "objs": [
+     {
+      "x": 0,
+      "z": -0.03,
+      "top": 0.1
+     }
+    ],
+    "cue": "l2-teach",
+    "level": {
+     "id": 2,
+     "unlocked": true,
+     "gazeWake": false,
+     "mugCovers": true,
+     "ghostSpot": "left",
+     "gazeShown": true,
+     "mugGhostShown": false,
+     "ghostAt": [
+      -0.08,
+      -0.025
+     ],
+     "l2Won": false
+    }
+   }
+  },
+  {
+   "name": "l2-visuals",
+   "pass": true,
+   "info": {
+    "id": 2,
+    "unlocked": true,
+    "gazeWake": false,
+    "mugCovers": true,
+    "ghostSpot": "left",
+    "gazeShown": true,
+    "mugGhostShown": false,
+    "ghostAt": [
+     -0.08,
+     -0.025
+    ],
+    "l2Won": false
+   }
+  },
+  {
+   "name": "l2-one-object",
+   "pass": true,
+   "info": {
+    "v2": "ok",
+    "objects": 1,
+    "level": {
+     "id": 2,
+     "unlocked": true,
+     "gazeWake": false,
+     "mugCovers": false,
+     "ghostSpot": "teach",
+     "gazeShown": true,
+     "mugGhostShown": true,
+     "ghostAt": [
+      -0.08,
+      -0.025
+     ],
+     "l2Won": false
+    }
+   }
+  },
+  {
+   "name": "l2-swap",
+   "pass": true,
+   "info": {
+    "creature": {
+     "s": 0.2665,
+     "mode": "wait",
+     "spotted": 1,
+     "dashes": 25,
+     "wins": 1,
+     "length": 0.38019222021102905
+    },
+    "ghostSpot": "right"
+   }
+  },
+  {
+   "name": "l2-ghost-right",
+   "pass": true,
+   "info": [
+    0.08,
+    -0.025
+   ]
+  },
+  {
+   "name": "l2-win",
+   "pass": true,
+   "info": {
+    "creature": {
+     "s": 0.3802,
+     "mode": "home",
+     "spotted": 1,
+     "dashes": 26,
+     "wins": 2,
+     "length": 0.38019222021102905
+    }
+   }
+  },
+  {
+   "name": "l2-won-flag",
+   "pass": true,
+   "info": {
+    "id": 2,
+    "unlocked": true,
+    "gazeWake": false,
+    "mugCovers": true,
+    "ghostSpot": "left",
+    "gazeShown": true,
+    "mugGhostShown": false,
+    "ghostAt": [
+     0.08,
+     -0.025
+    ],
+    "l2Won": true
+   }
+  },
+  {
+   "name": "l2-need-object",
+   "pass": true,
+   "info": {
+    "cue": "need-object",
+    "text": "Level 2 needs a real mug or book in the gaze; hold a finger on top"
+   }
+  },
+  {
+   "name": "l2-no-object-no-win",
+   "pass": true,
+   "info": {
+    "wins": 2,
+    "gazeWoke": true
+   }
+  },
+  {
+   "name": "woke-reason-gaze",
+   "pass": true,
+   "info": [
+    {
+     "t": 127.817,
+     "type": "keeper-woke",
+     "hand": "right",
+     "reason": "gaze",
+     "level": 2,
+     "distMm": 100
+    }
+   ]
+  },
+  {
+   "name": "register-gate",
+   "pass": true,
+   "info": {
+    "flat": {
+     "at": [
+      0.11999999731779099,
+      0.0899999737739563,
+      -0.039999961853027344
+     ],
+     "pointing": false,
+     "objects": 0
+    },
+    "point": {
+     "at": [
+      0.11999999731779099,
+      0.0899999737739563,
+      -0.039999961853027344
+     ],
+     "pointing": true,
+     "objects": 1
+    }
+   }
+  },
+  {
+   "name": "knob-gate",
+   "pass": true,
+   "info": {
+    "flatCue": "mug-off",
+    "flatPointing": false,
+    "pointTip": [
+     -0.23000000417232513,
+     0.021000027656555176,
+     0.11000001430511475
+    ],
+    "moved": true
+   }
+  },
+  {
+   "name": "fps-inview",
+   "pass": true,
+   "info": [
+    [
+     90,
+     false
+    ],
+    [
+     90,
+     false
+    ],
+    [
+     90,
+     false
+    ],
+    [
+     7,
+     true
+    ],
+    [
+     7,
+     true
+    ]
+   ]
+  },
+  {
+   "name": "errors",
+   "pass": true,
+   "info": []
+  }
+ ],
+ "failed": []
+}

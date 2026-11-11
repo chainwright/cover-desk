@@ -29,8 +29,8 @@ so the game gives the same verdict; not yet on real tracked hands) ·
 unit tests · 66 of 67 deliberate bugs in the tested code make a unit test
 fail (the 67th is equivalent) · 33 glue mutations (ten from an outside run
 on day 4, nine day-6, the eleven an outside run made on day 6, three day-7)
-run against unit tests and then the emulator wiring check on the built
-`/emu/` (`tools/emu/wiring_check.mjs`); results in `devlog/DAY7.md` · frame rate on a Quest: **not measured yet**.
+all 33 caught, 3 by unit tests and 30 by the emulator wiring check on the
+built `/emu/` (`tools/emu/wiring_check.mjs`; `devlog/DAY7.md`) · frame rate on a Quest: **not measured yet**.
 
 ## How it plays (level 1)
 

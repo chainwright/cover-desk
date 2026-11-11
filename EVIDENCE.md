@@ -207,11 +207,20 @@ the day-3 mutation itself.
 | 7k unlock card replaces the day-5 "again" card | 1 |
 | 7l level-2 ghosts back at 6 cm (too near the gaze) | 2 |
 | 7m ghost mug off the gaze | 3 |
+| 8a the next round no longer waits for the hand (3.5 s again) | 2 |
+| 8b no wake hysteresis | 2 |
+| 8c creature dwell 0 (the day-6 creature) | 2 |
+| 8d dwell check removed | 2 |
+| 8e gaze drawn during the win's "again" card | 1 |
+| 8f teach copy back to "between the lantern and the path" | 2 |
+| 8g knob: pointing gate removed (pure function) | 1 |
+| 8h level switch keeps every object (pure function) | 1 |
+| 8i fps inView always true (pure function) | 1 |
 
-57 of 58 caught (7e after its new test); the other (4d) is equivalent. The
-day-1 to day-5 rows above are the day-5 counts; on day 6 some of them fail
-one or two more tests (the day-6 tests also catch them), see the output
-file. Output: `devlog/day6_mutations_output.txt`.
+Day 7: 66 of 67 caught; the other (4d) is equivalent. The rows before 8a
+are the earlier days' counts; on later days some fail one or two more
+tests, see the output files. Output: `devlog/day7_mutations_output.txt`
+(day 6: `devlog/day6_mutations_output.txt`).
 
 The outside run's ten day-4 glue mutations, recreated at today's call sites
 (`COVER_EMU_BASE=http://127.0.0.1:8799/ python3 tools/mutations.py outside`
@@ -239,12 +248,31 @@ with `dist/` served there; a mutation no unit test catches is built into
 | G7 level 2 keeps every object (one-object rule off at the call site) | emulator wiring check: l2-one-object |
 | G8 `/emu/` O key registers nothing | emulator wiring check: l2-start, l2-visuals |
 | G9 `/emu/` R key uses the left spot | unit tests (1 failing) |
+| R1 an awake keeper no longer sees the whole path | wake-holds (and later checks) |
+| R2 lantern wake not wired at the call site | wake, wake-holds, woke-reason-lantern |
+| R3 move knob: pointing gate removed at the call site | knob-gate |
+| R4 registration: any hand counts as pointing | register-gate |
+| R5 desk tap: pointing gate removed | fps-inview (not traced: a non-pointing hold likely re-placed the board) |
+| R6 level-2 round boundary back to nook/home only | l2-start and the later l2 checks |
+| R7 level 2 keeps every earlier object at the switch | l2-start, l2-mug-off |
+| R8 keeper-woke always says reason 'lantern' | woke-reason-gaze |
+| R9 fps log inView always true | fps-inview |
+| R10 spotted log: wrist speeds dropped | spotted-log |
+| R11 a level-2 win never recorded (l2Won) | l2-won-flag |
+| G10 the next round starts 3.5 s after a win again | again-waits |
+| G11 the win hop not applied to the creature | win-hop-flare |
+| G12 the win flare not applied to the light | win-hop-flare |
 
-19 of 19 caught (the ten above re-run on day 6 at today's call sites, and
-G1–G9). The wiring check's hop reading is a sampling of 2–3 frames at 3–6
-fps on a loaded machine: its floor went from 1 cm to 3 mm on day 6 after a
-clean build read 0.9 cm, and it still failed once (during G3). It is weak
-evidence on its own; the hop itself is unit-tested (6k).
+Day 7: 33 of 33 caught (`devlog/day7_mutations_output.txt`). R1–R11 are the
+outside run's eleven day-6 glue mutations (its exact edits, at today's call
+sites): on day 6, R3, R7, R9, R10 and R11 survived both stages and R4 and R8
+failed only the flaky hop check; each now fails a check written for it.
+Since day 7 the hop check no longer samples frames from outside: the game
+records every frame of a win and the check compares the applied hop and
+flare with `winFx(t)`. During R7 an intermediate version (with a 2 mm
+floor) still failed once at about 2 fps; the floor went, R7 was re-run and
+failed only l2-start and l2-mug-off. The clean build passed the final
+check twice in a row (`devlog/day7_emu_wiring_local_run*.json`).
 
 Day-5 note: during that day's run the machine lost its network for a while;
 O16–O22 also logged console errors then, not traced to a request. The clean
