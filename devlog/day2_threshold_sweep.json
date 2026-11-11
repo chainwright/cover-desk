@@ -1,0 +1,4491 @@
+{
+ "model": "see tools/sweep-thresholds.mjs header",
+ "trials": 600,
+ "best": {
+  "enterMm": 4,
+  "exitMm": 16,
+  "bandMm": 25,
+  "ok": true,
+  "cost": 0.04257347670250895,
+  "r": {
+   "slide-desk": {
+    "frameError": 0.0016666666666666668,
+    "falseTrials": 0,
+    "dropoutsPerTrial": 0,
+    "wrongRodTrials": 0.0016666666666666668
+   },
+   "touch-top": {
+    "frameError": 0.038906810035842294,
+    "falseTrials": 0,
+    "dropoutsPerTrial": 0.006666666666666667,
+    "wrongRodTrials": 0.0033333333333333335
+   },
+   "hover-2cm": {
+    "frameError": 0.017903225806451612,
+    "falseTrials": 0.025,
+    "dropoutsPerTrial": 0,
+    "wrongRodTrials": 0
+   },
+   "hover-3cm": {
+    "frameError": 0,
+    "falseTrials": 0,
+    "dropoutsPerTrial": 0,
+    "wrongRodTrials": 0
+   },
+   "hover-5cm": {
+    "frameError": 0,
+    "falseTrials": 0,
+    "dropoutsPerTrial": 0,
+    "wrongRodTrials": 0
+   }
+  }
+ },
+ "day1": {
+  "enterMm": 4,
+  "exitMm": 4,
+  "bandMm": 23,
+  "ok": true,
+  "cost": 0.2659838709677419,
+  "r": {
+   "slide-desk": {
+    "frameError": 0.0017204301075268817,
+    "falseTrials": 0,
+    "dropoutsPerTrial": 0.0016666666666666668,
+    "wrongRodTrials": 0.0016666666666666668
+   },
+   "touch-top": {
+    "frameError": 0.16376344086021505,
+    "falseTrials": 0,
+    "dropoutsPerTrial": 1.975,
+    "wrongRodTrials": 0.0016666666666666668
+   },
+   "hover-2cm": {
+    "frameError": 0.0033691756272401434,
+    "falseTrials": 0.025,
+    "dropoutsPerTrial": 0,
+    "wrongRodTrials": 0
+   },
+   "hover-3cm": {
+    "frameError": 0,
+    "falseTrials": 0,
+    "dropoutsPerTrial": 0,
+    "wrongRodTrials": 0
+   },
+   "hover-5cm": {
+    "frameError": 0,
+    "falseTrials": 0,
+    "dropoutsPerTrial": 0,
+    "wrongRodTrials": 0
+   }
+  }
+ },
+ "current": {
+  "enterMm": 4,
+  "exitMm": 16,
+  "bandMm": 23,
+  "ok": true,
+  "cost": 0.043492831541218635,
+  "r": {
+   "slide-desk": {
+    "frameError": 0.0017204301075268817,
+    "falseTrials": 0,
+    "dropoutsPerTrial": 0.0016666666666666668,
+    "wrongRodTrials": 0.0016666666666666668
+   },
+   "touch-top": {
+    "frameError": 0.03960573476702509,
+    "falseTrials": 0,
+    "dropoutsPerTrial": 0.008333333333333333,
+    "wrongRodTrials": 0.0016666666666666668
+   },
+   "hover-2cm": {
+    "frameError": 0.017903225806451612,
+    "falseTrials": 0.025,
+    "dropoutsPerTrial": 0,
+    "wrongRodTrials": 0
+   },
+   "hover-3cm": {
+    "frameError": 0,
+    "falseTrials": 0,
+    "dropoutsPerTrial": 0,
+    "wrongRodTrials": 0
+   },
+   "hover-5cm": {
+    "frameError": 0,
+    "falseTrials": 0,
+    "dropoutsPerTrial": 0,
+    "wrongRodTrials": 0
+   }
+  }
+ },
+ "grid": [
+  {
+   "enterMm": 0,
+   "exitMm": 0,
+   "bandMm": 19,
+   "ok": true,
+   "cost": 0.4743987455197133,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.33086021505376345,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 2.68,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.00026881720430107527,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 0,
+   "bandMm": 21,
+   "ok": true,
+   "cost": 0.46523118279569897,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.3267383512544803,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 2.6966666666666668,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.00026881720430107527,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 0,
+   "bandMm": 23,
+   "ok": true,
+   "cost": 0.46430555555555547,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.3255017921146953,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 2.7066666666666666,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.00026881720430107527,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 0,
+   "bandMm": 25,
+   "ok": true,
+   "cost": 0.46333243727598566,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.32474910394265233,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 2.705,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.00026881720430107527,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 4,
+   "bandMm": 19,
+   "ok": true,
+   "cost": 0.28295250896057345,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.24258064516129033,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.6166666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0005555555555555556,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 4,
+   "bandMm": 21,
+   "ok": true,
+   "cost": 0.27158781362007167,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.23826164874551972,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.5933333333333334,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0005555555555555556,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 4,
+   "bandMm": 23,
+   "ok": true,
+   "cost": 0.27019802867383513,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.23706093189964159,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.5933333333333334,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.0005555555555555556,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 4,
+   "bandMm": 25,
+   "ok": true,
+   "cost": 0.26927867383512544,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.2363620071684588,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.5916666666666667,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.0005555555555555556,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 8,
+   "bandMm": 19,
+   "ok": true,
+   "cost": 0.1831084229390681,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.16623655913978494,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.14666666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0010215053763440861,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 8,
+   "bandMm": 21,
+   "ok": true,
+   "cost": 0.17143369175627238,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.1617741935483871,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.12,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0010215053763440861,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 8,
+   "bandMm": 23,
+   "ok": true,
+   "cost": 0.17006182795698924,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.16059139784946236,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.12,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.0010215053763440861,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 8,
+   "bandMm": 25,
+   "ok": true,
+   "cost": 0.1691424731182796,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.15989247311827956,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.11833333333333333,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.0010215053763440861,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 12,
+   "bandMm": 19,
+   "ok": true,
+   "cost": 0.14656182795698927,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.13485663082437277,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.043333333333333335,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0026702508960573476,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 12,
+   "bandMm": 21,
+   "ok": true,
+   "cost": 0.1344874551971326,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.13016129032258064,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0026702508960573476,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 12,
+   "bandMm": 23,
+   "ok": true,
+   "cost": 0.13311559139784945,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.1289784946236559,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.0026702508960573476,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 0,
+   "exitMm": 12,
+   "bandMm": 25,
+   "ok": true,
+   "cost": 0.13219623655913978,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.1282795698924731,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.011666666666666667,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.0026702508960573476,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 2,
+   "bandMm": 19,
+   "ok": true,
+   "cost": 0.3706747311827957,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.24313620071684588,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 2.36,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0010931899641577062,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 2,
+   "bandMm": 21,
+   "ok": true,
+   "cost": 0.36070967741935483,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.23905017921146954,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 2.36,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0010931899641577062,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 2,
+   "bandMm": 23,
+   "ok": true,
+   "cost": 0.3596406810035842,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.23767025089605734,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 2.37,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.0010931899641577062,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 2,
+   "bandMm": 25,
+   "ok": true,
+   "cost": 0.35870340501792114,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.23695340501792114,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 2.368333333333333,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.0010931899641577062,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 6,
+   "bandMm": 19,
+   "ok": true,
+   "cost": 0.20436917562724016,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.16758064516129031,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.545,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0026344086021505377,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 6,
+   "bandMm": 21,
+   "ok": true,
+   "cost": 0.1931720430107527,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.1635125448028674,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.52,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0026344086021505377,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 6,
+   "bandMm": 23,
+   "ok": true,
+   "cost": 0.19172849462365593,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.16225806451612904,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.52,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.0026344086021505377,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 6,
+   "bandMm": 25,
+   "ok": true,
+   "cost": 0.19080913978494626,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.16155913978494624,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.5183333333333333,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.0026344086021505377,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 10,
+   "bandMm": 19,
+   "ok": true,
+   "cost": 0.1177258064516129,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.10243727598566309,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.115,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.005125448028673835,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 10,
+   "bandMm": 21,
+   "ok": true,
+   "cost": 0.10593817204301076,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.09802867383512545,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.085,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.005125448028673835,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 10,
+   "bandMm": 23,
+   "ok": true,
+   "cost": 0.10456630824372759,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.09684587813620071,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.085,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.005125448028673835,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 10,
+   "bandMm": 25,
+   "ok": true,
+   "cost": 0.10364695340501791,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.09614695340501792,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.08333333333333333,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.005125448028673835,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 14,
+   "bandMm": 19,
+   "ok": true,
+   "cost": 0.09039157706093189,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.07885304659498207,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.04,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.006218637992831541,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 14,
+   "bandMm": 21,
+   "ok": true,
+   "cost": 0.07860394265232974,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.07444444444444444,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.01,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.006218637992831541,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 14,
+   "bandMm": 23,
+   "ok": true,
+   "cost": 0.0772320788530466,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.07326164874551971,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.01,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.006218637992831541,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 2,
+   "exitMm": 14,
+   "bandMm": 25,
+   "ok": true,
+   "cost": 0.0763127240143369,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.07256272401433692,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.008333333333333333,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.006218637992831541,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 4,
+   "bandMm": 19,
+   "ok": true,
+   "cost": 0.2784220430107527,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.16905017921146953,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 1.9966666666666666,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0033691756272401434,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 4,
+   "bandMm": 21,
+   "ok": true,
+   "cost": 0.26739157706093186,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.16498207885304658,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 1.975,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0033691756272401434,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 4,
+   "bandMm": 23,
+   "ok": true,
+   "cost": 0.2659838709677419,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.16376344086021505,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 1.975,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.0033691756272401434,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 4,
+   "bandMm": 25,
+   "ok": true,
+   "cost": 0.26506451612903226,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.16306451612903225,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 1.9733333333333334,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.0033691756272401434,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 8,
+   "bandMm": 19,
+   "ok": true,
+   "cost": 0.13527867383512546,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.10557347670250897,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.4033333333333333,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0076164874551971325,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 8,
+   "bandMm": 21,
+   "ok": true,
+   "cost": 0.1241478494623656,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.10173835125448029,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.375,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0076164874551971325,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 8,
+   "bandMm": 23,
+   "ok": true,
+   "cost": 0.12277598566308244,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.10055555555555555,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.375,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.0076164874551971325,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 8,
+   "bandMm": 25,
+   "ok": true,
+   "cost": 0.12185663082437276,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.09985663082437277,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.37333333333333335,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.0076164874551971325,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 12,
+   "bandMm": 19,
+   "ok": true,
+   "cost": 0.07286827956989247,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.058996415770609316,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.08666666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.014767025089605736,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 12,
+   "bandMm": 21,
+   "ok": true,
+   "cost": 0.06158243727598567,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.055089605734767025,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.056666666666666664,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.014767025089605736,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 12,
+   "bandMm": 23,
+   "ok": true,
+   "cost": 0.0602105734767025,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.053906810035842294,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.056666666666666664,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.014767025089605736,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 12,
+   "bandMm": 25,
+   "ok": true,
+   "cost": 0.059291218637992825,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.053207885304659495,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.055,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.014767025089605736,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 16,
+   "bandMm": 19,
+   "ok": true,
+   "cost": 0.0561505376344086,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.044695340501792115,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.03833333333333333,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.017903225806451612,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 16,
+   "bandMm": 21,
+   "ok": true,
+   "cost": 0.044864695340501796,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.040788530465949824,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.008333333333333333,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.017903225806451612,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 16,
+   "bandMm": 23,
+   "ok": true,
+   "cost": 0.043492831541218635,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.03960573476702509,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.008333333333333333,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.017903225806451612,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 4,
+   "exitMm": 16,
+   "bandMm": 25,
+   "ok": true,
+   "cost": 0.04257347670250895,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.038906810035842294,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.006666666666666667,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.017903225806451612,
+     "falseTrials": 0.025,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 6,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.19799910394265235,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.11062724014336918,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 1.5566666666666666,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.007903225806451614,
+     "falseTrials": 0.04666666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 6,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.18683243727598567,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.10675627240143369,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 1.5283333333333333,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.007939068100358423,
+     "falseTrials": 0.04666666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 6,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.18552598566308245,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.10555555555555556,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 1.53,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.007939068100358423,
+     "falseTrials": 0.04666666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 6,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.18460663082437276,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.10485663082437276,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 1.5283333333333333,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.007939068100358423,
+     "falseTrials": 0.04666666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 10,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.08157078853046595,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.059032258064516126,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.26,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.015896057347670252,
+     "falseTrials": 0.04666666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 10,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.07050000000000001,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.055340501792114694,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.23,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.016057347670250896,
+     "falseTrials": 0.04666666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 10,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.06912813620071684,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.05415770609318996,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.23,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.016057347670250896,
+     "falseTrials": 0.04666666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 10,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.06820878136200717,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.05345878136200717,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.22833333333333333,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.016057347670250896,
+     "falseTrials": 0.04666666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 14,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.04310573476702509,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.030483870967741935,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.06166666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.026827956989247313,
+     "falseTrials": 0.04833333333333333,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 14,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.03203494623655914,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.026792114695340503,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.03166666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.026827956989247313,
+     "falseTrials": 0.04833333333333333,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 14,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.030663082437275987,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.025609318996415772,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.03166666666666667,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.026827956989247313,
+     "falseTrials": 0.04833333333333333,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 14,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.02974372759856631,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.024910394265232973,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.03,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.026827956989247313,
+     "falseTrials": 0.04833333333333333,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 18,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.034221326164874555,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.0228494623655914,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.03666666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0393010752688172,
+     "falseTrials": 0.05,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 18,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.0231505376344086,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.019157706093189963,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.006666666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0393010752688172,
+     "falseTrials": 0.05,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 18,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.021778673835125446,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.017974910394265232,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.006666666666666667,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.0393010752688172,
+     "falseTrials": 0.05,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 6,
+   "exitMm": 18,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.02085931899641577,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.017275985663082437,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.005,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.0393010752688172,
+     "falseTrials": 0.05,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 8,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.12957706093189963,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.06578853046594982,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 1.085,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.01740143369175627,
+     "falseTrials": 0.09333333333333334,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.000053763440860215054,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 8,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.11843458781362007,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.062025089605734766,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 1.055,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.01747311827956989,
+     "falseTrials": 0.09333333333333334,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.000053763440860215054,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 8,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.11700896057347669,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.06078853046594982,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 1.055,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.0174910394265233,
+     "falseTrials": 0.09333333333333334,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.000053763440860215054,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 8,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.11608960573476702,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.06008960573476702,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 1.0533333333333332,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.0174910394265233,
+     "falseTrials": 0.09333333333333334,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.000053763440860215054,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 12,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.05149372759856631,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.034121863799283156,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.15666666666666668,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.030089605734767023,
+     "falseTrials": 0.095,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.00012544802867383513,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 12,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.04042293906810036,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.03043010752688172,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.12666666666666668,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.03021505376344086,
+     "falseTrials": 0.095,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.00012544802867383513,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 12,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.0390510752688172,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.02924731182795699,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.12666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.03021505376344086,
+     "falseTrials": 0.095,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.00012544802867383513,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 12,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.03813172043010753,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.028548387096774194,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.125,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.03021505376344086,
+     "falseTrials": 0.095,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.00012544802867383513,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 16,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.03186021505376344,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.02007168458781362,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.045,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.05460573476702509,
+     "falseTrials": 0.095,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0005734767025089606,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 16,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.020789426523297492,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.016379928315412188,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.015,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.055053763440860215,
+     "falseTrials": 0.095,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0005734767025089606,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 16,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.019417562724014337,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.015197132616487455,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.015,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.055053763440860215,
+     "falseTrials": 0.095,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0005734767025089606,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 16,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.01849820788530466,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.01449820788530466,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.055053763440860215,
+     "falseTrials": 0.095,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0005734767025089606,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 20,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.029758960573476705,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.018387096774193548,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.03666666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.07279569892473119,
+     "falseTrials": 0.095,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0007706093189964158,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 20,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.018688172043010754,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.014695340501792114,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.006666666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0732437275985663,
+     "falseTrials": 0.095,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0007706093189964158,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 20,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.0173163082437276,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.013512544802867383,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.006666666666666667,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.0732437275985663,
+     "falseTrials": 0.095,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0007706093189964158,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 8,
+   "exitMm": 20,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.01639695340501792,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.012813620071684588,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.005,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.0732437275985663,
+     "falseTrials": 0.095,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0007706093189964158,
+     "falseTrials": 0.0033333333333333335,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 10,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.07764695340501793,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.037025089605734765,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.6216666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.03485663082437276,
+     "falseTrials": 0.18166666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.00026881720430107527,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 10,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.06657616487455198,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.03333333333333333,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.5916666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.03492831541218638,
+     "falseTrials": 0.18166666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.00026881720430107527,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 10,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.06520430107526883,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.0321505376344086,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.5916666666666667,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.03492831541218638,
+     "falseTrials": 0.18166666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.00026881720430107527,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 10,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.06428494623655913,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.031451612903225803,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.59,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.03492831541218638,
+     "falseTrials": 0.18166666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.00026881720430107527,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 14,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.034408602150537634,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.02028673835125448,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.09166666666666666,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.0617921146953405,
+     "falseTrials": 0.185,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0005555555555555556,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 14,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.023337813620071684,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.016594982078853047,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.06166666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.06186379928315412,
+     "falseTrials": 0.185,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0005555555555555556,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 14,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.021965949820788533,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.015412186379928316,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.06166666666666667,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.06186379928315412,
+     "falseTrials": 0.185,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0005555555555555556,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 14,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.02104659498207885,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.01471326164874552,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.06,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.06186379928315412,
+     "falseTrials": 0.185,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0005555555555555556,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 18,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.0257078853046595,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.014086021505376344,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.11394265232974911,
+     "falseTrials": 0.19,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0010215053763440861,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 18,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.014637096774193548,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.01039426523297491,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.011666666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.11394265232974911,
+     "falseTrials": 0.19,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0010215053763440861,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 18,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.013265232974910394,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.009211469534050179,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.011666666666666667,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.11394265232974911,
+     "falseTrials": 0.19,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0010215053763440861,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 18,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.012345878136200718,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.008512544802867384,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.01,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.11394265232974911,
+     "falseTrials": 0.19,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0010215053763440861,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 22,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.025057347670250894,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.013602150537634408,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.03833333333333333,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.1471505376344086,
+     "falseTrials": 0.19166666666666668,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0026702508960573476,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 22,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.013986559139784948,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.009910394265232976,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.008333333333333333,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.14906810035842294,
+     "falseTrials": 0.19166666666666668,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0026702508960573476,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 22,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.012614695340501792,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.008727598566308243,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.008333333333333333,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.14906810035842294,
+     "falseTrials": 0.19166666666666668,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0026702508960573476,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 10,
+   "exitMm": 22,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.011695340501792115,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.008028673835125448,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.006666666666666667,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.14906810035842294,
+     "falseTrials": 0.19166666666666668,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0026702508960573476,
+     "falseTrials": 0.005,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 12,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.04808870967741935,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.022383512544802867,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.3233333333333333,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.07078853046594982,
+     "falseTrials": 0.32666666666666666,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0010931899641577062,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 12,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.037,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.01867383512544803,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.29333333333333333,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.07087813620071684,
+     "falseTrials": 0.32666666666666666,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0010931899641577062,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 12,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.035628136200716844,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.0174910394265233,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.29333333333333333,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.07093189964157706,
+     "falseTrials": 0.32666666666666666,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0010931899641577062,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 12,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.03470878136200717,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.0167921146953405,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.2916666666666667,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.0710752688172043,
+     "falseTrials": 0.33,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-3cm": {
+     "frameError": 0.0010931899641577062,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 16,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.02762096774193548,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.014749103942652329,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.06666666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.1256810035842294,
+     "falseTrials": 0.3333333333333333,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0026344086021505377,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 16,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.016550179211469535,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.011057347670250897,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.03666666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.1256989247311828,
+     "falseTrials": 0.3333333333333333,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0026344086021505377,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 16,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.01517831541218638,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.009874551971326164,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.03666666666666667,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.1257347670250896,
+     "falseTrials": 0.3333333333333333,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.0026344086021505377,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 16,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.014258960573476703,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.00917562724014337,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.035,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.1264336917562724,
+     "falseTrials": 0.33666666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-3cm": {
+     "frameError": 0.0026344086021505377,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 20,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.023192652329749104,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.011487455197132616,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.043333333333333335,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.21170250896057347,
+     "falseTrials": 0.3383333333333333,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.005125448028673835,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 20,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.012121863799283155,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.0077956989247311825,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.2117204301075269,
+     "falseTrials": 0.3383333333333333,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.005125448028673835,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 20,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.010750000000000001,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.0066129032258064515,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.212078853046595,
+     "falseTrials": 0.3383333333333333,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.005125448028673835,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 20,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.009830645161290324,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.005913978494623656,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.011666666666666667,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.21444444444444444,
+     "falseTrials": 0.3416666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-3cm": {
+     "frameError": 0.005125448028673835,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 24,
+   "bandMm": 19,
+   "ok": false,
+   "cost": 0.0204578853046595,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0074551971326164874,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.041666666666666664,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.009086021505376345,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.03666666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.27944444444444444,
+     "falseTrials": 0.3416666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.006218637992831541,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 24,
+   "bandMm": 21,
+   "ok": false,
+   "cost": 0.00938709677419355,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.002992831541218638,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.013333333333333334,
+     "wrongRodTrials": 0
+    },
+    "touch-top": {
+     "frameError": 0.005394265232974911,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.006666666666666667,
+     "wrongRodTrials": 0
+    },
+    "hover-2cm": {
+     "frameError": 0.28068100358422937,
+     "falseTrials": 0.3416666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.006218637992831541,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 24,
+   "bandMm": 23,
+   "ok": false,
+   "cost": 0.008015232974910394,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0017204301075268817,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.0016666666666666668,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.004211469534050179,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.006666666666666667,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-2cm": {
+     "frameError": 0.2810394265232975,
+     "falseTrials": 0.3416666666666667,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-3cm": {
+     "frameError": 0.006218637992831541,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  },
+  {
+   "enterMm": 12,
+   "exitMm": 24,
+   "bandMm": 25,
+   "ok": false,
+   "cost": 0.007095878136200717,
+   "r": {
+    "slide-desk": {
+     "frameError": 0.0016666666666666668,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "touch-top": {
+     "frameError": 0.0035125448028673835,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0.005,
+     "wrongRodTrials": 0.0033333333333333335
+    },
+    "hover-2cm": {
+     "frameError": 0.283673835125448,
+     "falseTrials": 0.345,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0.0016666666666666668
+    },
+    "hover-3cm": {
+     "frameError": 0.006218637992831541,
+     "falseTrials": 0.01,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    },
+    "hover-5cm": {
+     "frameError": 0,
+     "falseTrials": 0,
+     "dropoutsPerTrial": 0,
+     "wrongRodTrials": 0
+    }
+   }
+  }
+ ]
+}

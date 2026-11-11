@@ -1,0 +1,598 @@
+{
+ "z_mm": 142.0,
+ "surface_mm": 57.0,
+ "contact": {
+  "enter": 0.004,
+  "exit": 0.016,
+  "floor": -0.03,
+  "band": 0.023,
+  "bandHold": 0.027
+ },
+ "rows": [
+  {
+   "heightMm": 40,
+   "offsetMm": 0,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    0.0,
+    97.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 40,
+   "offsetMm": 10,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    10.0,
+    97.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 40,
+   "offsetMm": 20,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    20.0,
+    97.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 40,
+   "offsetMm": 24,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    24.0,
+    97.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 40,
+   "offsetMm": 30,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    30.0,
+    97.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 30,
+   "offsetMm": 0,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    0.0,
+    87.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 30,
+   "offsetMm": 10,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    10.0,
+    87.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 30,
+   "offsetMm": 20,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    20.0,
+    87.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 30,
+   "offsetMm": 24,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    24.0,
+    87.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 30,
+   "offsetMm": 30,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    30.0,
+    87.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 20,
+   "offsetMm": 0,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    0.0,
+    77.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 20,
+   "offsetMm": 10,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    10.0,
+    77.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 20,
+   "offsetMm": 20,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    20.0,
+    77.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 20,
+   "offsetMm": 24,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    24.0,
+    77.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 20,
+   "offsetMm": 30,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    30.0,
+    77.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 10,
+   "offsetMm": 0,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    0.0,
+    67.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 10,
+   "offsetMm": 10,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    10.0,
+    67.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 10,
+   "offsetMm": 20,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    20.0,
+    67.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 10,
+   "offsetMm": 24,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    24.0,
+    67.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 10,
+   "offsetMm": 30,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    30.0,
+    67.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 6,
+   "offsetMm": 0,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    0.0,
+    63.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 6,
+   "offsetMm": 10,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    10.0,
+    63.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 6,
+   "offsetMm": 20,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    20.0,
+    63.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 6,
+   "offsetMm": 24,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    24.0,
+    63.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 6,
+   "offsetMm": 30,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    30.0,
+    63.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 3,
+   "offsetMm": 0,
+   "state": "contact",
+   "rod": 2,
+   "expectRod": 2,
+   "tipMm": [
+    0.0,
+    60.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 3,
+   "offsetMm": 10,
+   "state": "contact",
+   "rod": 2,
+   "expectRod": 2,
+   "tipMm": [
+    10.0,
+    60.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 3,
+   "offsetMm": 20,
+   "state": "contact",
+   "rod": 2,
+   "expectRod": 2,
+   "tipMm": [
+    20.0,
+    60.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 3,
+   "offsetMm": 24,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    24.0,
+    60.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 3,
+   "offsetMm": 30,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    30.0,
+    60.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 0,
+   "offsetMm": 0,
+   "state": "contact",
+   "rod": 2,
+   "expectRod": 2,
+   "tipMm": [
+    0.0,
+    57.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 0,
+   "offsetMm": 10,
+   "state": "contact",
+   "rod": 2,
+   "expectRod": 2,
+   "tipMm": [
+    10.0,
+    57.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 0,
+   "offsetMm": 20,
+   "state": "contact",
+   "rod": 2,
+   "expectRod": 2,
+   "tipMm": [
+    20.0,
+    57.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 0,
+   "offsetMm": 24,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    24.0,
+    57.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": 0,
+   "offsetMm": 30,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    30.0,
+    57.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": -20,
+   "offsetMm": 0,
+   "state": "contact",
+   "rod": 2,
+   "expectRod": 2,
+   "tipMm": [
+    0.0,
+    37.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": -20,
+   "offsetMm": 10,
+   "state": "contact",
+   "rod": 2,
+   "expectRod": 2,
+   "tipMm": [
+    10.0,
+    37.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": -20,
+   "offsetMm": 20,
+   "state": "contact",
+   "rod": 2,
+   "expectRod": 2,
+   "tipMm": [
+    20.0,
+    37.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": -20,
+   "offsetMm": 24,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    24.0,
+    37.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": -20,
+   "offsetMm": 30,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    30.0,
+    37.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": -49,
+   "offsetMm": 0,
+   "state": "contact",
+   "rod": 2,
+   "expectRod": 2,
+   "tipMm": [
+    0.0,
+    8.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": -49,
+   "offsetMm": 10,
+   "state": "contact",
+   "rod": 2,
+   "expectRod": 2,
+   "tipMm": [
+    10.0,
+    8.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": -49,
+   "offsetMm": 20,
+   "state": "contact",
+   "rod": 2,
+   "expectRod": 2,
+   "tipMm": [
+    20.0,
+    8.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": -49,
+   "offsetMm": 24,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    24.0,
+    8.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  },
+  {
+   "heightMm": -49,
+   "offsetMm": 30,
+   "state": "hover",
+   "rod": -1,
+   "expectRod": -1,
+   "tipMm": [
+    30.0,
+    8.0,
+    142.0
+   ],
+   "tipErrMm": 0.0
+  }
+ ]
+}

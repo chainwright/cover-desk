@@ -12,7 +12,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test tests/*.test.ts",
-    "check": "npm run typecheck && npm test && npm run build"
+    "check": "npm run typecheck && npm test && npm run build",
+    "sweep": "node tools/sweep-thresholds.mjs",
+    "analyze": "node tools/analyze-log.mjs"
   },
   "dependencies": {
     "@iwsdk/core": "1.1.0-rc.2",
