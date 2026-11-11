@@ -12,6 +12,10 @@
  *   4. fallback — a comfortable spot in the air when there is no desk.
  * Hold a fingertip on the small knob at the near-left corner to move it.
  *
+ * Level 2 (day 6, src/level2.ts): unlocked by a level-1 win; it starts once a
+ * real object is registered, and needs it: a hand in the keeper's gaze wakes
+ * it, so only the object can shade the middle of the path.
+ *
  * Every frame: read both hands' 25 joints → capsules in the board frame →
  * with the registered real objects, they are the occluders → the light map
  * (what the keeper sees on the desk, drawn as the light pool with your
@@ -47,6 +51,7 @@ import {
   MODE_DASH,
   MODE_HOME,
   MODE_NAMES,
+  MODE_NOOK,
   MODE_PAUSED,
   MODE_RETREAT,
   MODE_SPOTTED,
@@ -72,7 +77,8 @@ import {
   isPointingDown,
   type PoseInfo,
 } from './hand-proxy.ts';
-import { BOARD, CREATURE_Y, LEVEL_1, Route } from './level.ts';
+import { BOARD, CREATURE_Y, LEVEL_1, Route, TEACH_SPOT, type Level } from './level.ts';
+import { Gaze, L2_LEFT, L2_RIGHT, LEVEL_2, LevelProgress, objectSlot, startLevel } from './level2.ts';
 import { LightMap } from './light-map.ts';
 import { LogKeeper, LogStore, type StoreStatus } from './log-store.ts';
 import { KNOB_LINES, PROMPT_LINES, firstRunCues, newCues, type CueInput } from './onboarding.ts';
@@ -156,6 +162,13 @@ export interface CoverDebug {
   requestMove(): void;
   /** Starts a fresh round (creature back in its nook). */
   restart(): void;
+  /** Day 6: the round's level, whether level 2 is unlocked, a hand in the keeper's gaze, the object covering the gaze. */
+  level: { id: number; unlocked: boolean; gazeWake: boolean; mugCovers: boolean; ghostSpot: string; gazeShown: boolean; mugGhostShown: boolean; ghostAt: [number, number] };
+  /**
+   * Day 6, /emu/ only (the O key): registers an object standing at board point (x, z) with its top at `top`,
+   * through the same rules as a fingertip registration (judgeRegistration), without the hold. Returns the verdict.
+   */
+  registerAt(x: number, z: number, top: number): string;
   /** What the keeper makes of a creature standing at board point (x, z): 'seen' | 'shadow:<by>' | 'dark'. */
   sightAt(x: number, z: number): string;
   /** Forgets every registered object. */
@@ -166,9 +179,17 @@ export class CoverSystem extends createSystem({
   planes: { required: [XRPlaneComponent] },
 }) {
   private model!: CoverModel;
-  private level = LEVEL_1;
+  private progress = new LevelProgress(startLevel(typeof location === 'undefined' ? '' : location.search));
+  private level: Level = this.progress.level === 2 ? LEVEL_2 : LEVEL_1;
   private lantern: Lantern = LEVEL_1.lanterns[0];
   private route = new Route(LEVEL_1.route);
+  /** Level 2: the keeper's gaze (same lantern and path in both levels). */
+  private gaze = new Gaze(LEVEL_1.lanterns[0], this.route);
+  /** Level 2: a hand shades the path inside the gaze (the keeper is awake); the object shades all of it. */
+  private gazeWake = false;
+  private mugCovers = false;
+  private l2Won = false;
+  private objOcc = new Occluders(1, MAX_OBJECT_MARKERS);
   private occ = new Occluders();
   private lightMap = new LightMap();
   private sight: SightResult = { state: DARK, by: BY_NONE };
@@ -187,7 +208,10 @@ export class CoverSystem extends createSystem({
   private coverWatch = new CoverWatch();
   private moveRequested = false;
   private cues = newCues();
-  private cueIn: CueInput = { placement: 'preview', placed: false, listening: false, moveRequested: false, everDashed: false, paused: false, leading: false, spotted: false, awake: false, again: false };
+  private cueIn: CueInput = {
+    placement: 'preview', placed: false, listening: false, moveRequested: false, everDashed: false, paused: false, leading: false, spotted: false, awake: false, again: false,
+    unlocked: false, level: 1, objects: 0, mugCovers: false, gazeWake: false, pastGaze: false, l2Won: false,
+  };
   private promptKey = '';
   private knobCard!: TextCard;
   private stepAt = 0;
@@ -437,18 +461,36 @@ export class CoverSystem extends createSystem({
     i.spotted = this.round.spotted;
     i.awake = this.keeperAwake;
     i.again = this.round.again;
+    i.unlocked = this.progress.unlocked;
+    i.level = this.level.id;
+    i.objects = this.objectCount;
+    i.mugCovers = this.mugCovers;
+    i.gazeWake = this.gazeWake;
+    i.pastGaze = this.creature.s >= this.gaze.s0 && this.creature.mode !== MODE_HOME;
+    i.l2Won = this.l2Won;
     firstRunCues(i, this.cues);
   }
 
-  /** The keeper wakes while a tracked hand is within WAKE_RADIUS of the lantern (feedback.ts). */
+  /**
+   * The keeper wakes while a tracked hand is within WAKE_RADIUS of the lantern (feedback.ts), and in level 2
+   * while a hand shades any point of the path inside its gaze (level2.ts).
+   */
   private updateWake(placed: boolean, time: number): void {
     const h = placed ? handAtLantern(this.local, this.joints.tracked, this.lantern) : -1;
-    const awake = h >= 0;
+    const g = placed && this.level.needsObject ? this.gaze.handInGaze(this.local, this.joints.radii, this.joints.tracked) : -1;
+    const awake = h >= 0 || g >= 0;
     if (awake && !this.keeperAwake) {
       hm();
-      this.logger?.event(time, 'keeper-woke', { hand: HAND_SIDES[h], distMm: Math.round(nearestJointToLantern(this.local[h], this.lantern) * 1000) });
+      const by = h >= 0 ? h : g;
+      this.logger?.event(time, 'keeper-woke', {
+        hand: HAND_SIDES[by],
+        reason: h >= 0 ? 'lantern' : 'gaze',
+        level: this.level.id,
+        distMm: Math.round(nearestJointToLantern(this.local[by], this.lantern) * 1000),
+      });
     }
     this.keeperAwake = awake;
+    this.gazeWake = h < 0 && g >= 0;
   }
 
   // ------------------------------------------------------------- sessions
@@ -841,33 +883,51 @@ export class CoverSystem extends createSystem({
       routeDistance: distanceToPolyline(x, z, this.level.route),
       keeperDistance,
     });
-    const info = { hand: h, xMm: Math.round(x * 1000), zMm: Math.round(z * 1000), topMm: Math.round((y - TIP_PAD) * 1000) };
+    const info = { xMm: Math.round(x * 1000), zMm: Math.round(z * 1000), topMm: Math.round((y - TIP_PAD) * 1000) };
     if (verdict !== 'ok') {
       // Holds at desk height or by a hand that isn't pointing are ordinary play: don't log them.
       if (verdict !== 'too-low' && verdict !== 'not-pointing') {
-        this.logger?.event(time, 'register-rejected', { reason: verdict, ...info });
+        this.logger?.event(time, 'register-rejected', { reason: verdict, hand: h, ...info });
         click(1.3, 0.2);
       }
       return;
     }
-    // Replace an object touched again (or the oldest when full).
-    let slot = -1;
-    for (let i = 0; i < this.objectCount; i++) {
-      if (Math.hypot(this.objects[i * 3] - x, this.objects[i * 3 + 1] - z) < REGISTER.replace) slot = i;
-    }
-    if (slot < 0) {
-      if (this.objectCount < MAX_OBJECT_MARKERS) slot = this.objectCount++;
-      else {
-        this.objects.copyWithin(0, 3);
-        slot = MAX_OBJECT_MARKERS - 1;
-      }
-    }
+    this.addObject(x, z, y - TIP_PAD, time, { hand: h, ...info });
+  }
+
+  /** Registers an object (or replaces one touched again, or the oldest when full); level 2 counts one, so it replaces it. */
+  private addObject(x: number, z: number, top: number, time: number, info: Record<string, unknown>): void {
+    const pick = objectSlot(this.level.needsObject, this.objects, this.objectCount, x, z, REGISTER.replace, MAX_OBJECT_MARKERS);
+    if (pick.shift) this.objects.copyWithin(0, 3);
+    const slot = pick.slot;
+    this.objectCount = pick.count;
     this.objects[slot * 3] = x;
     this.objects[slot * 3 + 1] = z;
-    this.objects[slot * 3 + 2] = y - TIP_PAD;
+    this.objects[slot * 3 + 2] = top;
+    this.lastSlot = slot;
     this.syncObjectMarkers();
-    this.logger?.event(time, 'register', { slot, ...info });
+    this.logger?.event(time, 'register', { slot, level: this.level.id, ...info });
     click(0.9, 0.5);
+  }
+
+  /** The slot written last (level 2 keeps only that one when it starts). */
+  private lastSlot = 0;
+
+  /** Level 2 starts at a round boundary (the creature out of the light) once it is unlocked and an object is registered; it keeps the newest object. */
+  private updateLevel(time: number): void {
+    const c = this.creature;
+    // A round boundary: home, in its nook, or waiting at the light's edge (out of the light).
+    const boundary = c.mode === MODE_NOOK || c.mode === MODE_HOME || (c.mode === MODE_WAIT && this.lineState === DARK);
+    if (!this.progress.update(this.objectCount, boundary)) return;
+    this.level = LEVEL_2;
+    if (this.objectCount > 1 || this.lastSlot !== 0) {
+      this.objects.copyWithin(0, this.lastSlot * 3, this.lastSlot * 3 + 3);
+      this.objectCount = 1;
+      this.lastSlot = 0;
+      this.syncObjectMarkers();
+    }
+    this.logger?.event(time, 'level', { level: 2, objects: this.objectCount });
+    click(0.8, 0.6);
   }
 
   private clearObjects(time: number): void {
@@ -891,9 +951,12 @@ export class CoverSystem extends createSystem({
     for (let h = 0; h < 2; h++) {
       if (this.joints.tracked[h]) addHandCapsules(this.local[h], this.joints.radii[h], h, this.occ);
     }
+    this.objOcc.clear();
     for (let i = 0; i < this.objectCount; i++) {
       this.occ.addCylinder(this.objects[i * 3], this.objects[i * 3 + 1], REGISTER.radius, this.objects[i * 3 + 2], OBJECT_OWNER + i);
+      this.objOcc.addCylinder(this.objects[i * 3], this.objects[i * 3 + 1], REGISTER.radius, this.objects[i * 3 + 2], OBJECT_OWNER + i);
     }
+    this.mugCovers = this.gaze.coveredBy(this.objOcc);
   }
 
   /** Smoothed wrist speed (board frame, m/s; about 0.1 s time constant), logged with each spot. */
@@ -993,7 +1056,9 @@ export class CoverSystem extends createSystem({
       case EV_HOME:
         this.wins++;
         this.homeAt = time;
-        this.logger?.event(time, 'home', { wins: this.wins, spotted: c.spottedCount });
+        if (this.level.needsObject) this.l2Won = true;
+        this.progress.onWin();
+        this.logger?.event(time, 'home', { wins: this.wins, spotted: c.spottedCount, level: this.level.id, objects: this.objectCount });
         lock();
         chime();
         break;
@@ -1007,6 +1072,8 @@ export class CoverSystem extends createSystem({
         this.logger?.event(time, 'back-in-nook');
         break;
     }
+
+    this.updateLevel(time);
 
     // The win's hop, flare and bead pop, timed from the moment it got home.
     winFx(c.mode === MODE_HOME && this.homeAt >= 0 ? time - this.homeAt : -1, this.fx);
@@ -1107,7 +1174,14 @@ export class CoverSystem extends createSystem({
     // first stands in a hand's shadow (whether or not a desk tap is still awaited).
     const ghost = this.cues.ghost;
     m.ghostHand.visible = ghost;
-    if (ghost) m.ghostMat.opacity = 0.18 + 0.14 * (0.5 + 0.5 * Math.sin(time * 3));
+    if (ghost) {
+      m.ghostMat.opacity = 0.18 + 0.14 * (0.5 + 0.5 * Math.sin(time * 3));
+      const spot = this.cues.ghostSpot === 'left' ? L2_LEFT : this.cues.ghostSpot === 'right' ? L2_RIGHT : TEACH_SPOT;
+      m.ghostHand.position.set(spot.x, 0, spot.z);
+    }
+    // Level 2: the keeper's gaze and, until an object covers it, the ghost mug.
+    m.gaze.visible = this.cues.gaze;
+    m.mugGhost.visible = this.cues.mugGhost;
 
     // Cover proxy (debug): one dot per joint, sized as cover.
     if (flags.proxy) {
@@ -1450,6 +1524,27 @@ export class CoverSystem extends createSystem({
       },
       restart() {
         self.restart();
+      },
+      get level() {
+        const m = self.model;
+        return {
+          id: self.level.id,
+          unlocked: self.progress.unlocked,
+          gazeWake: self.gazeWake,
+          mugCovers: self.mugCovers,
+          ghostSpot: self.cues.ghostSpot,
+          gazeShown: m.gaze.visible,
+          mugGhostShown: m.mugGhost.visible,
+          ghostAt: [+m.ghostHand.position.x.toFixed(4), +m.ghostHand.position.z.toFixed(4)] as [number, number],
+        };
+      },
+      registerAt(x, z, top) {
+        if (!self.isPlaced()) return 'not-placed';
+        let keeperDistance = Math.hypot(x - self.lantern.x, z - self.lantern.z);
+        for (const k of self.level.keepers) keeperDistance = Math.min(keeperDistance, Math.hypot(x - k.x, z - k.z));
+        const verdict = judgeRegistration({ x, y: top + TIP_PAD, z, pointing: true, board: BOARD, routeDistance: distanceToPolyline(x, z, self.level.route), keeperDistance });
+        if (verdict === 'ok') self.addObject(x, z, top, self.lastTime, { emulated: true, xMm: Math.round(x * 1000), zMm: Math.round(z * 1000), topMm: Math.round(top * 1000) });
+        return verdict;
       },
       clearObjects() {
         self.clearObjects(self.lastTime);

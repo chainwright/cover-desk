@@ -1,4 +1,4 @@
-"""Mutation check (days 2-5): applies each mutation to the source, runs `npm test`,
+"""Mutation check (days 2-6): applies each mutation to the source, runs `npm test`,
 restores the file, and prints which tests failed. Run: python3 tools/mutations.py
 A mutation that no test catches is printed with 0 failing.
 
@@ -7,7 +7,11 @@ code are recreated at today's call sites. Glue that no unit test can reach
 gets a second stage when COVER_EMU_BASE is set (a server serving dist/, e.g.
 http://127.0.0.1:8799/): the emulator build is rebuilt with the mutation and
 tools/emu/wiring_check.mjs is run against it; a failing check catches it.
-Rebuild dist/ afterwards (npm run build)."""
+Rebuild dist/ afterwards (npm run build).
+
+Day 6: 7a-7m mutate the level-2 code (unit tests); G1-G9 its glue (cover-system.ts,
+emu-seat.ts), tried against the emulator wiring check's l2-* phase when no unit test
+catches them."""
 import subprocess, shutil, re, sys
 import os
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -62,6 +66,20 @@ M=[
  ('6l eyes stay shut when a hand is at the lantern','src/feedback.ts','out.eyes = spotted || awake ? EYES_OPEN : 1;','out.eyes = spotted ? EYES_OPEN : 1;'),
  ('6m a lifted hand counts as back at the start','src/feedback.ts','if (j[1] <= RETURN_MAX_Y && Math.hypot','if (Math.hypot'),
  ('6n analyser counts every second as in view','src/touch-log.ts','if (e.inView) inView.push(Number(e.fps));','inView.push(Number(e.fps));'),
+ # day-6 code: level 2 (src/level2.ts, the level-2 cards in src/onboarding.ts)
+ ('7a a hand in the gaze never wakes the keeper','src/level2.ts','      if (blockedBy(o, l.x, l.y, l.z, p[2 * i], CREATURE_Y, p[2 * i + 1]) !== BY_NONE) return true;\n',''),
+ ('7b no padding in the gaze wake test (2 mm -> 0)','src/level2.ts','export const GAZE_PAD = 0.002;','export const GAZE_PAD = 0;'),
+ ('7c gaze sampled every 2 cm instead of 2 mm','src/level2.ts','export const GAZE_STEP = 0.002;','export const GAZE_STEP = 0.02;'),
+ ('7d gaze half-angle 10 -> 4 deg','src/level2.ts','export const GAZE_HALF = 10 * DEG;','export const GAZE_HALF = 4 * DEG;'),
+ ('7e "the object covers the gaze" true when one sample is covered','src/level2.ts','      if (blockedBy(objects, l.x, l.y, l.z, p[2 * i], CREATURE_Y, p[2 * i + 1]) === BY_NONE) return false;','      if (blockedBy(objects, l.x, l.y, l.z, p[2 * i], CREATURE_Y, p[2 * i + 1]) !== BY_NONE) return true;'),
+ ('7f level 2 counts every object (no replace)','src/level2.ts','  if (level2) return { slot: 0, count: 1, shift: false };\n',''),
+ ('7g a level-1 win never unlocks level 2','src/level2.ts','    if (this.level === 1) this.unlocked = true;','    if (this.level === 1) this.unlocked = false;'),
+ ('7h level 2 starts without an object','src/level2.ts','this.level === 1 && this.unlocked && objects > 0 && atBoundary','this.level === 1 && this.unlocked && atBoundary'),
+ ('7i "needs a real mug" card never shown','src/onboarding.ts',"  else if (!i.objects) cues.prompt = 'need-object';\n",''),
+ ('7j ghost never moves to the right-hand spot','src/onboarding.ts',"    cues.ghostSpot = 'right';","    cues.ghostSpot = 'left';"),
+ ('7k unlock card replaces the day-5 "again" card','src/onboarding.ts',"if (i.unlocked && !i.objects && cues.prompt === 'none')","if (i.unlocked && !i.objects && (cues.prompt === 'none' || cues.prompt === 'again'))"),
+ ('7l level-2 ghosts back at 6 cm (too near the gaze)','src/level2.ts','export const L2_LEFT = { x: -0.08, z: -0.025 } as const;','export const L2_LEFT = { x: -0.06, z: -0.025 } as const;'),
+ ('7m ghost mug off the gaze','src/level2.ts','export const MUG_SPOT = { x: 0, z: -0.03 } as const;','export const MUG_SPOT = { x: 0.05, z: -0.03 } as const;'),
 ]
 # The outside run's ten day-4 glue mutations, recreated at today's call sites
 # (marked 'emu': if no unit test catches them, the emulator wiring check is tried).
@@ -76,6 +94,16 @@ OUT=[
  ('O20 keeper eyes never open','src/cover-system.ts','    this.eyeOpen += (pay.eyes - this.eyeOpen) * Math.min(1, dt * 20);','    this.eyeOpen += (1 - this.eyeOpen) * Math.min(1, dt * 20);'),
  ('O21 stare line never shown','src/cover-system.ts','    m.beam.visible = pay.stare;','    m.beam.visible = false;'),
  ('O22 slide-card latch removed at the call site','src/cover-system.ts','this.round.frame(this.creature.mode, this.lineState === SHADOW && this.lineBy < OBJECT_OWNER,','this.round.frame(this.creature.mode, false,'),
+ # day-6 glue in cover-system.ts (level 2), checked by the wiring check's l2-* phase
+ ('G1 gaze wake not wired','src/cover-system.ts','const g = placed && this.level.needsObject ? this.gaze.handInGaze(this.local, this.joints.radii, this.joints.tracked) : -1;','const g = -1;'),
+ ('G2 level never switches to 2','src/cover-system.ts','    this.updateLevel(time);\n',''),
+ ('G3 a win does not unlock level 2','src/cover-system.ts','        this.progress.onWin();\n',''),
+ ('G4 "the object covers the gaze" never computed','src/cover-system.ts','    this.mugCovers = this.gaze.coveredBy(this.objOcc);','    this.mugCovers = this.objectCount > 0;'),
+ ('G5 ghost hand not moved to level 2\'s spots','src/cover-system.ts','      m.ghostHand.position.set(spot.x, 0, spot.z);\n',''),
+ ('G6 gaze and ghost mug never drawn','src/cover-system.ts','    m.gaze.visible = this.cues.gaze;\n    m.mugGhost.visible = this.cues.mugGhost;','    m.gaze.visible = false;\n    m.mugGhost.visible = false;'),
+ ('G7 level 2 keeps every object (one-object rule off at the call site)','src/cover-system.ts','objectSlot(this.level.needsObject, this.objects,','objectSlot(false, this.objects,'),
+ ('G8 /emu/ O key registers nothing','src/emu-seat.ts','      else console.info(`[cover] emulated object: ${f.registerAt(EMU_MUG.x, EMU_MUG.z, EMU_MUG.top)}`);','      else console.info(\'[cover] emulated object: off\');'),
+ ('G9 /emu/ R key uses the left spot','src/emu-seat.ts',"  if (level === 2) return key === 'r' ? L2_RIGHT.x : L2_LEFT.x;","  if (level === 2) return L2_LEFT.x;"),
 ]
 EMU=os.environ.get('COVER_EMU_BASE')
 ONLY=sys.argv[1] if len(sys.argv)>1 else None  # 'unit' or 'outside'

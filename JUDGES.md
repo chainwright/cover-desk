@@ -24,6 +24,13 @@
 5. Point down onto the top of a mug standing between the lantern and the
    path and hold still for a second: the mug becomes cover too and throws
    its own shadow.
+6. **Level 2 (needs a real mug or book).** After your first win the keeper's
+   gaze appears, a pale wedge across the middle of the path, with a ghost
+   mug in it. Stand the mug on the ghost mug, point onto its top and hold.
+   Your hand alone can't cross the gaze (a hand there wakes the keeper); the
+   mug alone leaves both ends lit. Hand at the left ghost, edge it to the
+   mug; when the creature waits in the mug's shadow, lift your hand over to
+   the right ghost. (`?level=2` starts here directly.)
 
 To leave the immersive view: look at your **left** palm at eye level and
 pinch thumb and index until the menu icon fills.
@@ -56,6 +63,17 @@ Open **https://chainwright.github.io/cover-desk/emu/** in desktop Chrome.
    and the creature stays in its nook. **C** again takes the hand away.
 6. **M** hands the emulator back to its own menus and gizmos, if you want to
    pose the hands yourself.
+7. **Level 2** (unlocked by the win in step 3, or open
+   **https://chainwright.github.io/cover-desk/emu/?level=2**): the pale wedge
+   is the keeper's gaze. Without an object the card says "Level 2 needs a
+   real mug or book"; **H** then hold **→**: the hand reaches the gaze, the
+   keeper wakes, no win.
+8. Press **O**: an emulated 10 cm mug stands on the ghost mug (the
+   emulator's room has no real one; it goes through the same registration
+   rules). Press **H** (the hand at the left ghost; if it is up, **H** twice):
+   the creature runs through your shadow into the mug's and waits past the
+   gaze, and the ghost moves right. Press **R**: the hand goes over to the
+   right ghost and the creature gets home.
 
 Even if the board floats in the air instead (no desk found), it is playable
 where it floats; the game is the same. The room is the emulator's simulated
@@ -65,16 +83,18 @@ ships in both bundles and does nothing without the emulator). This recipe
 is what `tools/emu/wiring_check.mjs` runs on the `/emu/` build in headless
 Chromium; on day 5, on the live URL: board on the desk, H → dash into the
 lane and stop, → held → a win, H H → the ghost's spot, L → spotted, C → the
-keeper wakes, no console errors (`devlog/DAY5.md`).
+keeper wakes, no console errors (`devlog/DAY5.md`); day 6 adds level 2 to
+the check (unlock card, O, H, R → a level-2 win; no object → no win) and a
+replay on the live URL (`devlog/DAY6.md`).
 
 ## Checking the code (about 2 minutes)
 
 ```sh
 git clone https://github.com/chainwright/cover-desk && cd cover-desk
 npm ci
-npm test           # 79 tests, including the 18-case line-of-sight set
+npm test           # 89 tests, including the 18-case line-of-sight set and level 2 (tests/day6.test.ts)
 npm run build      # main build without the emulator, /emu/ with it, then a check of both
-python3 tools/mutations.py unit   # deliberate bugs in the tested code (see devlog/DAY5.md)
+python3 tools/mutations.py unit   # deliberate bugs in the tested code (see devlog/DAY6.md)
 # the glue: serve dist/ (python3 -m http.server 8799 --directory dist), then
 COVER_EMU_BASE=http://127.0.0.1:8799/ python3 tools/mutations.py outside
 ```
@@ -85,7 +105,7 @@ Node 22.18+ or 24 for `npm test`.
 
 | Criterion | Where to look |
 |---|---|
-| Innovation | Your tracked hand is a line-of-sight occluder against a watcher, not a gesture trigger: `src/hand-proxy.ts`, `src/sightline.ts`, the case set in `tests/los-cases.test.ts` |
+| Innovation | Your tracked hand is a line-of-sight occluder against a watcher, not a gesture trigger: `src/hand-proxy.ts`, `src/sightline.ts`, the case set in `tests/los-cases.test.ts`; level 2 needs a real object and your hand together (`src/level2.ts`, `tests/day6.test.ts`) |
 | Experience | First-run teaching and the cards after a spot, a win and a hand at the lantern (`src/onboarding.ts`, `src/feedback.ts`), pause when the covering hand is lost (`CoverWatch` in `src/creature.ts`), `devlog/day5_*.png` (emulator) |
 | Technical | Tests, mutation check, the emulator wiring check (`tools/emu/wiring_check.mjs`), the tester log and its analyser; Quest frame rate is still open ([EVIDENCE.md](EVIDENCE.md)) |
 | Polish | Synthesised sound; untextured models in felt, wood and paper tints; video still to come |

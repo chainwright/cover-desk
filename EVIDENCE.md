@@ -1,6 +1,6 @@
 # Evidence: what is shown, how, and what is not
 
-Day 5, 11 Nov 2026. No Meta Quest has run this build yet. Every number below
+Day 6, 11 Nov 2026. No Meta Quest has run this build yet. Every number below
 comes from Node unit tests, the Immersive Web Emulator, or the author's
 scripted runs, and says which. [CLAIMS.md](CLAIMS.md) lists each claim with
 its proof level; this page holds the evidence itself.
@@ -9,7 +9,7 @@ its proof level; this page holds the evidence itself.
 
 | Criterion | Shown | How to check | Not shown yet |
 |---|---|---|---|
-| Innovation | The tracked hand is cover in a line-of-sight game: 25 joints become 30 capsules and block the lantern's sight line, whatever the pose | `npm test`: the case set below, "pose-agnostic", "spread fingers leave gaps" | That it reads as play rather than a chore on a real desk |
+| Innovation | The tracked hand is cover in a line-of-sight game: 25 joints become 30 capsules and block the lantern's sight line, whatever the pose. Level 2 needs a real object and the hand together: a hand in the keeper's gaze wakes it, one object never covers the whole path, the mug holds the cover while the hand moves over | `npm test`: the case set below, "pose-agnostic", "spread fingers leave gaps"; `tests/day6.test.ts` (level 2) | That it reads as play rather than a chore on a real desk; level 2 with a real mug |
 | Experience | First-run teaching on every placement path; the taught pose makes a lane you slide, not a blackout; a "slide your hand along" card; a win staged at desk scale (hop, warm flare, bead pop) followed by the ghost and an "again" card; a keeper that wakes when it spots, with a card that says why; a hand at the lantern wakes the keeper; pause, not "spotted", when the covering hand is lost; a desktop judge reaches the game in `/emu/` | `tests/day2.test.ts` … `tests/day5.test.ts`; the `/emu/` wiring check in `devlog/DAY5.md` | Cold-stranger timings on a headset ([TESTER_10MIN.md](TESTER_10MIN.md)); comfort |
 | Technical | The drawn shadow equals the creature's sight test at 2,048 cell centres; the main build has no emulator; the mutation counts below; the tester log survives a simulated reload; its flush helpers and its write path (a failed write is written again by the next flush, 3 in a row switch storage off) are unit-tested on a fake IndexedDB, and the two flush call sites are checked in the built `/emu/` | `npm test`, `npm run build`, `python3 tools/mutations.py`, `node tools/emu/wiring_check.mjs` | Frame rate on a Quest, tracking shimmer, plane and anchor behaviour in real rooms, the hand mask |
 | Polish | Synthesised sound (a win chime, the keeper's "hm?"); one material family | play `/emu/` | No video yet; untextured models |
@@ -75,11 +75,38 @@ Day 5 (`tests/day5.test.ts`), all in the same model:
   wall a few centimetres before it, shades the whole lit path; the creature
   crosses without a slide. Pinned by a test.
 
+Day 6, level 2 (`tests/day6.test.ts`, `src/level2.ts`), same model:
+- **The gaze:** the path points within 10° of the lantern's axis (x about
+  −3 … +3 cm). A hand wakes the keeper when it blocks the sight line to any
+  of them; the test samples the stretch every 2 mm and pads every capsule by
+  2 mm, so a hand can't shade a gaze point between samples unnoticed. A test
+  checks it: every pose on a 1 cm grid (left- and right-handed "stop", edge,
+  flat; three heights) that shades a gaze point by the creature's own test
+  at 1 mm steps also trips the wake test.
+- **Hand alone, never:** every still pose on a 1.5 cm grid (four poses, two
+  heights) and careful or heedless slides at 1, 3, 6, 9 cm/s, either hand:
+  no win. The same careful slide under level 1's rules does win.
+- **Object alone, never:** the mug on its ghost spot (x 0, z −3 cm, 10 cm)
+  covers the gaze; litFraction strictly between 0 and 1 and well below the
+  empty board's; both ends of the lit path stay lit. One 8 cm object at each
+  legal spot on a 1 cm grid, 30 cm tall: no win.
+- **Together:** a careful slide (never into the gaze) plus the mug: home,
+  unspotted, the keeper never woke, for either hand and with the mug moved
+  ±1 cm (9/9). A still hand at each ghost (x ∓8 cm) wins with 11 mm joint
+  radii; with the fixture's 7 mm floor it needs a nudge toward the mug. A
+  hand slid straight into the gaze wakes the keeper and the creature is
+  spotted.
+- **The ghost spots:** ±1 cm either way, either hand, 7 or 11 mm radii: clear
+  of the gaze; at 14 mm the corner 1 cm inward and 1 cm toward the lantern
+  touches it (pinned by the test).
+- **Two objects** can shade the whole path in the model, so level 2 counts
+  one (a test pins both).
+
 ## Mutation table
 
 `python3 tools/mutations.py` applies each edit, runs `npm test`, restores the
-file. Counts below are from `devlog/day5_mutations_output.txt` (earlier:
-`devlog/day4_mutations_output.txt`, `devlog/day3_mutations_output.txt`, `devlog/day2_mutations_output.txt`). O3
+file. Counts below are from `devlog/day6_mutations_output.txt` (earlier:
+`devlog/day5_mutations_output.txt`, `devlog/day4_mutations_output.txt`, `devlog/day3_mutations_output.txt`, `devlog/day2_mutations_output.txt`). O3
 and O4 are the two outside mutations that survived day 2. O9 and O10 here
 are helper-level versions of the day-3 flush survivors (they mutate the
 tested helpers `flushOnPageHide` and `FlushTimer`); the app's call sites are
@@ -133,8 +160,24 @@ the day-3 mutation itself.
 | 6l eyes stay shut when a hand is at the lantern | 1 |
 | 6m a lifted hand counts as back at the start | 1 |
 | 6n analyser counts every second as in view | 1 |
+| 7a a hand in the gaze never wakes the keeper | 4 |
+| 7b no padding in the gaze wake test (2 mm -> 0) | 1 |
+| 7c gaze sampled every 2 cm instead of 2 mm | 3 |
+| 7d gaze half-angle 10 -> 4 deg | 2 |
+| 7e "the object covers the gaze" true when one sample is covered | 0 in the run; after the new partial-cover test, 1 (re-run) |
+| 7f level 2 counts every object (no replace) | 1 |
+| 7g a level-1 win never unlocks level 2 | 1 |
+| 7h level 2 starts without an object | 1 |
+| 7i "needs a real mug" card never shown | 1 |
+| 7j ghost never moves to the right-hand spot | 1 |
+| 7k unlock card replaces the day-5 "again" card | 1 |
+| 7l level-2 ghosts back at 6 cm (too near the gaze) | 2 |
+| 7m ghost mug off the gaze | 3 |
 
-44 of 45 caught; the other is equivalent. Output: `devlog/day5_mutations_output.txt`.
+57 of 58 caught (7e after its new test); the other (4d) is equivalent. The
+day-1 to day-5 rows above are the day-5 counts; on day 6 some of them fail
+one or two more tests (the day-6 tests also catch them), see the output
+file. Output: `devlog/day6_mutations_output.txt`.
 
 The outside run's ten day-4 glue mutations, recreated at today's call sites
 (`COVER_EMU_BASE=http://127.0.0.1:8799/ python3 tools/mutations.py outside`
@@ -153,10 +196,25 @@ with `dist/` served there; a mutation no unit test catches is built into
 | O20 keeper eyes never open | emulator wiring check: spotted-eyes-stare, spotted-hm, spotted-card, wake-holds |
 | O21 stare line never shown | emulator wiring check: spotted-eyes-stare |
 | O22 slide-card latch removed at the call site | emulator wiring check: slide-card |
+| G1 gaze wake not wired | emulator wiring check: l2-no-object-no-win |
+| G2 level never switches to 2 | emulator wiring check: l2-start and every later l2-* check |
+| G3 a win does not unlock level 2 | emulator wiring check: l2-unlocked and every later l2-* check (this run also failed win-hop-flare, a sampling flake, below) |
+| G4 "the object covers the gaze" never computed | emulator wiring check: l2-one-object |
+| G5 ghost hand not moved to level 2's spots | emulator wiring check: l2-visuals, l2-ghost-right |
+| G6 gaze and ghost mug never drawn | emulator wiring check: l2-unlocked, l2-visuals, l2-one-object |
+| G7 level 2 keeps every object (one-object rule off at the call site) | emulator wiring check: l2-one-object |
+| G8 `/emu/` O key registers nothing | emulator wiring check: l2-start, l2-visuals |
+| G9 `/emu/` R key uses the left spot | unit tests (1 failing) |
 
-10 of 10 caught. (During this run the machine lost its network for a while;
+19 of 19 caught (the ten above re-run on day 6 at today's call sites, and
+G1–G9). The wiring check's hop reading is a sampling of 2–3 frames at 3–6
+fps on a loaded machine: its floor went from 1 cm to 3 mm on day 6 after a
+clean build read 0.9 cm, and it still failed once (during G3). It is weak
+evidence on its own; the hop itself is unit-tested (6k).
+
+Day-5 note: during that day's run the machine lost its network for a while;
 O16–O22 also logged console errors then, not traced to a request. The clean
-build's wiring check, run after the network came back, has none.)
+build's wiring check, run after the network came back, had none.
 
 ## Emulator runs
 
@@ -184,6 +242,10 @@ build's wiring check, run after the network came back, has none.)
   says so and the creature stays home; no console errors. Details in
   `devlog/DAY5.md`.
 
+- Day 6, the wiring check with a level-2 phase on the built `/emu/`, and
+  `tools/emu/replay.mjs` on the live URL; details and outputs in
+  `devlog/DAY6.md`.
+
 ## Not shown yet (needs a Quest)
 
 - Frame rate ≥ 72 fps (median) with passthrough and a hand in the light.
@@ -196,5 +258,8 @@ build's wiring check, run after the network came back, has none.)
 - A registered mug's height against a ruler; phantom mid-air registrations
   (known weakness; the protocol counts them).
 - The log's download and the report form on Quest Browser.
+- Level 2 with a real mug: registration on a real mug top, whether players
+  find the gaze and the lift-over, and whether real joint radii keep the
+  ghost spots clear of the gaze.
 - No labelled case set on real tracked hands exists yet; a returned tester
   log is what would make one.

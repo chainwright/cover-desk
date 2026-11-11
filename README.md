@@ -5,6 +5,9 @@ sleepy lantern-keeper. You never move it. You protect it: stand your hand on
 the desk like "stop", between the keeper's lantern and the path, and the
 creature dashes through your hand's shadow.
 
+Level 2 needs a real mug or book on your desk: your hand alone can't get
+the creature across, and neither can the mug; the two together can.
+
 Mixed reality, hands only, seated. Built for Quest 3/3S; so far tested only in
 the Immersive Web Emulator (no headset run yet, see [CLAIMS.md](CLAIMS.md)).
 Built with the Immersive Web SDK (WebXR on Three.js).
@@ -17,14 +20,13 @@ how is in [CLAIMS.md](CLAIMS.md); the evidence per criterion, with what is
 still unproven, is in [EVIDENCE.md](EVIDENCE.md).
 
 Checked so far: line-of-sight case set **18/18** on synthetic 25-joint hands
-(9 cover cases, 9 negative controls; not yet on real tracked hands) · 79/79
-unit tests · 44 of 45 deliberate bugs in the tested code make a unit test
-fail (the 45th is equivalent) · the 10 glue mutations an outside run left
-uncaught on day 4, recreated at today's call sites: 2 fail a unit test, the
-other 8 fail the emulator wiring check on the built `/emu/`
-(`tools/emu/wiring_check.mjs`; the flush calls, the win and spotted
-feedback, the slide-card latch) · frame rate on a Quest:
-**not measured yet**.
+(9 cover cases, 9 negative controls; not yet on real tracked hands) · 89/89
+unit tests · 57 of 58 deliberate bugs in the tested code make a unit test
+fail (the 58th is equivalent; one day-6 survivor, 7e, got a new test and was
+re-run) · 19 glue mutations (the outside run's ten from day 4, nine in the
+day-6 level-2 glue): 3 fail a unit test, the other 16 fail the emulator
+wiring check on the built `/emu/` (`tools/emu/wiring_check.mjs`) · frame
+rate on a Quest: **not measured yet**.
 
 ## How it plays (level 1)
 
@@ -96,6 +98,51 @@ feedback, the slide-card latch) · frame rate on a Quest:
   Moving that hand away while the headset still tracks it counts as lifting
   it: the creature is spotted.
 
+## Level 2: the keeper's gaze (needs a real object)
+
+Level 1 plays the same on any flat surface. Level 2 is why Cover is mixed
+reality: it can't be won without a real object standing on your desk.
+
+- **Unlocked by your first level-1 win.** The game then draws the keeper's
+  gaze (a pale wedge from the lantern across the middle of the path) and a
+  ghost mug in it, with a card: "Level 2: stand a mug or a book in the gaze;
+  hold a finger on top". Level 1 plays on until you do. Registering the
+  object (point down onto its top and hold still, as above) starts level 2
+  at the next quiet moment (the creature out of the light).
+- **The rule:** a hand that comes between the lantern and any point of the
+  path inside the gaze wakes the keeper (it then sees the whole path, a card
+  says "A hand in its gaze wakes it"). A still object there doesn't. So your
+  hand can lead the creature to the edge of the gaze and no further; in the
+  model this holds for every still pose and slide tried
+  (`tests/day6.test.ts`), and the wake test is padded so a hand can't shade
+  a gaze point without being noticed.
+- **The mug alone** shades the gaze and a good part of the light, never all
+  of it: both ends of the lit path stay lit, so the creature can't even
+  leave its nook. In the model that holds at every legal spot on a 1 cm
+  grid for one registration-sized object (8 cm footprint), 30 cm tall (the
+  registration limit).
+- **Together:** stand your hand at the ghost on the left and edge it toward
+  the mug; the creature runs through your shadow into the mug's. The mug
+  holds it there while you lift your hand over the gaze (a hand above the
+  sight lines shades nothing, so it wakes nothing) to the ghost on the right;
+  your shadow takes it home. The mug frees your hand at the one moment the
+  hand can't do the job.
+- **Level 2 counts one object**; a new registration replaces it. (In the
+  model two objects can shade the whole path between them and replace the
+  hand.)
+- **Without an object** level 2 says so ("Level 2 needs a real mug or book")
+  and there is no win. Nothing is faked: the emulator's `O` key (below)
+  registers an emulated object through the same rules, for desktop judges
+  only.
+
+How this differs from Silhouette (2023), the closest game we know of: as far
+as we can tell it is played with your hands' shadows alone; in Cover's level
+2 a real object from your desk has to share the work with your hand, so the
+game needs your room, not just your hands.
+
+All of this is the geometry model and the emulator; no real mug has been
+played with on a Quest yet.
+
 ## URL options
 
 | Option | What it does |
@@ -106,6 +153,7 @@ feedback, the slide-card latch) · frame rate on a Quest:
 | `?hands=outline` / `?hands=off` | The SDK's hand outline, or no hand at all (default: an invisible mask, meant to let your real hand show over the board; not yet checked on a headset) |
 | `?occlude=depth` | Also asks for depth sensing to soften virtual things behind real objects (more GPU work) |
 | `?reset=1` | Forgets the saved desk spot |
+| `?level=2` | Starts on level 2 (no level-1 win needed), for judges and testers |
 
 ## How the shadow works
 
@@ -191,7 +239,11 @@ its desk with hands, and the board lands on the emulated desk by itself.
 Then **H** stands the right hand like "stop" where the ghost hand stands,
 holding **→** slides it along to lead the creature home, **L** lifts it
 (spotted), **C** cups the lantern (the keeper wakes), and **M** gives the
-emulator its own controls back. **H** alone,
+emulator its own controls back. For level 2 (after a win, or with
+`?level=2`): **O** puts an emulated 10 cm mug on the ghost mug (registered
+through the same rules as a fingertip registration; the emulator's room has
+no real mug), **H** stands the hand at level 2's left ghost, and **R** moves
+it over the gaze to the right ghost. **H** alone,
 without sliding, gets the creature only to the far edge of the lane. If the
 board ever floats in the air instead, it is playable there too. The seat and
 keys only run in the `/emu/` build: their code ships in both bundles but does
@@ -218,6 +270,7 @@ src/hand-proxy.ts     25 joints → capsules, pose classes (pure, tested)
 src/light-map.ts      the shadow grid drawn on the desk (pure, tested)
 src/creature.ts       the creature's behaviour and the cover-hand watch (pure, tested)
 src/level.ts          board and level 1 layout, route
+src/level2.ts         level 2: the keeper's gaze, the unlock, one object (pure, tested)
 src/contact.ts        fingertip rules and object registration (pure, tested)
 src/calibration.ts    one-touch desk tap (pure, tested)
 src/desk-anchor.ts    persistent anchor for the desk spot

@@ -8,6 +8,8 @@
  *  - the felt creature, its nook, its trinket, the path as paper dots
  *  - markers for registered real objects, a move knob, a ghost hand that shows
  *    the "stop" palm in the first seconds
+ *  - level 2 (day 6): the keeper's gaze, a pale wedge from the lantern across
+ *    the middle of the path, and a ghost mug where a real object should stand
  */
 import {
   BufferAttribute,
@@ -37,6 +39,7 @@ import {
 import { BOARD, TEACH_SPOT, type Level } from './level.ts';
 import { MAP_COLS, MAP_MIN_D, MAP_ROWS } from './light-map.ts';
 import { REGISTER } from './contact.ts';
+import { GAZE_HALF, MUG_SPOT } from './level2.ts';
 import type { Lantern } from './sightline.ts';
 
 export const PATH_DOTS = 26;
@@ -80,6 +83,10 @@ export interface CoverModel {
   ghostHand: Group;
   ghostMat: MeshBasicMaterial;
   proxyDots: InstancedMesh;
+  /** Level 2: the keeper's gaze (a pale wedge with brighter edges), hidden until level 2 is unlocked. */
+  gaze: Group;
+  /** Level 2: an outline where the real object should stand. */
+  mugGhost: Group;
 }
 
 export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
@@ -288,9 +295,33 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
   proxyDots.frustumCulled = false;
   root.add(proxyDots);
 
+  // ------------------------------------------------------------ level 2: the gaze and the ghost mug
+  const gaze = new Group();
+  gaze.name = 'keeper-gaze';
+  const gazeReach = { ...lantern, half: GAZE_HALF, range: 0.19 };
+  const gazeFill = new Mesh(sectorGeometry(gazeReach, 8, 4), new MeshBasicMaterial({ color: 0xcfe0ff, transparent: true, opacity: 0.16, depthWrite: false, side: DoubleSide }));
+  const edgeMat = new MeshBasicMaterial({ color: 0xe8f0ff, transparent: true, opacity: 0.7, depthWrite: false, side: DoubleSide });
+  for (const sign of [-1, 1]) gaze.add(new Mesh(sectorGeometry({ ...gazeReach, yaw: lantern.yaw + sign * GAZE_HALF, half: 0.006 }, 1, 4), edgeMat));
+  gaze.add(gazeFill);
+  gaze.position.y = 0.0022;
+  gaze.renderOrder = 3;
+  gaze.visible = false;
+  root.add(gaze);
+  const mugGhost = new Group();
+  mugGhost.name = 'mug-ghost';
+  const mugRing = new Mesh(new RingGeometry(REGISTER.radius - 0.003, REGISTER.radius, 40), edgeMat);
+  mugRing.rotation.x = -Math.PI / 2;
+  mugRing.position.y = 0.0025;
+  const mugWall = new Mesh(new CylinderGeometry(REGISTER.radius, REGISTER.radius, 0.09, 32, 1, true), new MeshBasicMaterial({ color: 0xfff4e0, transparent: true, opacity: 0.12, depthWrite: false, side: DoubleSide }));
+  mugWall.position.y = 0.045;
+  mugGhost.add(mugRing, mugWall);
+  mugGhost.position.set(MUG_SPOT.x, 0, MUG_SPOT.z);
+  mugGhost.visible = false;
+  root.add(mugGhost);
+
   return {
     root, pool, poolMat, shadowTex, keeper, keeperEyes, beam, lanternGlow, creature, trinket, nook, pathDots,
-    objectMarkers, winBeads, setBead, knob, ghostHand, ghostMat, proxyDots,
+    objectMarkers, winBeads, setBead, knob, ghostHand, ghostMat, proxyDots, gaze, mugGhost,
   };
 }
 

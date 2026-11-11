@@ -1,11 +1,12 @@
-# Cover: a 10-minute test on your Quest
+# Cover: a 10-minute test on your Quest (12 with the optional level 2)
 
 **Keep people and brands out of everything you send: no faces, no other
 people, no logos (a plain mug, book titles hidden, only your hands). Please
 don't post your footage publicly before 18 Nov 2026, and send it only by
 email (below), never through the public GitHub form.**
 
-You need a Meta Quest 3 or 3S, a desk and a chair. Nothing to install. This
+You need a Meta Quest 3 or 3S, a desk and a chair; for the optional step 7,
+a plain mug or a book about 8–15 cm tall. Nothing to install. This
 build has not run on a Quest before you: if something is broken, that is
 exactly what we need to know.
 
@@ -29,7 +30,7 @@ The log of your session is kept on the headset until you press **Start a new
 log** (sending it doesn't delete it). It is written every few seconds; to be
 safe, download it right after you leave the immersive view (step 3 below).
 
-## 2. Play and measure (6 min)
+## 2. Play and measure (6 min, plus 2 for the optional step 7)
 
 Press **Enter**.
 
@@ -41,6 +42,7 @@ Press **Enter**.
 | 4 | Hold the hand still for 5 s, then slide it sideways toward the trinket, slowly: **about a hand's width every 2 seconds**. After each win, **put your hand back where the ghost stood** (the ghost and a card show you where). Do five crossings | With the hand still, did the creature stop at the edge of your shadow? **Did you need to slide to get it home?** How many of 5 reached the trinket? Was it ever "spotted" (it flashes and runs back) while your hand stood still? Did you notice each win (what told you)? |
 | 5 | With the creature waiting in your shadow, **keep that hand still** and hide it from the headset for 5 s: hold a book between your eyes and the hand, or look up at the ceiling. Then look back | Was the creature still where it was ("It waits for your hand" may show), or back in its nook (spotted)? Write "It waits" or "spotted". |
 | 6 | Play freely for a minute. Optional, once: cup your hand right around the lantern | Does the shadow edge shimmer? Anything odd? What happened when you cupped the lantern? (We expect the keeper to wake up.) |
+| 7 | **Optional, 2 min: level 2.** After your wins a pale wedge (the keeper's gaze) and a ghost mug appear. Stand your mug on the ghost mug, point down onto its top with one finger and hold still about a second. Then: hand at the ghost on the left, edge it toward the mug; when the creature waits in the mug's shadow, lift your hand over the wedge to the ghost on the right. Try once to slide your hand straight into the wedge, too | Did the mug register (a click, a ring on top)? Did the creature cross with mug + hand? What happened when your hand went into the wedge (we expect the keeper to wake)? Mug height, roughly |
 
 ## 3. Send it (3 min)
 

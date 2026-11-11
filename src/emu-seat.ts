@@ -11,13 +11,19 @@
  *   ← →      hold to slide it along (at a speed the creature can follow)
  *   L        lift it 20 cm (the light passes under it: the creature is spotted)
  *   C        stand it right at the lantern, cupping it (day 5: the keeper wakes)
+ *   O        (day 6) put an emulated object in the keeper's gaze (registered through the
+ *            same rules as a fingertip registration), again to take it away; level 2
+ *            needs it. The emulator's room has no real mug: this stands in for one.
+ *   R        (day 6) stand the hand at level 2's right-hand ghost, as if lifted over the gaze
  *   M        hand the emulator back to its own controls (its menus and gizmos)
+ * In level 2, H stands the hand at level 2's left-hand ghost.
  *
  * Inert anywhere else: it does nothing unless the emulator is present
  * (`window.IWER_DEVICE`), and the main build never contains the emulator.
  */
 import type { CoverDebug } from './cover-system.ts';
 import { LEVEL_1, TEACH_SPOT } from './level.ts';
+import { L2_LEFT, L2_RIGHT, MUG_SPOT } from './level2.ts';
 
 interface V3 { x: number; y: number; z: number; set(x: number, y: number, z: number): unknown }
 interface Q4 { set(x: number, y: number, z: number, w: number): unknown }
@@ -60,6 +66,15 @@ export const GRIP_TO_WRIST = { x: 0.049, y: -0.117, z: 0.002 };
  */
 export const SLIDE_SPEED = 0.03;
 
+/** O: the emulated object, a 10 cm mug on level 2's ghost mug. */
+export const EMU_MUG = { x: MUG_SPOT.x, z: MUG_SPOT.z, top: 0.1 } as const;
+
+/** Where H (and R) stand the hand: level 1's ghost spot, or level 2's left (H) and right (R) ghosts. */
+export function seatSpotX(level: number, key: 'h' | 'r'): number {
+  if (level === 2) return key === 'r' ? L2_RIGHT.x : L2_LEFT.x;
+  return key === 'r' ? L2_RIGHT.x : STOP.x;
+}
+
 /** C: the hand stands right in front of the lantern, cupping it (wrist 2.5 cm in front, centred). */
 export const CUP = { x: LEVEL_1.lanterns[0].x, z: LEVEL_1.lanterns[0].z + 0.025 } as const;
 
@@ -96,7 +111,8 @@ export function seatHandPose(x: number, y: number, z: number, boardPoint: (x: nu
 
 const KEYS_HTML =
   '<b>Emulator seat</b> · <b>H</b> stand your hand like \'stop\' between the lantern and the path, again to take it away' +
-  ' · hold <b>← →</b> to slide it along and lead the creature · <b>L</b> lift it · <b>C</b> cup the lantern (it wakes the keeper) · <b>M</b> emulator\'s own controls';
+  ' · hold <b>← →</b> to slide it along and lead the creature · <b>L</b> lift it · <b>C</b> cup the lantern (it wakes the keeper)' +
+  ' · level 2: <b>O</b> an emulated mug in the gaze, <b>R</b> the hand over to the right-hand ghost · <b>M</b> emulator\'s own controls';
 
 export function installEmuSeat(cover: () => CoverDebug | undefined): void {
   const device = (window as unknown as { IWER_DEVICE?: EmuDevice }).IWER_DEVICE;
@@ -142,7 +158,8 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
     if (!f) return;
     const r = device.hands.right;
     const y = STOP.y + (lifted ? STOP.lift : 0);
-    const p = cupped ? seatHandPose(CUP.x, STOP.y, CUP.z, f.boardPoint) : seatHandPose(x, y, STOP.z, f.boardPoint);
+    const z = f.level.id === 2 ? L2_LEFT.z : STOP.z;
+    const p = cupped ? seatHandPose(CUP.x, STOP.y, CUP.z, f.boardPoint) : seatHandPose(x, y, z, f.boardPoint);
     r.poseId = 'flat';
     r.quaternion.set(p.quaternion[0], p.quaternion[1], p.quaternion[2], p.quaternion[3]);
     r.position.set(p.position[0], p.position[1], p.position[2]);
@@ -175,13 +192,25 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
   window.addEventListener('keydown', (e) => {
     if (!seated || device.controlMode !== 'programmatic') return;
     const k = e.key.toLowerCase();
+    const level = cover()?.level.id ?? 1;
     if (k === 'h') {
       // H stands the hand where the ghost stands (again after a win), or takes it away.
       raised = !raised;
       lifted = cupped = false;
-      x = STOP.x;
+      x = seatSpotX(level, 'h');
       if (raised) placeRight();
       else park(device.hands.right, 1);
+    } else if (k === 'r') {
+      // R: the hand goes over the top to level 2's right-hand ghost (a lifted hand shades nothing on the way).
+      raised = true;
+      lifted = cupped = false;
+      x = seatSpotX(level, 'r');
+      placeRight();
+    } else if (k === 'o') {
+      const f = cover();
+      if (!f) return;
+      if (f.objects.length) f.clearObjects();
+      else console.info(`[cover] emulated object: ${f.registerAt(EMU_MUG.x, EMU_MUG.z, EMU_MUG.top)}`);
     } else if (k === 'c') {
       cupped = !cupped;
       raised = cupped;

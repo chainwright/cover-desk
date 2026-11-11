@@ -9,9 +9,16 @@
 //   flush-hide a pagehide writes the log at once (O16: index.ts wiring)
 //   slide-card after H the card says "Slide your hand along" (O22: latch)
 //   win-*      after a slide: trinket carried, one bead, a chime, the hop, the flare (O17–O19)
+//              (day 6: the hop counts from 3 mm, not 1 cm: at 3–6 fps on a loaded machine the
+//              0.45 s hop gets two or three frames, and a 1 cm floor failed a clean build)
 //   again      after a win the "again" card and the ghost, until H stands the hand at the ghost's spot
 //   spotted-*  L: eyes open, stare line, "hm?", the spotted card (O20, O21)
 //   wake-*     C cups the lantern: the keeper wakes, the card says so, the creature stays home
+//   l2-*       day 6: after the level-1 win the unlock card and the gaze; O registers the emulated
+//              mug and level 2 starts; H: the creature crosses into the mug's shadow and waits past
+//              the gaze (the swap card, the ghost on the right); R: home (a level-2 win); O again:
+//              no object, the "needs a real mug" card, and H + → held never wins (the hand in the
+//              gaze wakes the keeper)
 //   errors     no console errors
 import { chromium } from 'playwright';
 
@@ -29,7 +36,7 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 page.on('pageerror', (e) => errors.push(String(e)));
 const S = () => page.evaluate(() => {
   const f = window.__cover;
-  return { placement: f.placement, creature: f.creature, lit: f.litFraction, cue: f.cues.prompt, promptText: f.cues.promptText, ghost: f.cues.ghostVisible, payoff: f.payoff, logStore: f.logStore };
+  return { placement: f.placement, creature: f.creature, lit: f.litFraction, cue: f.cues.prompt, promptText: f.cues.promptText, ghost: f.cues.ghostVisible, payoff: f.payoff, logStore: f.logStore, level: f.level, objects: f.objects.length, fps: f.fps };
 });
 const chunks = () => page.evaluate(() => new Promise((res) => {
   const r = indexedDB.open('cover-tester-log-v2');
@@ -104,7 +111,7 @@ try {
       maxFlare = Math.max(maxFlare, s.payoff.flare);
       maxBead = Math.max(maxBead, s.payoff.bead);
       carried ||= s.payoff.trinketCarried;
-      if (!shotWin && maxHop > 0.01 && maxFlare > 0.1 && s.payoff.hop > 0.005) { shotWin = true; await shot('day5_01_emu_win_hop'); }
+      if (!shotWin && maxHop > 0.003 && maxFlare > 0.1 && s.payoff.hop > 0.003) { shotWin = true; await shot('day5_01_emu_win_hop'); }
       if (Date.now() - won > 1500) break;
     }
     await sleep(30);
@@ -114,7 +121,7 @@ try {
   check('win-trinket', carried, null);
   check('win-bead', s.payoff.beads === 1, s.payoff.beads);
   check('win-chime', s.payoff.sounds.chime === chime0 + 1, s.payoff.sounds);
-  check('win-hop-flare', maxHop > 0.01 && maxFlare > 0.1, { maxHop, maxFlare, maxBead });
+  check('win-hop-flare', maxHop > 0.003 && maxFlare > 0.1, { maxHop, maxFlare, maxBead, fps: s.fps });
   await shot('day5_02_emu_again_ghost');
   check('again', s.cue === 'again' && s.ghost && /bring your hand back/i.test(s.promptText), { cue: s.cue, ghost: s.ghost });
 
@@ -158,6 +165,55 @@ try {
   await page.keyboard.press('c');
   const asleep = await until(async () => { const x = await S(); return !x.payoff.awake ? x : null; }, 5000);
   check('wake-ends', !!asleep, null);
+
+  // Day 6: level 2. The level-1 win unlocked it; with no object the card says what it needs.
+  await until(async () => (await S()).creature.mode === 'nook', 10000);
+  s = await S();
+  check('l2-unlocked', s.level.id === 1 && s.level.unlocked && s.cue === 'unlocked' && /level 2/i.test(s.promptText) && s.level.gazeShown && s.level.mugGhostShown, { level: s.level, cue: s.cue, text: s.promptText });
+  await page.keyboard.press('o');
+  const l2 = await until(async () => { const x = await S(); return x.level.id === 2 ? x : null; }, 5000, 50);
+  check('l2-start', l2 && l2.objects === 1 && l2.level.mugCovers && l2.cue === 'l2-teach' && l2.level.ghostSpot === 'left', l2 ? { level: l2.level, cue: l2.cue, objects: l2.objects } : null);
+  await sleep(300);
+  s = await S();
+  check('l2-visuals', s.level.gazeShown && !s.level.mugGhostShown && s.ghost && Math.abs(s.level.ghostAt[0] + 0.08) < 1e-3, s.level);
+  // level 2 counts one object: a second registration elsewhere replaces the mug (and the card says it no longer covers the gaze)
+  const v2 = await page.evaluate(() => window.__cover.registerAt(0.12, -0.04, 0.1));
+  const off = await until(async () => { const x = await S(); return x.cue === 'mug-off' && x.level.mugGhostShown ? x : null; }, 3000, 50);
+  check('l2-one-object', v2 === 'ok' && off && off.objects === 1 && !off.level.mugCovers && off.level.mugGhostShown, off ? { v2, objects: off.objects, level: off.level } : v2);
+  await page.evaluate(() => window.__cover.registerAt(0, -0.03, 0.1));
+  await until(async () => (await S()).cue === 'l2-teach', 3000, 50);
+  await shot('day6_01_emu_l2_mug_ghost_left');
+  await page.keyboard.press('h');
+  const past = await until(async () => { const x = await S(); return x.cue === 'l2-swap' && x.creature.mode === 'wait' ? x : null; }, 20000, 50);
+  check('l2-swap', past && past.level.ghostSpot === 'right' && !past.payoff.awake && past.creature.spotted === s.creature.spotted, past ? { creature: past.creature, ghostSpot: past.level.ghostSpot } : null);
+  await sleep(300);
+  check('l2-ghost-right', Math.abs((await S()).level.ghostAt[0] - 0.08) < 1e-3, (await S()).level.ghostAt);
+  await shot('day6_02_emu_l2_mug_holds_it');
+  const wins1 = (await S()).creature.wins;
+  await page.keyboard.press('r');
+  const won2 = await until(async () => { const x = await S(); return x.creature.wins > wins1 ? x : null; }, 30000, 50);
+  check('l2-win', won2 && won2.level.id === 2 && won2.creature.spotted === s.creature.spotted, won2 ? { creature: won2.creature } : null);
+  await shot('day6_03_emu_l2_win');
+  // O again: the object is gone; level 2 stays and says so; H + → held never wins (the hand reaches the gaze)
+  await page.keyboard.press('h'); // hand away
+  await until(async () => (await S()).creature.mode === 'nook', 10000);
+  await page.keyboard.press('o');
+  const none = await until(async () => { const x = await S(); return x.objects === 0 && x.cue === 'need-object' ? x : null; }, 5000, 50);
+  check('l2-need-object', none && none.level.id === 2 && /needs a real mug/i.test(none.promptText), none ? { cue: none.cue, text: none.promptText } : null);
+  await page.keyboard.press('h');
+  await sleep(3000);
+  await page.keyboard.down('ArrowRight');
+  let gazeWoke = false;
+  const wins2 = (await S()).creature.wins;
+  const tn = Date.now();
+  while (Date.now() - tn < 20000) {
+    const x = await S();
+    gazeWoke ||= x.level.gazeWake;
+    await sleep(100);
+  }
+  await page.keyboard.up('ArrowRight');
+  s = await S();
+  check('l2-no-object-no-win', s.creature.wins === wins2 && gazeWoke, { wins: s.creature.wins, gazeWoke });
 } catch (e) {
   check('ran', false, String(e));
 }
