@@ -164,7 +164,23 @@ rejected taps, a bigger creature, the hand-shaped shadow, levels 2 and 3.
 
 ## Public URL
 
-(filled in after the deploy below)
+- Main (Quest): https://chainwright.github.io/cover-desk/
+- Desktop emulator: https://chainwright.github.io/cover-desk/emu/
+
+Checked after the deploy with `tools/emu/public_check.mjs` (headless
+Chromium; result in `day2_public_check.json`):
+- both return HTTP 200; the served main bundle contains no emulator code, the
+  `/emu/` bundle does; both carry the build stamp `91554733f31e` (commit
+  `9155473`); no console errors on either;
+- main page in a desktop browser without WebXR: `emulator: false`, Enter
+  disabled, the note links to `./emu/`, and the intro reads "Hold your hand up
+  in the light, like 'stop'";
+- `/emu/?test=1&reset=1`: `emulator: true` on the page and in the log; Enter
+  starts a session. The emulator starts standing with controllers, away from
+  the desk, so the board goes to the `fallback` spot in the air with the
+  ghost hand and "Tap your desk with one finger and hold it still". A desktop
+  judge has to switch to hands and sit at the desk first; JUDGES.md says so.
+  Making that first emulator minute smoother is still open.
 
 ## Deploy
 

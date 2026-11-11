@@ -19,9 +19,12 @@ This build has no emulator in it. Nothing in it has run on a Quest yet; see
 
 ## Without a headset (desktop emulator)
 
-Open **https://chainwright.github.io/cover-desk/emu/** in desktop Chrome,
-press **Enter**, switch the emulator's input to **hands** and move a hand into
-the lantern's light. The room you see is the emulator's simulated home office,
+Open **https://chainwright.github.io/cover-desk/emu/** in desktop Chrome and
+press **Enter**. The emulator starts standing, with controllers, away from the
+desk, so the board first floats in the air: switch the emulator's input to
+**hands**, move the headset to sit at the emulated desk, point one finger at
+the desk and hold still to put the board there, then move a hand into the
+lantern's light. The room you see is the emulator's simulated home office,
 not a real desk, and its frame rate says nothing about a headset.
 
 ## Checking the code (about 2 minutes)

@@ -1,0 +1,50 @@
+{
+ "static": {
+  "mainStatus": 200,
+  "emuStatus": 200,
+  "mainHasEmulator": false,
+  "emuHasEmulator": true,
+  "stamp": "\"91554733f31e\""
+ },
+ "main": {
+  "before": {
+   "status": 200,
+   "emulatorFlag": "false",
+   "iwer": false,
+   "intro": "A sleepy keeper's lantern lights your desk. Hold your hand up in the light, like 'stop', and a tiny felt creature dashes through your shadow.",
+   "note": "Open this page in the browser of a Meta Quest 3 or 3S. No headset? Try it in the desktop emulator.",
+   "emuLink": "./emu/",
+   "enterDisabled": true
+  },
+  "after": null,
+  "errors": []
+ },
+ "emu": {
+  "before": {
+   "status": 200,
+   "emulatorFlag": "true",
+   "iwer": true,
+   "intro": "A sleepy keeper's lantern lights your desk. Hold your hand up in the light, like 'stop', and a tiny felt creature dashes through your shadow.",
+   "note": "Desktop emulator: a simulated room and hands. On a Quest, open the main link instead.",
+   "emuLink": null,
+   "enterDisabled": false
+  },
+  "after": {
+   "introHidden": true,
+   "placement": "fallback",
+   "emulator": true,
+   "cues": {
+    "ghost": true,
+    "prompt": "tap-desk",
+    "knobLabel": false,
+    "canRegister": false,
+    "ghostVisible": true,
+    "promptVisible": true,
+    "promptText": "Tap your desk with one finger and hold it still"
+   },
+   "build": "91554733f31e",
+   "logEmulator": true
+  },
+  "errors": []
+ }
+}
