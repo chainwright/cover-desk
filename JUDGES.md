@@ -25,8 +25,8 @@
    is easier) standing between the lantern and the path and hold still for
    a second: it becomes cover too and throws its own shadow.
 6. **Level 2 (needs a registered object).** After your first win, once the
-   win's card is done, the keeper's gaze appears, a pale wedge across the
-   middle of the path, with a ghost mug in it. Stand the mug or book on the
+   win's card is done, a ghost mug appears in the middle of the path (the
+   keeper's gaze, a pale wedge across it, is drawn once level 2 starts). Stand the mug or book on the
    ghost mug, point onto its top and hold. (The headset doesn't see the
    object; a still finger in mid-air can register one too.) Your hand alone
    can't cross the gaze (a hand there wakes the keeper); the object alone
@@ -75,8 +75,8 @@ Open **https://chainwright.github.io/cover-desk/emu/** in desktop Chrome.
    pale paper mug (the emulator's room has no real one; it goes through the
    same registration rules). Press **H** (the hand at the left ghost; if it is up, **H** twice):
    the creature runs through your shadow into the mug's and waits past the
-   gaze, and the ghost moves right. Press **R**: the hand goes over to the
-   right ghost and the creature gets home.
+   gaze, and the ghost moves right. Press **R**: the hand lifts up, goes
+   over the gaze and comes down at the right ghost, and the creature gets home.
 
 Even if the board floats in the air instead (no desk found), it is playable
 where it floats; the game is the same. The room is the emulator's simulated

@@ -15,7 +15,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { REGISTER, TIP_PAD, onKnob } from '../src/contact.ts';
 import { CREATURE, EV_DASH_START, EV_HOME, MODE_HOME, MODE_NOOK, MODE_WAIT, newCreature, stepCreature, type CreatureWorld } from '../src/creature.ts';
-import { STOP } from '../src/emu-seat.ts';
+import { LIFT_OVER, STOP, liftOverAt } from '../src/emu-seat.ts';
 import {
   LanternWake,
   NEXT_ROUND_MAX_S,
@@ -79,7 +79,8 @@ test('post-win flow as the game runs it: "Home!" and the ghost stay past 3.5 s u
   round.frame(mode, false, true);
   assert.equal(round.again, false);
   c = cues(round.again);
-  assert.deepEqual([c.prompt, c.gaze, c.mugGhost], ['unlocked', true, true]);
+  // day 7b: level 1 draws no gaze (it has no gaze rule); the ghost mug shows where level 2's object goes
+  assert.deepEqual([c.prompt, c.gaze, c.mugGhost], ['unlocked', false, true]);
   // no hand at all: after 10 s the round starts anyway and its first dash ends the card
   const r2 = new RoundCues();
   r2.onEvent(EV_HOME);
@@ -275,15 +276,12 @@ function liftOver(make: (x: number, y: number, z: number) => Float32Array, lift:
         if (!wakes(make(nx, WY, L2_LEFT.z))) x = nx;
       }
     }
-    if (phase === 1) {
-      y = WY + lift * Math.min(1, (t - t0) / 0.2);
-      if (t - t0 >= 0.2) (phase = 2), (t0 = t);
-    } else if (phase === 2) {
-      x = x0 + (land - x0) * Math.min(1, (t - t0) / 0.4);
-      if (t - t0 >= 0.4) (phase = 3), (t0 = t);
-    } else if (phase === 3) {
-      y = WY + lift * (1 - Math.min(1, (t - t0) / 0.2));
-      if (t - t0 >= 0.2) phase = 4;
+    if (phase >= 1 && phase <= 3) {
+      // day 7b: the same motion the /emu/ R key plays (emu-seat.ts liftOverAt), at height `lift`
+      const p = liftOverAt(t - t0, x0, land, 0, lift);
+      x = p.x;
+      y = WY + p.dy;
+      phase = p.done ? 4 : t - t0 < LIFT_OVER.upS ? 1 : t - t0 < LIFT_OVER.upS + LIFT_OVER.overS ? 2 : 3;
     } else if (phase === 4 && opts.edge && c.mode === MODE_WAIT) {
       const nx = Math.min(0.15, x + 0.03 * DT); // with the 7 mm floor the hand slides on (the steps say "slide the hand along")
       if (!wakes(make(nx, WY, L2_LEFT.z))) x = nx;

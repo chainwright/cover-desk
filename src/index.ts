@@ -1,7 +1,7 @@
 import { DepthSensingSystem, VisibilityState, World } from '@iwsdk/core';
 import projectOptions from 'virtual:iwsdk-project';
 import { unlockAudio } from './click-sound.ts';
-import { CoverSystem, type CoverDebug } from './cover-system.ts';
+import { CoverSystem, coverDebug } from './cover-system.ts';
 import { installEmuSeat } from './emu-seat.ts';
 import { flags } from './flags.ts';
 import { flushOnPageHide } from './log-store.ts';
@@ -43,7 +43,7 @@ World.create(document.getElementById('scene-container') as HTMLDivElement, proje
   if (supported && emulator) {
     enter.disabled = false;
     note.textContent =
-      'Desktop emulator: a simulated room and hands. Enter seats you at its desk with hands; then H stands your hand where the ghost hand shows, between the lantern and the path, holding → slides it to lead the creature, L lifts it, C cups the lantern. Level 2 (after a win, or ?level=2): O stands an emulated mug in the keeper\'s gaze, H the hand at the left ghost, R moves it over the gaze to the right ghost. On a Quest, open the main link instead.';
+      'Desktop emulator: a simulated room and hands. Enter seats you at its desk with hands; then H stands your hand where the ghost hand shows, between the lantern and the path, holding → slides it to lead the creature, L lifts it, C cups the lantern. Level 2 (after a win, or ?level=2): O stands an emulated mug in the keeper\'s gaze, H the hand at the left ghost, R lifts it up, over the gaze and down at the right ghost. On a Quest, open the main link instead.';
     installEmuSeat(cover);
   } else if (supported) {
     enter.disabled = false;
@@ -78,9 +78,8 @@ World.create(document.getElementById('scene-container') as HTMLDivElement, proje
   if (flags.test) setUpTester();
 });
 
-function cover(): CoverDebug | undefined {
-  return (window as unknown as { __cover?: CoverDebug }).__cover;
-}
+// Day 7b: the game's handle comes from the module; only the /emu/ build also puts it on window (checks).
+const cover = coverDebug;
 
 function setUpTester(): void {
   tester.hidden = false;

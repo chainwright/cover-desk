@@ -304,7 +304,7 @@ test('cards: level 1 unchanged until a win; then it names what level 2 needs; le
   assert.equal(firstRunCues({ ...base, again: true, unlocked: true, objects: 0 }).prompt, 'again', 'the day-5 "again" card first');
   // unlocked, no object yet
   const un = firstRunCues({ ...base, unlocked: true, objects: 0 });
-  assert.deepEqual([un.prompt, un.gaze, un.mugGhost], ['unlocked', true, true]);
+  assert.deepEqual([un.prompt, un.gaze, un.mugGhost], ['unlocked', false, true], 'day 7b: no gaze drawn in level 1');
   assert.equal(firstRunCues({ ...base, unlocked: true, objects: 0, spotted: true }).prompt, 'spotted', 'play comes first');
   const l2 = { ...base, unlocked: true, level: 2 };
   const need = firstRunCues({ ...l2, objects: 0 });

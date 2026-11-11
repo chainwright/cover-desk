@@ -82,6 +82,7 @@ import { Gaze, L2_LEFT, L2_RIGHT, LEVEL_2, LevelProgress, keepNewestObject, obje
 import { LightMap } from './light-map.ts';
 import { LogKeeper, LogStore, type StoreStatus } from './log-store.ts';
 import { KNOB_LINES, PROMPT_LINES, firstRunCues, newCues, type CueInput } from './onboarding.ts';
+import { seatTrace } from './emu-seat.ts';
 import { placementStep, type PlacementClock, type PlacementState, type PlacementWorld } from './placement.ts';
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightResult } from './sightline.ts';
 import { TextCard } from './text-card.ts';
@@ -173,6 +174,19 @@ export interface CoverDebug {
   sightAt(x: number, z: number): string;
   /** Forgets every registered object. */
   clearObjects(): void;
+  /** Day 7b, /emu/: the last R lift-over as the emulator seat placed the hand, per frame [t s, x m, height m]. */
+  seatTrace: readonly (readonly [number, number, number])[];
+}
+
+let debugHandle: CoverDebug | undefined;
+/**
+ * The running game's debug handle (the page's tester panel uses it). Day 7b:
+ * it lives here, not on `window`; only the /emu/ build (and the dev server)
+ * also puts it on `window` for the emulator checks, so the main build served
+ * to a Quest carries no global handle.
+ */
+export function coverDebug(): CoverDebug | undefined {
+  return debugHandle;
 }
 
 export class CoverSystem extends createSystem({
@@ -1572,12 +1586,14 @@ export class CoverSystem extends createSystem({
       clearObjects() {
         self.clearObjects(self.lastTime);
       },
+      seatTrace,
       sightAt(x, z) {
         const r = look(self.lantern, self.occ, x, CREATURE_Y, z, { state: DARK, by: BY_NONE });
         return r.state === SEEN ? 'seen' : r.state === SHADOW ? `shadow:${self.ownerName(r.by)}` : 'dark';
       },
     };
-    (window as unknown as { __cover: CoverDebug }).__cover = debug;
+    debugHandle = debug;
+    if (__COVER_EMU__) (window as unknown as Record<string, CoverDebug>)['__cover'] = debug;
   }
 }
 

@@ -1,4 +1,4 @@
-"""Mutation check (days 2-6): applies each mutation to the source, runs `npm test`,
+"""Mutation check (days 2-8): applies each mutation to the source, runs `npm test`,
 restores the file, and prints which tests failed. Run: python3 tools/mutations.py
 A mutation that no test catches is printed with 0 failing.
 
@@ -16,7 +16,10 @@ catches them.
 Day 7: 8a-8i mutate the day-7 code (post-win flow, wake hysteresis, the creature's
 dwell, the gaze during the win card, the teach copy, and the pure pieces pulled out of
 the glue). R1-R11 are the outside run's eleven day-6 glue mutations (judges_impl_d5,
-ORGANISER_CHECKS section 5), recreated at today's call sites; G10-G12 the day-7 glue."""
+ORGANISER_CHECKS section 5), recreated at today's call sites; G10-G12 the day-7 glue.
+
+Day 7b: 9a-9e the gaze only in level 2, the /emu/ R lift-over (pure), the debug handle
+gate; G13-G14 the R motion's glue (wiring check l2-r-motion)."""
 import subprocess, shutil, re, sys
 import os
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -90,11 +93,17 @@ M=[
  ('8b no wake hysteresis (sleeps at 6.3 cm again)','src/feedback.ts','this.hand >= 0 ? SLEEP_RADIUS : WAKE_RADIUS','WAKE_RADIUS'),
  ('8c creature dwell 0 (day-6 creature)','src/creature.ts','  dwell: 0.1,','  dwell: 0,'),
  ('8d dwell check removed in stepCreature','src/creature.ts','      if (c.clearFor < p.dwell) return EV_NONE; // standing still: the way ahead must stay dark a moment\n',''),
- ('8e gaze drawn during the win\'s "again" card','src/onboarding.ts','cues.gaze = i.placed && (l2 || (!!i.unlocked && !i.again));','cues.gaze = i.placed && (l2 || !!i.unlocked);'),
+ ('8e ghost mug drawn during the win\'s "again" card (day 7b: the gaze is level 2 only)','src/onboarding.ts','cues.mugGhost = i.placed && (l2 || (!!i.unlocked && !i.again))','cues.mugGhost = i.placed && (l2 || !!i.unlocked)'),
  ('8f teach copy back to "between the lantern and the path"','src/onboarding.ts',"""teach: ["Stand your hand like 'stop'", '!right where the pale hand is'],""","""teach: ["Stand your hand like 'stop'", '!between the lantern and the path'],"""),
  ('8g knob: pointing gate removed (pure; R3 in the function)','src/contact.ts','  return pointing && Math.hypot(lx - knob.x','  return Math.hypot(lx - knob.x'),
  ('8h level switch keeps every object (pure; R7 in the function)','src/level2.ts','  if (lastSlot !== 0) objects.copyWithin(0, lastSlot * 3, lastSlot * 3 + 3);\n  return 1;','  return count;'),
  ('8i fps inView always true (pure; R9 in the function)','src/touch-log.ts','  return placed && viewDeg < IN_VIEW_DEG;','  return true;'),
+ # day-7b code
+ ('9a gaze drawn in level 1 after the unlock again','src/onboarding.ts','cues.gaze = i.placed && l2;','cues.gaze = i.placed && (l2 || !!i.unlocked);'),
+ ('9b lift-over crosses low (no height while moving across)','src/emu-seat.ts','return { x: fromX + (toX - fromX) * ((t - upS) / overS), dy: top, done: false };','return { x: fromX + (toX - fromX) * ((t - upS) / overS), dy: 0, done: false };'),
+ ('9c lift-over jumps (R moves the hand at once)','src/emu-seat.ts','  if (t < upS) return','  if (t < 0) return'),
+ ('9d level-1 card points at the gaze again','src/onboarding.ts',"'!on the ghost mug; finger on top'","'!in the gaze; hold a finger on top'"),
+ ('9e debug handle on window in every build','src/cover-system.ts',"    if (__COVER_EMU__) (window","    if (true) (window"),
 ]
 # The outside run's ten day-4 glue mutations, recreated at today's call sites
 # (marked 'emu': if no unit test catches them, the emulator wiring check is tried).
@@ -135,6 +144,9 @@ OUT=[
  ('G10 the next round starts 3.5 s after a win again (call site)','src/cover-system.ts','nextRoundDue(time - this.homeAt, this.handBack)','time - this.homeAt > 3.5'),
  ('G11 the win hop not applied to the creature (call site)','src/cover-system.ts','      bob = this.fx.hop; // the win','      bob = 0; // the win'),
  ('G12 the win flare not applied to the light (call site)','src/cover-system.ts','    (m.poolMat.uniforms.uFlare as { value: number }).value = this.fx.flare;\n','    (m.poolMat.uniforms.uFlare as { value: number }).value = 0;\n'),
+ # day-7b glue
+ ('G13 /emu/ R jumps again (the motion starts at its end)','src/emu-seat.ts','      over = { t: 0, fromX,','      over = { t: LIFT_OVER_S, fromX,'),
+ ('G14 /emu/ R motion not applied to the hand height','src/emu-seat.ts','    const y = STOP.y + (over ? dy : lifted ? STOP.lift : 0);','    const y = STOP.y + (lifted ? STOP.lift : 0);'),
 ]
 EMU=os.environ.get('COVER_EMU_BASE')
 ONLY=sys.argv[1] if len(sys.argv)>1 else None  # 'unit' or 'outside'

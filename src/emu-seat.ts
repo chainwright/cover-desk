@@ -14,7 +14,8 @@
  *   O        (day 6) put an emulated object in the keeper's gaze (registered through the
  *            same rules as a fingertip registration), again to take it away; level 2
  *            needs it. The emulator's room has no real mug: this stands in for one.
- *   R        (day 6) stand the hand at level 2's right-hand ghost, as if lifted over the gaze
+ *   R        (day 6) take the hand over the gaze to level 2's right-hand ghost; day 7b: as one
+ *            continuous motion (up 10 cm, across, down: LIFT_OVER), not a jump
  *   M        hand the emulator back to its own controls (its menus and gizmos)
  * In level 2, H stands the hand at level 2's left-hand ghost.
  *
@@ -75,6 +76,31 @@ export function seatSpotX(level: number, key: 'h' | 'r'): number {
   return key === 'r' ? L2_RIGHT.x : STOP.x;
 }
 
+/**
+ * R (day 7b): the lift-over as the hand would do it, the same motion
+ * `tests/day7.test.ts` plays in the model: straight up by `up` (in `upS`
+ * seconds), across at that height (`overS`), straight down (`downS`). Until
+ * day 7 R jumped the hand to the right ghost in one frame.
+ */
+export const LIFT_OVER = { up: 0.1, upS: 0.2, overS: 0.4, downS: 0.2 } as const;
+export const LIFT_OVER_S = LIFT_OVER.upS + LIFT_OVER.overS + LIFT_OVER.downS;
+
+/**
+ * Where the lift-over has the wrist `t` seconds in, going from `fromX` to
+ * `toX` (board frame): `x`, and `dy` above the standing height. The hand only
+ * moves across at full height, so it never passes low over the gaze. `fromDy`:
+ * a hand already lifted (L) starts there and goes no lower than `up` on the way
+ * (`up`: the model tests also play lower lifts).
+ */
+export function liftOverAt(t: number, fromX: number, toX: number, fromDy = 0, up: number = LIFT_OVER.up): { x: number; dy: number; done: boolean } {
+  const top = Math.max(up, fromDy);
+  const { upS, overS, downS } = LIFT_OVER;
+  if (t < upS) return { x: fromX, dy: fromDy + (top - fromDy) * Math.max(0, t / upS), done: false };
+  if (t < upS + overS) return { x: fromX + (toX - fromX) * ((t - upS) / overS), dy: top, done: false };
+  if (t < LIFT_OVER_S) return { x: toX, dy: top * (1 - (t - upS - overS) / downS), done: false };
+  return { x: toX, dy: 0, done: true };
+}
+
 /** C: the hand stands right in front of the lantern, cupping it (wrist 2.5 cm in front, centred). */
 export const CUP = { x: LEVEL_1.lanterns[0].x, z: LEVEL_1.lanterns[0].z + 0.025 } as const;
 
@@ -112,7 +138,10 @@ export function seatHandPose(x: number, y: number, z: number, boardPoint: (x: nu
 const KEYS_HTML =
   '<b>Emulator seat</b> · <b>H</b> stand your hand like \'stop\' between the lantern and the path, again to take it away' +
   ' · hold <b>← →</b> to slide it along and lead the creature · <b>L</b> lift it · <b>C</b> cup the lantern (it wakes the keeper)' +
-  ' · level 2: <b>O</b> an emulated mug in the gaze, <b>R</b> the hand over to the right-hand ghost · <b>M</b> emulator\'s own controls';
+  ' · level 2: <b>O</b> an emulated mug in the gaze, <b>R</b> lift the hand over the gaze to the right-hand ghost · <b>M</b> emulator\'s own controls';
+
+/** /emu/ checks: the last R motion as the seat placed it, per frame: [t s, wrist x m, height above standing m]. */
+export const seatTrace: [number, number, number][] = [];
 
 export function installEmuSeat(cover: () => CoverDebug | undefined): void {
   const device = (window as unknown as { IWER_DEVICE?: EmuDevice }).IWER_DEVICE;
@@ -136,8 +165,19 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
   let x: number = STOP.x;
   let dir = 0;
   let last = 0;
+  /** The R motion under way: seconds into it (stepped like the slide), from where, extra height. */
+  let over: { t: number; fromX: number; toX: number; fromDy: number } | null = null;
+  let dy = 0;
   const slide = (now: number) => {
-    if (dir !== 0 && raised && !cupped) {
+    if (over) {
+      over.t += Math.min(0.05, (now - last) / 1000);
+      const p = liftOverAt(over.t, over.fromX, over.toX, over.fromDy);
+      x = p.x;
+      dy = p.dy;
+      placeRight();
+      seatTrace.push([+over.t.toFixed(3), +p.x.toFixed(4), +p.dy.toFixed(4)]);
+      if (p.done) over = null;
+    } else if (dir !== 0 && raised && !cupped) {
       const dt = Math.min(0.05, (now - last) / 1000);
       x = Math.min(STOP.maxX, Math.max(STOP.minX, x + dir * SLIDE_SPEED * dt));
       placeRight();
@@ -157,7 +197,7 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
     const f = cover();
     if (!f) return;
     const r = device.hands.right;
-    const y = STOP.y + (lifted ? STOP.lift : 0);
+    const y = STOP.y + (over ? dy : lifted ? STOP.lift : 0);
     const z = f.level.id === 2 ? L2_LEFT.z : STOP.z;
     const p = cupped ? seatHandPose(CUP.x, STOP.y, CUP.z, f.boardPoint) : seatHandPose(x, y, z, f.boardPoint);
     r.poseId = 'flat';
@@ -175,6 +215,7 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
     park(device.hands.left, -1);
     park(device.hands.right, 1);
     raised = lifted = cupped = false;
+    over = null;
     x = STOP.x;
     device.notifyStateChange?.();
     seated = true;
@@ -193,6 +234,8 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
     if (!seated || device.controlMode !== 'programmatic') return;
     const k = e.key.toLowerCase();
     const level = cover()?.level.id ?? 1;
+    // any key but R itself (and M) ends a lift-over under way where the hand is
+    if (k !== 'r' && k !== 'm' && over) over = null;
     if (k === 'h') {
       // H stands the hand where the ghost stands (again after a win), or takes it away.
       raised = !raised;
@@ -201,10 +244,17 @@ export function installEmuSeat(cover: () => CoverDebug | undefined): void {
       if (raised) placeRight();
       else park(device.hands.right, 1);
     } else if (k === 'r') {
-      // R: the hand goes over the top to level 2's right-hand ghost (a lifted hand shades nothing on the way).
+      // R: the hand goes up, over the gaze and down at level 2's right-hand ghost, as one motion.
+      // From where it stands (or from the H spot if it was down, or cupping the lantern).
+      if (over) return;
+      const fromX = raised && !cupped ? x : seatSpotX(level, 'h');
+      const fromDy = raised && !cupped && lifted ? STOP.lift : 0;
       raised = true;
       lifted = cupped = false;
-      x = seatSpotX(level, 'r');
+      seatTrace.length = 0;
+      over = { t: 0, fromX, toX: seatSpotX(level, 'r'), fromDy };
+      x = fromX;
+      dy = fromDy;
       placeRight();
     } else if (k === 'o') {
       const f = cover();

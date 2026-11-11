@@ -17,7 +17,8 @@
 //   again-waits (day 7) 6 s after the win, the hand not back: still home, the card and the ghost, no gaze yet
 //   spotted-*  L: eyes open, stare line, "hm?", the spotted card (O20, O21)
 //   wake-*     C cups the lantern: the keeper wakes, the card says so, the creature stays home
-//   l2-*       day 6: after the level-1 win the unlock card and the gaze; O registers the emulated
+//   l2-*       day 6: after the level-1 win the unlock card and the ghost mug (day 7b: no gaze drawn in
+//              level 1, it has no gaze rule); O registers the emulated
 //              mug and level 2 starts; H: the creature crosses into the mug's shadow and waits past
 //              the gaze (the swap card, the ghost on the right); R: home (a level-2 win); O again:
 //              no object, the "needs a real mug" card, and H + → held never wins (the hand in the
@@ -31,6 +32,9 @@
 //   register-gate    a still, not-pointing hand over a legal spot registers nothing; a pointing one does (R4);
 //                    note: that pointing hold is in mid-air, so it also shows a phantom registration
 //   knob-gate        a flat hand resting its fingertips on the knob doesn't move the board; a pointing one does (R3)
+//   l2-r-motion      (day 7b) R lifts the hand over the gaze as one motion: the seat's per-frame trace rises
+//                    in place, crosses only at full height (10 cm), comes down at the right ghost; the
+//                    keeper never wakes between R and the win
 //   fps-inview       with the head turned away the 'fps' log says inView false, looking at the board true (R9)
 //   errors     no console errors
 import { chromium } from 'playwright';
@@ -237,7 +241,7 @@ try {
   // Day 6: level 2. The level-1 win unlocked it; with no object the card says what it needs.
   await until(async () => (await S()).creature.mode === 'nook', 10000);
   s = await S();
-  check('l2-unlocked', s.level.id === 1 && s.level.unlocked && s.cue === 'unlocked' && /level 2/i.test(s.promptText) && s.level.gazeShown && s.level.mugGhostShown, { level: s.level, cue: s.cue, text: s.promptText });
+  check('l2-unlocked', s.level.id === 1 && s.level.unlocked && s.cue === 'unlocked' && /level 2/i.test(s.promptText) && /ghost mug/i.test(s.promptText) && !s.level.gazeShown && s.level.mugGhostShown, { level: s.level, cue: s.cue, text: s.promptText });
   // Day 7 (R7): two objects registered in level 1 before the switch, in one page task (so in the same
   // frame): the O key puts the mug in the gaze, then one more object stands elsewhere. At the switch
   // (the creature is in its nook, a round boundary) level 2 keeps only the newest.
@@ -274,8 +278,19 @@ try {
   check('l2-ghost-right', Math.abs((await S()).level.ghostAt[0] - 0.08) < 1e-3, (await S()).level.ghostAt);
   await shot('day6_02_emu_l2_mug_holds_it');
   const wins1 = (await S()).creature.wins;
+  const woke0 = (await events('keeper-woke')).length;
   await page.keyboard.press('r');
   const won2 = await until(async () => { const x = await S(); return x.creature.wins > wins1 ? x : null; }, 30000, 50);
+  {
+    // Day 7b: R is a motion, not a jump. The seat's trace, one row per frame: [t s, wrist x m, height above standing m].
+    const tr = await page.evaluate(() => window.__cover.seatTrace.map((r) => [...r]));
+    const L = -0.08, R = 0.08, between = tr.filter(([, x]) => x > L + 1e-4 && x < R - 1e-4);
+    const last = tr.at(-1);
+    const maxDy = Math.max(...tr.map((r) => r[2]));
+    const wokeR = (await events('keeper-woke')).length - woke0;
+    check('l2-r-motion', tr.length >= 10 && maxDy > 0.099 && between.length >= 3 && between.every((r) => r[2] > 0.099) && tr[0][2] < 0.05 && Math.abs(tr[0][1] - L) < 0.03 && last && Math.abs(last[1] - R) < 1e-4 && last[2] === 0 && wokeR === 0,
+      { frames: tr.length, maxDy, between: between.length, first: tr[0], last, wokeR });
+  }
   check('l2-win', won2 && won2.level.id === 2 && won2.creature.spotted === s.creature.spotted, won2 ? { creature: won2.creature } : null);
   check('l2-won-flag', won2 && won2.level.l2Won === true, won2?.level);
   await shot('day6_03_emu_l2_win');

@@ -23,6 +23,9 @@ out.static = {
   emuStatus: emu.status,
   mainHasEmulator: MARKERS.some((m) => main.text.includes(m)),
   emuHasEmulator: MARKERS.some((m) => emu.text.includes(m)),
+  // day 7b: the debug handle only in /emu/
+  mainHasDebugHandle: main.text.includes('__cover'),
+  emuHasDebugHandle: emu.text.includes('__cover'),
   stamp: COMMIT ? (main.text.match(/"([0-9a-f]{12})"/g) ?? []).find((s) => s.startsWith('"' + COMMIT)) ?? null : null,
   emuStamp: COMMIT ? (emu.text.match(/"([0-9a-f]{12})"/g) ?? []).find((s) => s.startsWith('"' + COMMIT)) ?? null : null,
 };
@@ -34,7 +37,8 @@ async function visit(url, enter) {
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(String(e)));
   const resp = await page.goto(url, { waitUntil: 'load' });
-  await page.waitForFunction(() => !!window.__cover && document.getElementById('note').textContent !== 'Checking for a headset…', null, { timeout: 30000 });
+  // day 7b: the main build has no window.__cover; wait for the page itself there
+  await page.waitForFunction((enter) => (!enter || !!window.__cover) && document.documentElement.dataset.emulator !== undefined && document.getElementById('note').textContent !== 'Checking for a headset…', enter, { timeout: 30000 });
   const before = await page.evaluate(() => ({
     status: 0,
     emulatorFlag: document.documentElement.dataset.emulator,
@@ -44,6 +48,7 @@ async function visit(url, enter) {
     emuLink: document.querySelector('#note a')?.getAttribute('href') ?? null,
     enterDisabled: document.getElementById('enter').disabled,
     reportLink: document.getElementById('report')?.getAttribute('href') ?? null,
+    debugHandle: '__cover' in window,
   }));
   before.status = resp.status();
   let after = null;

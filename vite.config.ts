@@ -8,7 +8,7 @@
 import { iwsdkDev } from '@iwsdk/vite-plugin-dev';
 import { defineConfig } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [iwsdkDev()],
   server: { host: '0.0.0.0', port: 8081, open: false },
   build: {
@@ -41,7 +41,12 @@ export default defineConfig({
     esbuildOptions: { target: 'esnext' },
   },
   // Build id written into tester logs (the commit on CI, 'dev' locally).
-  define: { __COVER_BUILD__: JSON.stringify((process.env.GITHUB_SHA ?? 'dev').slice(0, 12)) },
+  // __COVER_EMU__: the /emu/ build (and the dev server, which the checks also drive) exposes the debug
+  // handle on window; the main build (served at /, opened on a Quest) does not (day 7b).
+  define: {
+    __COVER_BUILD__: JSON.stringify((process.env.GITHUB_SHA ?? 'dev').slice(0, 12)),
+    __COVER_EMU__: JSON.stringify(process.env.COVER_VARIANT === 'emu' || command === 'serve'),
+  },
   publicDir: 'public',
   base: './',
-});
+}));

@@ -128,10 +128,11 @@ reality: it can't be won without a registered object. You point onto the
 top of a real mug or book to register it; the headset doesn't see the
 object itself, so a still finger in mid-air can register one too.
 
-- **Unlocked by your first level-1 win.** Once the win's card is done, the game draws the keeper's
-  gaze (a pale wedge from the lantern across the middle of the path) and a
-  ghost mug in it, with a card: "Level 2: stand a mug or a book in the gaze;
-  hold a finger on top". Level 1 plays on until you do. Registering the
+- **Unlocked by your first level-1 win.** Once the win's card is done, the game draws a
+  ghost mug in the middle of the path, with a card: "Level 2: stand a mug or
+  a book on the ghost mug; finger on top". Level 1 plays on until you do.
+  The keeper's gaze (a pale wedge from the lantern across the middle of the
+  path) is drawn in level 2 only, where it applies. Registering the
   object (point down onto its top and hold still, as above) starts level 2
   at the next quiet moment (the creature out of the light).
 - **The rule:** a hand that comes between the lantern and any point of the
@@ -154,7 +155,8 @@ object itself, so a still finger in mid-air can register one too.
   hand can't do the job. Lift your hand well up, about a hand's length,
   before moving it over: in the model a continuous lift-over of 5 cm or
   more wakes nothing and a 1 cm one wakes the keeper (`tests/day7.test.ts`,
-  either hand); `/emu/`'s R key still jumps between the two spots.
+  either hand); `/emu/`'s R key plays that same motion (up 10 cm, across,
+  down).
 - **Level 2 counts one object**; a new registration replaces it. (In the
   model two objects can shade the whole path between them and replace the
   hand.)
@@ -277,8 +279,8 @@ emulator its own controls back. For level 2 (after a win, or with
 `?level=2`): **O** puts an emulated 10 cm mug on the ghost mug (registered
 through the same rules as a fingertip registration; the emulator's room has
 no real mug; it is drawn as a pale paper mug), **H** stands the hand at
-level 2's left ghost, and **R** moves it over the gaze to the right ghost
-(a jump; the continuous lift-over is checked in the model). **H** alone,
+level 2's left ghost, and **R** lifts it up 10 cm, over the gaze and down
+at the right ghost, as one motion (the motion the model checks). **H** alone,
 without sliding, gets the creature only to the far edge of the lane. If the
 board ever floats in the air instead, it is playable there too. The seat and
 keys only run in the `/emu/` build: their code ships in both bundles but does

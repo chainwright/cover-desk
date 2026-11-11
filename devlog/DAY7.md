@@ -203,3 +203,45 @@ build, so the later check change doesn't change what is deployed.
 - A phantom registration also gets a depth-only column.
 - `window.__cover` is exposed in the main build.
 - The video.
+
+## Day 7b (11 Nov, later): three small open items closed
+
+- **`/emu/` R is a motion now** (`src/emu-seat.ts` `liftOverAt`, `LIFT_OVER`):
+  up 10 cm in place (0.2 s), across at that height (0.4 s), down at the
+  right ghost (0.2 s), stepped like the slide (≤ 0.05 s a frame, so at least
+  16 frames at any frame rate). It is the same function the day-7 model
+  test plays, so the model and the emulator can't drift apart. A hand
+  already lifted with L stays at 20 cm across; any other key stops it where
+  it is.
+- **Level 1 no longer draws the gaze** (`src/onboarding.ts`): the gaze is
+  drawn in level 2 only, where its rule applies. After the unlock, level 1
+  shows the ghost mug (where the object that starts level 2 goes) and the
+  card now reads "Level 2: stand a mug or a book / on the ghost mug; finger
+  on top". README, JUDGES, CLAIMS and both tester sheets follow.
+- **`window.__cover` only in `/emu/`** (`src/cover-system.ts` `coverDebug()`,
+  `__COVER_EMU__` in `vite.config.ts`): the page's tester panel reads the
+  handle from the module; the global is set only in the `/emu/` build and
+  the dev server. `tools/check-dist.mjs` now fails if `__cover` appears in
+  the main bundle or is missing from `/emu/`. Mutant check: a main build
+  made with the flag on fails it (exit 1). `public_check.mjs` no longer
+  waits for the handle on `/` and reports `mainHasDebugHandle`.
+- Tests: `tests/day7b.test.ts` (5): the R motion (starts in place, crosses
+  only at full height, ends standing at the right ghost, no step over 2 cm
+  at 30 fps), R from a lifted hand, no wrist pose on R's way shades the
+  gaze, level 1 never draws the gaze in nine states, the handle gate. Day 6
+  and day 7 card tests updated for the hidden gaze; the day-7 lift-over model
+  now calls `liftOverAt`.
+- Wiring check: `l2-unlocked` now needs no gaze and the ghost mug; new
+  `l2-r-motion` reads the seat's per-frame trace (16 frames, 7 of them
+  across, all at 10 cm; ends at x 0.08, height 0) and needs no keeper wake
+  between R and the win. `replay.mjs` adds `l1-no-gaze-after-unlock` and
+  `l2-r-is-a-motion`.
+- Mutations (`day7b_mutations_output.txt`): 8e retargeted (ghost mug during
+  the "again" card), 9a–9e by unit tests, 5 of 5 caught; G13 (R jumps) and
+  G14 (motion height not applied) by the wiring check, 2 of 2.
+
+Results, gated by exit code: typecheck 0; `npm test` 108/108, exit 0
+(`day7b_test_output.txt`); build with the dist check 0 (main 3,190 KB,
+emulator and `__cover` absent; `/emu/` 6,167 KB, both present); wiring check
+on the clean local build twice in a row, 40/40 both, exit 0
+(`day7b_emu_wiring_local_run1.json`, `…run2.json`; load average 13–15).

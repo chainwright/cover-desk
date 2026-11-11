@@ -12,7 +12,7 @@
     "build": "vite build && node tools/build-emu.mjs && node tools/check-dist.mjs",
     "build:main": "vite build",
     "preview": "vite preview",
-    "test": "node --test tests/sightline.test.ts tests/game.test.ts tests/day2.test.ts tests/los-cases.test.ts tests/day3.test.ts tests/day4.test.ts tests/day5.test.ts tests/day6.test.ts tests/day7.test.ts",
+    "test": "node --test tests/sightline.test.ts tests/game.test.ts tests/day2.test.ts tests/los-cases.test.ts tests/day3.test.ts tests/day4.test.ts tests/day5.test.ts tests/day6.test.ts tests/day7.test.ts tests/day7b.test.ts",
     "check": "npm run typecheck && npm test && npm run build",
     "analyze": "node tools/analyze-log.mjs"
   },

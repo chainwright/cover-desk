@@ -74,9 +74,9 @@ export interface Cues {
   canRegister: boolean;
   /** Day 6: where the ghost hand stands. */
   ghostSpot: GhostSpot;
-  /** Day 6: the keeper's gaze is drawn (level 2, or level 2 unlocked). */
+  /** Day 6: the keeper's gaze is drawn. Day 7b: in level 2 only (level 1 has no gaze rule). */
   gaze: boolean;
-  /** Day 6: the ghost mug shows where the object goes. */
+  /** Day 6: the ghost mug shows where the object goes (day 7b: in level 1 too, once unlocked: it starts level 2). */
   mugGhost: boolean;
 }
 
@@ -100,7 +100,8 @@ export const PROMPT_LINES: Record<Exclude<PromptKind, 'none'>, readonly string[]
   again: ['Home! Bring your hand back', '!to the ghost for another round'],
   // Day 6, level 2: a real object is needed. Unlocked by a level-1 win; it
   // starts once an object is registered, and without one the game says so.
-  unlocked: ['Level 2: stand a mug or a book', '!in the gaze; hold a finger on top'],
+  // Day 7b: level 1 no longer draws the gaze, so the card points at the ghost mug.
+  unlocked: ['Level 2: stand a mug or a book', '!on the ghost mug; finger on top'],
   'need-object': ['Level 2 needs a real mug or book', '!in the gaze; hold a finger on top'],
   'mug-off': ["The mug must cover the gaze:", '!stand it on the ghost mug'],
   gaze: ['A hand in its gaze wakes it.', '!Only the mug may stand there'],
@@ -124,9 +125,10 @@ export function firstRunCues(i: CueInput, cues: Cues = newCues()): Cues {
   cues.canRegister = onDesk && !i.moveRequested && (!i.listening || i.placement === 'desk');
   cues.ghostSpot = 'teach';
   const l2 = i.level === 2;
-  // Day 7: in level 1 the gaze and the ghost mug wait until the win's "again" card is done.
-  cues.gaze = i.placed && (l2 || (!!i.unlocked && !i.again));
-  cues.mugGhost = cues.gaze && (!i.objects || (l2 && !i.mugCovers));
+  // Day 7b: the gaze only where it applies (level 2); level 1 after the unlock shows only the ghost mug,
+  // where the object that starts level 2 goes, and (day 7) only once the win's "again" card is done.
+  cues.gaze = i.placed && l2;
+  cues.mugGhost = i.placed && (l2 || (!!i.unlocked && !i.again)) && (!i.objects || (l2 && !i.mugCovers));
   if (!onDesk) {
     // A board floating in the air: ask for a desk tap. Not while the desk is
     // still being looked for (day 4): the card made people tap during an
