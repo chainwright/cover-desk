@@ -108,7 +108,7 @@ import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightR
 import { TextCard } from './text-card.ts';
 import { buildAmbience, type Ambience } from './ambience.ts';
 import { STAR_FRACTIONS, STAR_OFFSET, buildNightChip, buildSky, buildStars, loadStars, saveStars, type NightChip, type Sky, type StarSet } from './stars.ts';
-import { HOLD_S, PICK_R, SHELF, loadAnimatedTuck, loadPets, petMaterials, savePet, savedPet, type AnimatedPet, type PetId } from './pets.ts';
+import { HOLD_S, PICK_R, SHELF, loadAnimatedTuck, loadPets, loadProp, petMaterials, savePet, savedPet, type AnimatedPet, type PetId } from './pets.ts';
 import { LABELS, TesterLogger, analyseLog, boardInView, logSettings, type Label } from './touch-log.ts';
 
 /** Inset from desk edges so the whole board stays on the desk, whichever way it is turned. */
@@ -415,6 +415,7 @@ export class CoverSystem extends createSystem({
         this.shelfPets[s.id] = c;
       }
       this.applyPet(this.petId);
+      this.loadProps();
       return loadAnimatedTuck().then((a) => { this.tuckAnim = a; if (this.petId === 'tuck') this.applyPet('tuck'); });
     }).catch((e: unknown) => console.warn('[cover] pets not loaded', e));
     // Day 8: beads and the level-2 unlock carry over to the next visit (localStorage); ?reset=1 forgets them.
@@ -749,6 +750,29 @@ export class CoverSystem extends createSystem({
   }
 
   /** The horizontal plane at desk height in front of the viewer, within reach (writes `best`). */
+  /** Chief 12.11 (judges r2: one art language): the plush keeper, burrow and felt stars replace the primitives (visual only). */
+  private loadProps(): void {
+    const m = this.model;
+    loadProp('keeper', 0.075, Math.PI).then((g) => {
+      for (const ch of m.keeper.children) ch.visible = false;
+      m.keeper.add(g);
+    }).catch((e: unknown) => console.warn('[cover] keeper prop', e));
+    loadProp('nook', 0.06, -Math.PI / 2).then((g) => {
+      (m.nook.material as import("@iwsdk/core").MeshStandardMaterial).visible = false;
+      for (const ch of m.nook.children) ch.visible = false;
+      g.position.copy(m.nook.position);
+      m.root.add(g);
+    }).catch((e: unknown) => console.warn('[cover] nook prop', e));
+    loadProp('star', 0.016).then((g) => {
+      for (const f of this.stars.fallen) {
+        (f.material as import("@iwsdk/core").MeshStandardMaterial).visible = false;
+        const c = g.clone();
+        c.rotation.x = 0;
+        f.add(c);
+      }
+    }).catch((e: unknown) => console.warn('[cover] star prop', e));
+  }
+
   /** Chief 12.11: makes `id` the creature (visual only). */
   private applyPet(id: PetId): void {
     if (!this.pets) return;

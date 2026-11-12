@@ -119,3 +119,23 @@ export async function loadAnimatedTuck(): Promise<AnimatedPet> {
   pet.play('idle', 0);
   return pet;
 }
+
+/** Chief 12.11 (judges r2: one art language): plush props from the same image→3D pipeline. */
+export async function loadProp(name: 'keeper' | 'nook' | 'star', size: number, turn = 0): Promise<Group> {
+  const loader = new GLTFLoader();
+  const gltf = await loader.loadAsync(`${import.meta.env.BASE_URL}pets/prop_${name}.glb`);
+  const model = gltf.scene as unknown as Group;
+  model.rotation.y = turn;
+  model.updateMatrixWorld(true);
+  const box = new Box3().setFromObject(model);
+  const sz = box.getSize(new Vector3());
+  model.scale.setScalar(size / Math.max(sz.x, sz.y, sz.z));
+  model.updateMatrixWorld(true);
+  const b2 = new Box3().setFromObject(model);
+  const c = b2.getCenter(new Vector3());
+  model.position.set(-c.x, -b2.min.y, -c.z);
+  const g = new Group();
+  g.name = `prop-${name}`;
+  g.add(model);
+  return g;
+}
