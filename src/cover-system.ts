@@ -106,7 +106,7 @@ import { placementStep, type PlacementClock, type PlacementState, type Placement
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightResult } from './sightline.ts';
 import { TextCard } from './text-card.ts';
 import { buildAmbience, type Ambience } from './ambience.ts';
-import { HOLD_S, PICK_R, SHELF, loadPets, petMaterials, savePet, savedPet, type PetId } from './pets.ts';
+import { HOLD_S, PICK_R, SHELF, loadAnimatedTuck, loadPets, petMaterials, savePet, savedPet, type AnimatedPet, type PetId } from './pets.ts';
 import { LABELS, TesterLogger, analyseLog, boardInView, logSettings, type Label } from './touch-log.ts';
 
 /** Inset from desk edges so the whole board stays on the desk, whichever way it is turned. */
@@ -243,6 +243,8 @@ export class CoverSystem extends createSystem({
   private shelf = new Group();
   private shelfPets: Partial<Record<PetId, Group>> = {};
   private pickHold = new Float32Array(SHELF.length);
+  private tuckAnim: AnimatedPet | null = null;
+  private petWaveUntil = 0;
   private sight: SightResult = { state: DARK, by: BY_NONE };
   private lineState = DARK;
   private lineBy = BY_NONE;
@@ -383,6 +385,7 @@ export class CoverSystem extends createSystem({
         this.shelfPets[s.id] = c;
       }
       this.applyPet(this.petId);
+      return loadAnimatedTuck().then((a) => { this.tuckAnim = a; if (this.petId === 'tuck') this.applyPet('tuck'); });
     }).catch((e: unknown) => console.warn('[cover] pets not loaded', e));
     // Day 8: beads and the level-2 unlock carry over to the next visit (localStorage); ?reset=1 forgets them.
     if (flags.reset) forgetProgress();
@@ -720,8 +723,11 @@ export class CoverSystem extends createSystem({
     if (!this.petOld.length) for (const ch of cr.root.children) this.petOld.push(ch);
     for (const o of this.petOld) o.visible = false;
     for (const pid of Object.keys(this.pets) as PetId[]) cr.root.remove(this.pets[pid]);
-    cr.root.add(this.pets[id]);
-    cr.mats = petMaterials(this.pets[id]);
+    if (this.tuckAnim) cr.root.remove(this.tuckAnim.root);
+    const model = id === 'tuck' && this.tuckAnim ? this.tuckAnim.root : this.pets[id];
+    cr.root.add(model);
+    cr.mats = petMaterials(model);
+    this.petWaveUntil = this.lastTime + 2;
     this.petId = id;
     savePet(id);
     for (const s of SHELF) { const c = this.shelfPets[s.id]; if (c) c.visible = s.id !== id; }
@@ -1366,6 +1372,15 @@ export class CoverSystem extends createSystem({
       const lid = bt < 0.14 ? Math.max(0.08, Math.abs(bt / 0.07 - 1)) : 1;
       for (const e of cr.eyes) e.scale.y = lid;
       cr.sprout.rotation.z = Math.sin(time * 2.4) * 0.12 + bob * 30;
+      // Tuck's real animations: run while it moves, a happy jump at home after a win, waves when picked
+      if (this.tuckAnim && this.petId === 'tuck') {
+        const a = this.tuckAnim;
+        a.mixer.update(dt);
+        if (c.mode === MODE_DASH || c.mode === MODE_RETREAT) a.play('run');
+        else if (c.mode === MODE_HOME) a.play('cheer');
+        else if (time < this.petWaveUntil) a.play('wave');
+        else a.play('idle');
+      }
     }
 
     // Trinket: turns slowly in its spot; after a win the creature carries it

@@ -7,7 +7,7 @@
  * Choosing: on the desk, at the board's near edge, the three stand on a little shelf; hold an index fingertip
  * on one for ~0.4 s and it becomes the creature (kept in localStorage). ?pet=bobo|lumi|tuck forces one.
  */
-import { Box3, Group, Mesh, MeshStandardMaterial, Vector3, type Color, type Object3D } from '@iwsdk/core';
+import { AnimationAction, AnimationClip, AnimationMixer, Box3, Group, Mesh, MeshStandardMaterial, Vector3, type Color, type Object3D } from '@iwsdk/core';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export const PET_IDS = ['bobo', 'lumi', 'tuck'] as const;
@@ -23,7 +23,7 @@ export function savedPet(): PetId {
     const s = localStorage.getItem(KEY);
     if (s && (PET_IDS as readonly string[]).includes(s)) return s as PetId;
   } catch { /* storage blocked */ }
-  return 'lumi';
+  return 'tuck';
 }
 export function savePet(id: PetId): void {
   try { localStorage.setItem(KEY, id); } catch { /* ignore */ }
@@ -33,8 +33,20 @@ export function savePet(id: PetId): void {
 async function loadOne(loader: GLTFLoader, id: PetId): Promise<Group> {
   const gltf = await loader.loadAsync(`${import.meta.env.BASE_URL}pets/${id}.glb`);
   const model = gltf.scene as unknown as Group;
-  const box = new Box3().setFromObject(model);
-  const size = box.getSize(new Vector3());
+  let box = new Box3().setFromObject(model);
+  let size = box.getSize(new Vector3());
+  // a long body (Lumi) lies along x in the generated model: turn it so it runs along +z (the creature's heading)
+  if (size.x > size.z * 1.3) {
+    model.rotation.y = -Math.PI / 2;
+    model.updateMatrixWorld(true);
+    box = new Box3().setFromObject(model);
+    size = box.getSize(new Vector3());
+  } else {
+    // the upright ones come out facing −z (their backs to the viewer on the shelf): turn them to +z
+    model.rotation.y = Math.PI;
+    model.updateMatrixWorld(true);
+    box = new Box3().setFromObject(model);
+  }
   const s = SIZE[id] / Math.max(size.x, size.y, size.z);
   model.scale.setScalar(s);
   const box2 = new Box3().setFromObject(model);
@@ -68,3 +80,42 @@ export const SHELF = PET_IDS.map((id, i) => ({ id, x: -0.12 + i * 0.05, z: 0.105
 /** Fingertip within this of a shelf pet (m), held for HOLD_S, picks it. */
 export const PICK_R = 0.025;
 export const HOLD_S = 0.4;
+
+/** Chief 12.11 (Roma 10092: "alive, waving its paws"): Tuck rigged + four clips (Higgsfield 3D Rigging, Meshy library). */
+export interface AnimatedPet {
+  root: Group;
+  mixer: AnimationMixer;
+  play(name: 'idle' | 'run' | 'wave' | 'cheer', fade?: number): void;
+  current: string;
+}
+export async function loadAnimatedTuck(): Promise<AnimatedPet> {
+  const loader = new GLTFLoader();
+  const base = `${import.meta.env.BASE_URL}pets/`;
+  const [idle, run, wave, cheer] = await Promise.all(['idle', 'run', 'wave', 'cheer'].map((n) => loader.loadAsync(`${base}tuck_${n}.glb`)));
+  const model = idle.scene as unknown as Group;
+  const box = new Box3().setFromObject(model);
+  const size = box.getSize(new Vector3());
+  model.scale.setScalar(SIZE.tuck / Math.max(size.x, size.y, size.z));
+  const b2 = new Box3().setFromObject(model);
+  const c = b2.getCenter(new Vector3());
+  model.position.set(-c.x, -b2.min.y, -c.z);
+  const root = new Group();
+  root.name = 'pet-tuck-animated';
+  root.add(model);
+  const mixer = new AnimationMixer(model);
+  const clips: Record<string, AnimationClip> = { idle: idle.animations[0], run: run.animations[0], wave: wave.animations[0], cheer: cheer.animations[0] };
+  const actions: Record<string, AnimationAction> = {};
+  for (const [k, clip] of Object.entries(clips)) if (clip) actions[k] = mixer.clipAction(clip);
+  const pet: AnimatedPet = {
+    root, mixer, current: '',
+    play(name, fade = 0.2) {
+      if (pet.current === name || !actions[name]) return;
+      const next = actions[name];
+      next.reset().setEffectiveWeight(1).fadeIn(fade).play();
+      if (pet.current && actions[pet.current]) actions[pet.current].fadeOut(fade);
+      pet.current = name;
+    },
+  };
+  pet.play('idle', 0);
+  return pet;
+}
