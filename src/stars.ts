@@ -92,7 +92,7 @@ export function buildSky(): Sky {
   grd.addColorStop(0, 'rgba(255,240,200,1)'); grd.addColorStop(0.25, 'rgba(255,215,120,0.8)'); grd.addColorStop(1, 'rgba(255,190,90,0)');
   g.fillStyle = grd; g.fillRect(0, 0, 64, 64);
   const geo = new BufferGeometry(); geo.setAttribute('position', new BufferAttribute(pos, 3));
-  const mat = new PointsMaterial({ map: new CanvasTexture(c), size: 0.022, transparent: true, depthWrite: false, depthTest: false, blending: AdditiveBlending });
+  const mat = new PointsMaterial({ map: new CanvasTexture(c), size: 0.013, transparent: true, depthWrite: false, depthTest: false, blending: AdditiveBlending });
   const points = new Points(geo, mat); points.frustumCulled = false;
   const lpos = new Float32Array((MAX_SKY - 1) * 6);
   for (let i = 0; i < MAX_SKY - 1; i++) { lpos.set(pts[i], i * 6); lpos.set(pts[i + 1], i * 6 + 3); }
@@ -107,7 +107,7 @@ export function buildSky(): Sky {
     set(n: number, time: number) {
       const k = Math.max(0, Math.min(MAX_SKY, n));
       if (k !== shown) { geo.setDrawRange(0, k); lgeo.setDrawRange(0, Math.max(0, k - 1) * 2); shown = k; }
-      mat.size = 0.02 + 0.004 * Math.sin(time * 2.2);
+      mat.size = 0.012 + 0.003 * Math.sin(time * 2.2);
       root.visible = k > 0;
     },
   };

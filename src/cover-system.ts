@@ -253,6 +253,9 @@ export class CoverSystem extends createSystem({
   private starAt = new Float32Array(3);
   private stirred = false;
   private resultAt = -1;
+  /** Chief 12.11: Night 7's finale (dawn, the creature climbs into your palm). */
+  private finaleAt = -1;
+  private beatAt = 0;
   private resultN = [false, false, false];
   private starBook = loadStars();
   private sky!: Sky;
@@ -553,7 +556,7 @@ export class CoverSystem extends createSystem({
     this.amb.update(Math.min(delta, 0.05), time, {
       placed,
       staring: this.sight.state === SEEN || this.keeperAwake,
-      flare: this.fx.flare,
+      flare: this.finaleAt >= 0 ? 1 : this.fx.flare,
       hands: this.joints.tracked[0] || this.joints.tracked[1],
     });
     if (placed) {
@@ -1307,6 +1310,23 @@ export class CoverSystem extends createSystem({
       }
     }
     this.sky.set(this.skyTest >= 0 ? this.skyTest : this.starBook.total, time);
+    // Night 7 finale: dawn lifts the night, the lantern goes out, the creature climbs into the nearest palm, a heartbeat
+    if (this.finaleAt >= 0) {
+      const t = time - this.finaleAt;
+      const cr = this.model.creature;
+      this.model.lanternGlow.emissiveIntensity = Math.max(0, 1.5 - t);
+      let h = this.joints.tracked[0] ? 0 : this.joints.tracked[1] ? 1 : -1;
+      if (h >= 0 && t > 1.5) {
+        const l = this.local[h];
+        const px = (l[0] + l[30]) / 2, py = (l[1] + l[31]) / 2, pz = (l[2] + l[32]) / 2; // wrist + middle metacarpal
+        const k = Math.min(1, (t - 1.5) / 1.2);
+        cr.root.position.x += (px - cr.root.position.x) * k;
+        cr.root.position.y += (py + 0.012 - cr.root.position.y) * k;
+        cr.root.position.z += (pz - cr.root.position.z) * k;
+        if (t - this.beatAt > 0.9 && k >= 1) { this.beatAt = t; click(0.35, 0.5); setTimeout(() => click(0.32, 0.35), 160); }
+      }
+      if (t > 10) this.finaleAt = -1;
+    }
     // the night's result above the trinket: stars light up one by one
     const res = this.stars.result;
     if (this.resultAt >= 0) {
@@ -1390,6 +1410,7 @@ export class CoverSystem extends createSystem({
           this.starBook.total += this.starState.reduce((a, v) => a + (v === 1 ? 1 : 0), 0);
           saveStars(this.starBook);
           this.logger?.event(time, 'night-stars', { n, all, calm: !this.stirred, total: this.starBook.total });
+          if (this.wins % 7 === 0 || this.skyTest === 99) { this.finaleAt = time; this.logger?.event(time, 'finale', { wins: this.wins }); }
         }
         lock();
         if (this.l2Climax) lullaby();
