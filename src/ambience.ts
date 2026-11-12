@@ -41,6 +41,10 @@ export interface Ambience {
   root: Group;
   /** placed: board on the desk; staring: keeper awake/looking; flare: the win flare (0..~1). */
   update(dt: number, time: number, s: { placed: boolean; staring: boolean; flare: number; hands: boolean }): void;
+  /** Lit (0..1) at a board point, from the light map; 0 outside the light. */
+  litAt(x: number, z: number): number;
+  /** 0..1: how far night has fallen. */
+  night(): number;
 }
 
 function radialTexture(inner: string, outer: string): CanvasTexture {
@@ -191,5 +195,5 @@ export function buildAmbience(l: Lantern, map: Uint8Array): Ambience {
     moteMat.size = 0.0035 + 0.0015 * Math.sin(time * 2.3);
   };
   update(0, 0, { placed: false, staring: false, flare: 0, hands: false });
-  return { root, update };
+  return { root, update, litAt, night: () => night01 };
 }

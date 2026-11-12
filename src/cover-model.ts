@@ -88,6 +88,10 @@ export interface Creature {
   root: Group;
   body: Mesh;
   bodyMat: MeshStandardMaterial;
+  /** Chief 12.11: every felt material of the creature with its base colour (dimmed in the dark). */
+  mats: { m: MeshStandardMaterial; base: Color }[];
+  /** Two small glints in its eyes, shown in the dark ("two eyes under your palm"). */
+  glintMat: MeshBasicMaterial;
 }
 
 export interface CoverModel {
@@ -441,7 +445,18 @@ function buildCreature(): Creature {
   const tail = new Mesh(new SphereGeometry(0.0035, 10, 6), FELT(0xf0d2b0));
   tail.position.set(0, 0.011, -0.0125);
   root.add(body, belly, tail);
-  return { root, body, bodyMat };
+  const glintMat = new MeshBasicMaterial({ color: 0xfff1c8, transparent: true, opacity: 0, depthWrite: false });
+  for (const sx of [-1, 1]) {
+    const g = new Mesh(new SphereGeometry(0.0014, 8, 6), glintMat);
+    g.position.set(sx * 0.0045 + 0.0006, 0.0162, 0.0128);
+    root.add(g);
+  }
+  const mats: { m: MeshStandardMaterial; base: Color }[] = [];
+  root.traverse((o) => {
+    const m = (o as Mesh).material as MeshStandardMaterial | undefined;
+    if (m && (m as MeshStandardMaterial).isMeshStandardMaterial && !mats.some((e) => e.m === m)) mats.push({ m, base: m.color.clone() });
+  });
+  return { root, body, bodyMat, mats, glintMat };
 }
 
 /** The ghost hand's shape (board frame, wrist at x, z on the desk): palm, four fingers, thumb. */

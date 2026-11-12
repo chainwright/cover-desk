@@ -1282,6 +1282,14 @@ export class CoverSystem extends createSystem({
     cr.root.scale.set(1, squash, 1);
     const flash = c.mode === MODE_SPOTTED ? 0.5 + 0.5 * Math.sin(time * 30) : 0;
     cr.bodyMat.emissive.setRGB(flash * 0.6, flash * 0.12, 0);
+    // Chief 12.11: in the night the creature is lit only by the lantern: in shade it nearly vanishes, two eye glints stay.
+    {
+      const nf = this.amb.night();
+      const lit = this.amb.litAt(cr.root.position.x, cr.root.position.z);
+      const k = 1 - nf * (1 - (0.18 + 0.82 * lit));
+      for (const e of cr.mats) e.m.color.copy(e.base).multiplyScalar(k);
+      cr.glintMat.opacity = nf * (1 - lit) * (0.75 + 0.25 * Math.sin(time * 2.1));
+    }
 
     // Trinket: turns slowly in its spot; after a win the creature carries it
     // on its back, hopping with it, until the next round starts.
