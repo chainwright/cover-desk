@@ -25,6 +25,9 @@ if (flags.depth && projectOptions.xr) {
   };
 }
 
+// Chief 12.11: the lantern's light cuts a hole in the night (stencil), see cover-model.ts / ambience.ts.
+(projectOptions as { render?: Record<string, unknown> }).render = { ...((projectOptions as { render?: Record<string, unknown> }).render ?? {}), stencil: true };
+
 World.create(document.getElementById('scene-container') as HTMLDivElement, projectOptions).then(async (world) => {
   if (flags.depth) {
     world.registerSystem(DepthSensingSystem, {

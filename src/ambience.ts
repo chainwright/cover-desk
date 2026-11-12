@@ -12,6 +12,8 @@
  */
 import {
   AdditiveBlending,
+  KeepStencilOp,
+  NotEqualStencilFunc,
   BackSide,
   BufferAttribute,
   BufferGeometry,
@@ -29,15 +31,16 @@ import {
   SpriteMaterial,
 } from '@iwsdk/core';
 import type { Lantern } from './sightline.ts';
+import { MAP_COLS, MAP_MIN_D, MAP_ROWS } from './light-map.ts';
 
 /** How dark the real room gets once the board is placed (0 = untouched passthrough). */
-export const NIGHT_MAX = 0.6;
-const MOTES = 70;
+export const NIGHT_MAX = 0.55;
+const MOTES = 24;
 
 export interface Ambience {
   root: Group;
   /** placed: board on the desk; staring: keeper awake/looking; flare: the win flare (0..~1). */
-  update(dt: number, time: number, s: { placed: boolean; staring: boolean; flare: number }): void;
+  update(dt: number, time: number, s: { placed: boolean; staring: boolean; flare: number; hands: boolean }): void;
 }
 
 function radialTexture(inner: string, outer: string): CanvasTexture {
@@ -52,12 +55,16 @@ function radialTexture(inner: string, outer: string): CanvasTexture {
   return new CanvasTexture(c);
 }
 
-export function buildAmbience(l: Lantern): Ambience {
+export function buildAmbience(l: Lantern, map: Uint8Array): Ambience {
   const root = new Group();
   root.name = 'ambience';
 
   // ---------------------------------------------------------------- night dome
-  const nightMat = new MeshBasicMaterial({ color: 0x04060c, transparent: true, opacity: 0, depthWrite: false, side: BackSide });
+  const nightMat = new MeshBasicMaterial({
+    color: 0x04060c, transparent: true, opacity: 0, depthWrite: false, side: BackSide,
+    // not where the lantern's light marked the stencil (cover-model.ts 'light-erase')
+    stencilWrite: true, stencilRef: 1, stencilFunc: NotEqualStencilFunc, stencilZPass: KeepStencilOp, stencilWriteMask: 0,
+  });
   const night = new Mesh(new SphereGeometry(3, 24, 16), nightMat);
   night.name = 'night-dome';
   night.renderOrder = -20; // first: dims passthrough, the board draws over it
@@ -125,11 +132,13 @@ export function buildAmbience(l: Lantern): Ambience {
     seed[i * 4 + 2] = 0.008 + Math.random() * Math.max(0.02, l.y * 1.3);
     seed[i * 4 + 3] = Math.random() * 100;
   }
+  const col = new Float32Array(MOTES * 3).fill(1);
   const moteGeo = new BufferGeometry();
   moteGeo.setAttribute('position', new BufferAttribute(pos, 3));
+  moteGeo.setAttribute('color', new BufferAttribute(col, 3));
   const moteMat = new PointsMaterial({
     map: radialTexture('rgba(255,236,190,1)', 'rgba(255,190,90,0)'),
-    size: 0.0045, sizeAttenuation: true, transparent: true, opacity: 0,
+    size: 0.0045, sizeAttenuation: true, transparent: true, opacity: 0, vertexColors: true,
     blending: AdditiveBlending, depthWrite: false,
   });
   const motes = new Points(moteGeo, moteMat);
@@ -140,10 +149,24 @@ export function buildAmbience(l: Lantern): Ambience {
 
   let night01 = 0;
   let dawn = 0;
+  let handsLost = 0;
+  /** Lit (0..1) at board point x, z from the light map (motes in the hand's shade go out). */
+  const litAt = (x: number, z: number): number => {
+    const rx = x - l.x, rz = z - l.z;
+    const d = Math.hypot(rx, rz);
+    let az = Math.atan2(rx, rz) - l.yaw;
+    az = ((az + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+    const u = (az + l.half) / (2 * l.half), v = (d - MAP_MIN_D) / (l.range - MAP_MIN_D);
+    if (u < 0 || u > 1 || v < 0 || v > 1) return 0;
+    const c = Math.min(MAP_COLS - 1, Math.floor(u * MAP_COLS)), r = Math.min(MAP_ROWS - 1, Math.floor(v * MAP_ROWS));
+    return map[(r * MAP_COLS + c) * 4] / 255;
+  };
   const update: Ambience['update'] = (dt, time, s) => {
     // dusk falls over ~2.5 s after placement; a win lifts it toward dawn for a moment
-    const target = s.placed ? 1 : 0;
-    night01 += Math.sign(target - night01) * Math.min(Math.abs(target - night01), dt / 2.5);
+    // safety: the night lifts when no hand has been tracked for 2 s (the player looked away or took the headset off)
+    handsLost = s.hands ? 0 : handsLost + dt;
+    const target = s.placed && handsLost < 2 ? 1 : 0;
+    night01 += Math.sign(target - night01) * Math.min(Math.abs(target - night01), dt / (target > night01 ? 2.5 : 0.8));
     dawn = Math.max(dawn * Math.exp(-dt * 1.2), Math.min(1, s.flare));
     nightMat.opacity = NIGHT_MAX * night01 * (1 - 0.75 * dawn);
     const flick = 0.92 + Math.sin(time * 5.3) * 0.05 + Math.sin(time * 13.1) * 0.03;
@@ -159,10 +182,14 @@ export function buildAmbience(l: Lantern): Ambience {
       pos[i * 3] = l.x + Math.sin(a) * d;
       pos[i * 3 + 1] = seed[k + 2] + Math.sin(time * 0.6 + ph) * 0.006;
       pos[i * 3 + 2] = l.z + Math.cos(a) * d;
+      const lit = litAt(pos[i * 3], pos[i * 3 + 2]);
+      const tw = 0.6 + 0.4 * Math.sin(time * 3.1 + ph * 5);
+      col[i * 3] = lit * tw; col[i * 3 + 1] = lit * tw * 0.85; col[i * 3 + 2] = lit * tw * 0.6;
     }
     moteGeo.attributes.position.needsUpdate = true;
+    moteGeo.attributes.color.needsUpdate = true;
     moteMat.size = 0.0035 + 0.0015 * Math.sin(time * 2.3);
   };
-  update(0, 0, { placed: false, staring: false, flare: 0 });
+  update(0, 0, { placed: false, staring: false, flare: 0, hands: false });
   return { root, update };
 }

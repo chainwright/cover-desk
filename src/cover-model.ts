@@ -17,6 +17,8 @@ import {
   CapsuleGeometry,
   CircleGeometry,
   Color,
+  AlwaysStencilFunc,
+  ReplaceStencilOp,
   ConeGeometry,
   CylinderGeometry,
   DataTexture,
@@ -170,7 +172,9 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
         float edge = smoothstep(1.0, 0.8, abs(az) / uHalf) * smoothstep(1.0, 0.72, v) * smoothstep(0.0, 0.08, v);
         float fall = clamp(0.16 / (0.1 + d), 0.0, 1.0);
         vec3 col = mix(uShade, uWarm * (1.0 + uFlare), lit);
-        float a = edge * mix(0.9, min(1.0, 0.62 * fall * uFlicker * (1.0 + uFlare)), lit);
+        // Chief 12.11: over the erased light only a faint warm wash (the real desk shows through); the lane gets
+        // a little extra dark on top of the night so it still reads.
+        float a = edge * mix(0.45, min(0.4, 0.2 * fall * uFlicker * (1.0 + uFlare)), lit);
         // the lane's edge: a pale line where the light map crosses from lit to shade
         float rim = (1.0 - smoothstep(0.12, 0.3, abs(raw - 0.5))) * edge * clamp(1.0 + uFlare, 0.3, 1.0);
         col = mix(col, uRim, rim);
@@ -181,7 +185,49 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
     depthWrite: false,
     side: DoubleSide,
   });
-  const pool = new Mesh(sectorGeometry(lantern, 48, 12), poolMat);
+  const poolGeo = sectorGeometry(lantern, 48, 12);
+  // Chief 12.11 (judges: "light must reveal the real desk, not paint over it"): the night dome (ambience.ts)
+  // darkens the room except where this pass marks the stencil: the lit cells of the light map (dithered edge).
+  // So in the light the real desk and the real hand show at full brightness, and the shade is the real desk
+  // left in the dark. Works the same in passthrough and in the emulator's simulated room.
+  const eraseMat = new ShaderMaterial({
+    uniforms: poolMat.uniforms,
+    vertexShader: poolMat.vertexShader,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D tMap;
+      uniform vec2 uL;
+      uniform float uYaw, uHalf, uMinD, uRange, uFlicker, uFlare;
+      varying vec2 vPos;
+      void main() {
+        vec2 r = vPos - uL;
+        float d = length(r);
+        float az = atan(r.x, r.y) - uYaw;
+        az = mod(az + 3.14159265, 6.2831853) - 3.14159265;
+        float u = (az + uHalf) / (2.0 * uHalf);
+        float v = (d - uMinD) / (uRange - uMinD);
+        if (u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0) discard;
+        float lit = smoothstep(0.3, 0.7, texture2D(tMap, vec2(u, v)).r);
+        float edge = smoothstep(1.0, 0.75, abs(az) / uHalf) * smoothstep(1.0, 0.6, v) * smoothstep(0.0, 0.08, v);
+        float fall = clamp(0.22 / (0.12 + d), 0.0, 1.0);
+        float a = clamp(lit * edge * (0.55 + 0.45 * fall) * uFlicker * (1.0 + uFlare), 0.0, 1.0);
+        if (a < 0.3) discard; // the hole's edge; the warm wash on top softens it
+        gl_FragColor = vec4(0.0);
+      }`,
+    transparent: true,
+    depthWrite: false,
+    side: DoubleSide,
+    colorWrite: false,
+    stencilWrite: true,
+    stencilRef: 1,
+    stencilFunc: AlwaysStencilFunc,
+    stencilZPass: ReplaceStencilOp,
+  });
+  const erase = new Mesh(poolGeo, eraseMat);
+  erase.name = 'light-erase';
+  erase.position.y = 0.0012;
+  erase.renderOrder = -30; // before the night dome (-20)
+  root.add(erase);
+  const pool = new Mesh(poolGeo, poolMat);
   pool.name = 'light-pool';
   pool.position.y = 0.0015;
   pool.renderOrder = 1;

@@ -358,7 +358,7 @@ export class CoverSystem extends createSystem({
 
   init(): void {
     this.model = buildCover(this.level, this.lightMap.data);
-    this.amb = buildAmbience(this.level.lanterns[0]);
+    this.amb = buildAmbience(this.level.lanterns[0], this.lightMap.data);
     this.model.root.add(this.amb.root);
     // Day 8: beads and the level-2 unlock carry over to the next visit (localStorage); ?reset=1 forgets them.
     if (flags.reset) forgetProgress();
@@ -506,6 +506,7 @@ export class CoverSystem extends createSystem({
       placed,
       staring: this.sight.state === SEEN || this.keeperAwake,
       flare: this.fx.flare,
+      hands: this.joints.tracked[0] || this.joints.tracked[1],
     });
     this.updateCues();
     this.watchIntro(time);
