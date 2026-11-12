@@ -32,6 +32,7 @@ import {
   Vector3,
   VisibilityState,
   XRPlane as XRPlaneComponent,
+  XRMesh as XRMeshComponent,
   createSystem,
   Group,
   type Object3D,
@@ -219,6 +220,7 @@ export function coverDebug(): CoverDebug | undefined {
 
 export class CoverSystem extends createSystem({
   planes: { required: [XRPlaneComponent] },
+  meshes: { required: [XRMeshComponent] },
 }) {
   private model!: CoverModel;
   private progress = new LevelProgress(startLevel(typeof location === 'undefined' ? '' : location.search));
@@ -1229,7 +1231,60 @@ export class CoverSystem extends createSystem({
       this.occ.addCylinder(this.objects[i * 3], this.objects[i * 3 + 1], REGISTER.radius, this.objects[i * 3 + 2], OBJECT_OWNER + i);
       this.objOcc.addCylinder(this.objects[i * 3], this.objects[i * 3 + 1], REGISTER.radius, this.objects[i * 3 + 2], OBJECT_OWNER + i);
     }
+    this.addSceneCover();
     this.mugCovers = this.gaze.coveredBy(this.objOcc);
+  }
+
+  /** Chief 12.11 (judges: "the game reads my room"): furniture-scale objects from the headset's Space Setup
+   *  (bounded scene meshes: a monitor, a lamp, a shelf…) standing on or by the play desk cast the lantern's
+   *  shade like the hand does. Each box becomes a row of upright capsules along its long side. Small things
+   *  (a cup) never appear in Space Setup: those stay touch-registered. No meshes → nothing changes. */
+  private sceneCover = 0;
+  private addSceneCover(): void {
+    let n = 0;
+    for (const e of this.queries.meshes.entities) {
+      if (!e.getValue(XRMeshComponent, 'isBounded3D')) continue;
+      const label = String(e.getValue(XRMeshComponent, 'semanticLabel') ?? '').toLowerCase();
+      if (label === 'floor' || label === 'ceiling' || label === 'wall' || label === 'table' || label === 'desk' || label === 'global mesh') continue;
+      const obj = e.object3D;
+      const mn = e.getValue(XRMeshComponent, 'min') as number[] | undefined;
+      const mx = e.getValue(XRMeshComponent, 'max') as number[] | undefined;
+      if (!obj || !mn || !mx) continue;
+      obj.updateWorldMatrix(true, false);
+      // the box's 8 corners → board frame
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+      const pts: number[] = [];
+      for (let k = 0; k < 8; k++) {
+        this.tmp.set(k & 1 ? mx[0] : mn[0], k & 2 ? mx[1] : mn[1], k & 4 ? mx[2] : mn[2]);
+        obj.localToWorld(this.tmp);
+        this.tmp.applyMatrix4(this.inv);
+        pts.push(this.tmp.x, this.tmp.z);
+        x0 = Math.min(x0, this.tmp.x); x1 = Math.max(x1, this.tmp.x);
+        y0 = Math.min(y0, this.tmp.y); y1 = Math.max(y1, this.tmp.y);
+        z0 = Math.min(z0, this.tmp.z); z1 = Math.max(z1, this.tmp.z);
+      }
+      // on/by the desk: rises above it, starts near it, within reach of the board
+      if (y1 < 0.03 || y0 > 0.15 || y1 - y0 > 1.2) continue;
+      const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+      if (Math.hypot(cx, cz) > 0.7) continue;
+      const lx = x1 - x0, lz = z1 - z0;
+      const along = lx >= lz;
+      const len = along ? lx : lz;
+      const r = Math.max(0.012, Math.min(0.06, (along ? lz : lx) / 2));
+      const segs = Math.max(1, Math.min(12, Math.ceil(len / 0.04)));
+      const top = Math.min(y1, 0.5);
+      for (let i = 0; i < segs; i++) {
+        const t = (i + 0.5) / segs;
+        const px = along ? x0 + t * lx : cx, pz = along ? cz : z0 + t * lz;
+        this.occ.addCapsule(px, Math.max(0, y0) + r, pz, px, Math.max(r, top - r), pz, r, OBJECT_OWNER + 8 + n);
+      }
+      n++;
+      if (n >= 4) break;
+    }
+    if (n !== this.sceneCover) {
+      this.sceneCover = n;
+      this.logger?.event(this.lastTime, 'scene-cover', { objects: n });
+    }
   }
 
   /** Smoothed wrist speed (board frame, m/s; about 0.1 s time constant), logged with each spot. */

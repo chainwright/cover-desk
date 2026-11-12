@@ -25,6 +25,11 @@ if (flags.depth && projectOptions.xr) {
   };
 }
 
+// Chief 12.11: the room's furniture from Space Setup casts shade (cover-system addSceneCover). Requested only on a
+// headset: the desktop emulator (IWER) hangs its session start with mesh-detection on.
+if (projectOptions.xr && !__COVER_EMU__ && !('IWER_DEVICE' in window)) {
+  projectOptions.xr.features = { ...projectOptions.xr.features, meshDetection: true };
+}
 // Chief 12.11: the lantern's light cuts a hole in the night (stencil), see cover-model.ts / ambience.ts.
 (projectOptions as { render?: Record<string, unknown> }).render = { ...((projectOptions as { render?: Record<string, unknown> }).render ?? {}), stencil: true };
 
