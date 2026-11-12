@@ -220,7 +220,7 @@ try {
   await until(async () => (await S()).creature.mode === 'nook', 15000);
   const hm1 = (await S()).payoff.sounds.hm;
   await page.keyboard.press('c');
-  const aw = await until(async () => { const x = await S(); return x.payoff.awake ? x : null; }, 5000, 50);
+  const aw = await until(async () => { const x = await S(); return x.payoff.awake ? x : null; }, 10000, 50);
   await shot('day5_03_emu_cupped_lantern_wakes');
   check('wake', aw && aw.cue === 'too-close' && /lantern/.test(aw.promptText), aw ? { cue: aw.cue, text: aw.promptText } : null);
   let maxS = 0;
@@ -236,7 +236,8 @@ try {
   const asleep = await until(async () => { const x = await S(); return !x.payoff.awake ? x : null; }, 5000);
   check('wake-ends', !!asleep, null);
   const wokeL = await events('keeper-woke');
-  check('woke-reason-lantern', wokeL.length > 0 && wokeL.at(-1).reason === 'lantern', wokeL.at(-1));
+  // day 8: the keeper waited 0.25 s (game time) with the hand inside the radius before it woke (G15: the call site's step)
+  check('woke-reason-lantern', wokeL.length > 0 && wokeL.at(-1).reason === 'lantern' && wokeL.at(-1).afterMs >= 249 && wokeL.at(-1).afterMs < 400, wokeL.at(-1));
 
   // Day 6: level 2. The level-1 win unlocked it; with no object the card says what it needs.
   await until(async () => (await S()).creature.mode === 'nook', 10000);

@@ -18,6 +18,7 @@ import { CREATURE, EV_DASH_START, EV_HOME, MODE_HOME, MODE_NOOK, MODE_WAIT, newC
 import { LIFT_OVER, STOP, liftOverAt } from '../src/emu-seat.ts';
 import {
   LanternWake,
+  WAKE_DWELL_S,
   NEXT_ROUND_MAX_S,
   NEXT_ROUND_S,
   RoundCues,
@@ -108,14 +109,16 @@ const handAt = (d: number) => {
 
 test('wake hysteresis: wakes inside 6.3 cm, stays awake until every joint is beyond 7 cm; asleep, 6.6 cm wakes nothing', () => {
   assert.ok(Math.abs(nearestJointToLantern(handAt(0.066), L) - 0.066) < 1e-6);
+  // day 8: each update here is one step of WAKE_DWELL_S (the wake's own dwell is tested in day8.test.ts)
   const w = new LanternWake();
-  assert.equal(w.update([handAt(0.066)], [true], L), -1, '6.6 cm while asleep');
-  assert.equal(w.update([handAt(0.062)], [true], L), 0, '6.2 cm wakes it');
-  assert.equal(w.update([handAt(0.066)], [true], L), 0, '6.6 cm: still awake');
-  assert.equal(w.update([handAt(0.069)], [true], L), 0, '6.9 cm: still awake');
-  assert.equal(w.update([handAt(0.071)], [true], L), -1, '7.1 cm: asleep');
-  assert.equal(w.update([handAt(0.066)], [true], L), -1);
-  assert.equal(w.update([handAt(0.05)], [false], L), -1, 'an untracked hand wakes nobody');
+  const D = WAKE_DWELL_S;
+  assert.equal(w.update([handAt(0.066)], [true], L, D), -1, '6.6 cm while asleep');
+  assert.equal(w.update([handAt(0.062)], [true], L, D), 0, '6.2 cm wakes it');
+  assert.equal(w.update([handAt(0.066)], [true], L, D), 0, '6.6 cm: still awake');
+  assert.equal(w.update([handAt(0.069)], [true], L, D), 0, '6.9 cm: still awake');
+  assert.equal(w.update([handAt(0.071)], [true], L, D), -1, '7.1 cm: asleep');
+  assert.equal(w.update([handAt(0.066)], [true], L, D), -1);
+  assert.equal(w.update([handAt(0.05)], [false], L, D), -1, 'an untracked hand wakes nobody');
   assert.ok(SLEEP_RADIUS > WAKE_RADIUS);
 });
 
@@ -128,7 +131,7 @@ test('a hand jittering ±4 mm around the wake radius wakes the keeper once, not 
   for (let i = 0; i < 300; i++) {
     const j = handAt(WAKE_RADIUS + (r() * 2 - 1) * 0.004);
     const was = w.awake;
-    w.update([j], [true], L);
+    w.update([j], [true], L, WAKE_DWELL_S); // one dwell per step: this test is about the hysteresis
     if (w.awake && !was) edges++;
     const p = handAtLantern([j], [true], L) >= 0; // day 6: no hysteresis
     if (p && !wasPlain) plain++;

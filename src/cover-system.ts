@@ -451,7 +451,7 @@ export class CoverSystem extends createSystem({
     this.readHands(time);
 
     const placed = this.isPlaced();
-    this.updateWake(placed, time);
+    this.updateWake(placed, time, Math.min(delta, 0.05));
     if (placed) {
       this.buildOccluders();
       this.lightMap.update(this.lantern, this.occ, CREATURE_Y);
@@ -497,10 +497,11 @@ export class CoverSystem extends createSystem({
    * The keeper wakes while a tracked hand is within WAKE_RADIUS of the lantern (feedback.ts), and in level 2
    * while a hand shades any point of the path inside its gaze (level2.ts).
    */
-  private updateWake(placed: boolean, time: number): void {
-    // Day 7: with hysteresis, so a hand jittering at the wake radius doesn't toggle it every frame.
+  private updateWake(placed: boolean, time: number, dt: number): void {
+    // Day 7: with hysteresis, so a hand jittering at the wake radius doesn't toggle it every frame;
+    // day 8: a hand must stay inside the radius for WAKE_DWELL_S first (dt is the game's clamped step).
     if (!placed) this.lanternWake.reset();
-    const h = placed ? this.lanternWake.update(this.local, this.joints.tracked, this.lantern) : -1;
+    const h = placed ? this.lanternWake.update(this.local, this.joints.tracked, this.lantern, dt) : -1;
     const g = placed && this.level.needsObject ? this.gaze.handInGaze(this.local, this.joints.radii, this.joints.tracked) : -1;
     const awake = h >= 0 || g >= 0;
     if (awake && !this.keeperAwake) {
@@ -510,6 +511,8 @@ export class CoverSystem extends createSystem({
         hand: HAND_SIDES[by],
         reason: h >= 0 ? 'lantern' : 'gaze',
         level: this.level.id,
+        // day 8: how long the hand stayed inside the wake radius first (lantern wakes only)
+        afterMs: h >= 0 ? Math.round(this.lanternWake.wokeAfter * 1000) : null,
         distMm: Math.round(nearestJointToLantern(this.local[by], this.lantern) * 1000),
       });
     }

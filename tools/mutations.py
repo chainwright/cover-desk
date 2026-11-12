@@ -90,7 +90,7 @@ M=[
  ('7m ghost mug off the gaze','src/level2.ts','export const MUG_SPOT = { x: 0, z: -0.03 } as const;','export const MUG_SPOT = { x: 0.05, z: -0.03 } as const;'),
  # day-7 code
  ('8a the next round no longer waits for the hand (3.5 s again)','src/feedback.ts','return sinceHome > NEXT_ROUND_MAX_S || (handBack && sinceHome > NEXT_ROUND_S);','return sinceHome > NEXT_ROUND_S;'),
- ('8b no wake hysteresis (sleeps at 6.3 cm again)','src/feedback.ts','this.hand >= 0 ? SLEEP_RADIUS : WAKE_RADIUS','WAKE_RADIUS'),
+ ('8b no wake hysteresis (sleeps at 6.3 cm again)','src/feedback.ts','this.hand = handAtLantern(local, tracked, l, SLEEP_RADIUS);','this.hand = handAtLantern(local, tracked, l, WAKE_RADIUS);'),
  ('8c creature dwell 0 (day-6 creature)','src/creature.ts','  dwell: 0.1,','  dwell: 0,'),
  ('8d dwell check removed in stepCreature','src/creature.ts','      if (c.clearFor < p.dwell) return EV_NONE; // standing still: the way ahead must stay dark a moment\n',''),
  ('8e ghost mug drawn during the win\'s "again" card (day 7b: the gaze is level 2 only)','src/onboarding.ts','cues.mugGhost = i.placed && (l2 || (!!i.unlocked && !i.again))','cues.mugGhost = i.placed && (l2 || !!i.unlocked)'),
@@ -104,6 +104,9 @@ M=[
  ('9c lift-over jumps (R moves the hand at once)','src/emu-seat.ts','  if (t < upS) return','  if (t < 0) return'),
  ('9d level-1 card points at the gaze again','src/onboarding.ts',"'!on the ghost mug; finger on top'","'!in the gaze; hold a finger on top'"),
  ('9e debug handle on window in every build','src/cover-system.ts',"    if (__COVER_EMU__) (window","    if (true) (window"),
+ # day-8 code
+ ('10a no wake dwell (the keeper wakes on the first frame inside)','src/feedback.ts','export const WAKE_DWELL_S = 0.25;','export const WAKE_DWELL_S = 0;'),
+ ('10b the wake dwell is not reset when the hand leaves (brushes add up)','src/feedback.ts','this.inside = h >= 0 ? this.inside + dt : 0;','this.inside = this.inside + (h >= 0 ? dt : 0);'),
 ]
 # The outside run's ten day-4 glue mutations, recreated at today's call sites
 # (marked 'emu': if no unit test catches them, the emulator wiring check is tried).
@@ -147,6 +150,8 @@ OUT=[
  # day-7b glue
  ('G13 /emu/ R jumps again (the motion starts at its end)','src/emu-seat.ts','      over = { t: 0, fromX,','      over = { t: LIFT_OVER_S, fromX,'),
  ('G14 /emu/ R motion not applied to the hand height','src/emu-seat.ts','    const y = STOP.y + (over ? dy : lifted ? STOP.lift : 0);','    const y = STOP.y + (lifted ? STOP.lift : 0);'),
+ # day-8 glue
+ ('G15 the wake dwell gets a whole second per frame at the call site (instant wake)','src/cover-system.ts','this.lanternWake.update(this.local, this.joints.tracked, this.lantern, dt)','this.lanternWake.update(this.local, this.joints.tracked, this.lantern, 1)'),
 ]
 EMU=os.environ.get('COVER_EMU_BASE')
 ONLY=sys.argv[1] if len(sys.argv)>1 else None  # 'unit' or 'outside'

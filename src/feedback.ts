@@ -47,23 +47,52 @@ export const WAKE_RADIUS = 0.063;
  */
 export const SLEEP_RADIUS = 0.07;
 
-/** The lantern wake with hysteresis: wakes inside WAKE_RADIUS, sleeps again only beyond SLEEP_RADIUS. */
+/**
+ * Day 8 (outside review: the ghost's spot ±1 cm clears the wake radius by
+ * about 2 mm, while hand tracking errs by about 1.7 cm at best): a hand
+ * must stay inside WAKE_RADIUS this long, without a break, before the
+ * keeper wakes. A joint that flickers inside for a frame or two wakes
+ * nothing; a hand cupping the lantern still does, a quarter second later.
+ * The radius itself is unchanged, so the bisection behind it still holds.
+ */
+export const WAKE_DWELL_S = 0.25;
+
+/**
+ * The lantern wake: wakes once a hand has stayed inside WAKE_RADIUS for
+ * WAKE_DWELL_S (day 8), sleeps again only when every joint is beyond
+ * SLEEP_RADIUS (day 7, hysteresis).
+ */
 export class LanternWake {
   /** The hand keeping the keeper awake (-1: asleep). */
   hand = -1;
+  /** While asleep: how long a hand has stayed inside WAKE_RADIUS without a break, s. */
+  inside = 0;
+  /** How long the hand had stayed inside when the keeper last woke, s (logged; the wiring check reads it). */
+  wokeAfter = 0;
 
   get awake(): boolean {
     return this.hand >= 0;
   }
 
-  /** Call once per frame; returns the hand at the lantern (-1 none). */
-  update(local: readonly Float32Array[], tracked: readonly boolean[], l: Lantern): number {
-    this.hand = handAtLantern(local, tracked, l, this.hand >= 0 ? SLEEP_RADIUS : WAKE_RADIUS);
+  /** Call once per frame with the frame's (game) time step; returns the hand keeping the keeper awake (-1 none). */
+  update(local: readonly Float32Array[], tracked: readonly boolean[], l: Lantern, dt: number): number {
+    if (this.hand >= 0) {
+      this.hand = handAtLantern(local, tracked, l, SLEEP_RADIUS);
+      return this.hand;
+    }
+    const h = handAtLantern(local, tracked, l, WAKE_RADIUS);
+    this.inside = h >= 0 ? this.inside + dt : 0;
+    if (h >= 0 && this.inside >= WAKE_DWELL_S - 1e-9) {
+      this.hand = h;
+      this.wokeAfter = this.inside;
+      this.inside = 0;
+    }
     return this.hand;
   }
 
   reset(): void {
     this.hand = -1;
+    this.inside = 0;
   }
 }
 
