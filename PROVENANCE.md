@@ -24,6 +24,7 @@ how to check it.
 | Day-5 deploy (gh-pages `c1955a8`, built from `c90f3f6`) | 2026-11-11 11:20:56 | 05:20 | same call |
 | Day-6 deploy (gh-pages `a9613e1`, built from `512a672`) | 2026-11-11 13:04:43 | 07:04 | same call |
 | Day-7 deploy (gh-pages `3baf3c3`, built from `b117ac8`) | 2026-11-11 15:29:26 | 09:29 | same call |
+| Day-7b deploy (gh-pages `2ec6d6d`, built from `83fa065`) | 2026-11-11 19:01:38 | 13:01 | same call |
 
 GitHub adds every later push to `gh-pages` to the same list.
 

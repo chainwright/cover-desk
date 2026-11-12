@@ -1,6 +1,6 @@
 # Evidence: what is shown, how, and what is not
 
-Day 7, 11 Nov 2026. No Meta Quest has run this build yet. Every number below
+Day 7b, 11 Nov 2026. No Meta Quest has run this build yet. Every number below
 comes from Node unit tests, the Immersive Web Emulator, or the author's
 scripted runs, and says which. [CLAIMS.md](CLAIMS.md) lists each claim with
 its proof level; this page holds the evidence itself.
@@ -9,7 +9,7 @@ its proof level; this page holds the evidence itself.
 
 | Criterion | Shown | How to check | Not shown yet |
 |---|---|---|---|
-| Innovation | The tracked hand is cover in a line-of-sight game: 25 joints become 30 capsules and block the lantern's sight line, whatever the pose. Level 2 needs a real object and the hand together: a hand in the keeper's gaze wakes it, one object never covers the whole path, the mug holds the cover while the hand moves over | `npm test`: the case set below, "pose-agnostic", "spread fingers leave gaps"; `tests/day6.test.ts` (level 2) | That it reads as play rather than a chore on a real desk; level 2 with a real mug |
+| Innovation | The tracked hand is cover in a line-of-sight game: 25 joints become 30 capsules and block the lantern's sight line, whatever the pose. Level 2 needs a registered object (meant to be a real one; not sensed) and the hand together: a hand in the keeper's gaze wakes it, one object never covers the whole path, the mug holds the cover while the hand moves over | `npm test`: the case set below, "pose-agnostic", "spread fingers leave gaps"; `tests/day6.test.ts` (level 2) | That it reads as play rather than a chore on a real desk; level 2 with a real mug |
 | Experience | First-run teaching on every placement path; the taught pose makes a lane you slide, not a blackout; a "slide your hand along" card; a win staged at desk scale (hop, warm flare, bead pop) followed by the ghost and an "again" card; a keeper that wakes when it spots, with a card that says why; a hand at the lantern wakes the keeper; pause, not "spotted", when the covering hand is lost; a desktop judge reaches the game in `/emu/` | `tests/day2.test.ts` … `tests/day5.test.ts`; the `/emu/` wiring check in `devlog/DAY5.md` | Cold-stranger timings on a headset ([TESTER_10MIN.md](TESTER_10MIN.md)); comfort |
 | Technical | The drawn shadow equals the creature's sight test at 2,048 cell centres; the main build has no emulator; the mutation counts below; the tester log survives a simulated reload; its flush helpers and its write path (a failed write is written again by the next flush, 3 in a row switch storage off) are unit-tested on a fake IndexedDB, and the two flush call sites are checked in the built `/emu/` | `npm test`, `npm run build`, `python3 tools/mutations.py`, `node tools/emu/wiring_check.mjs` | Frame rate on a Quest, tracking shimmer, plane and anchor behaviour in real rooms, the hand mask |
 | Polish | Synthesised sound (a win chime, the keeper's "hm?"); one material family | play `/emu/` | No video yet; untextured models |
@@ -123,13 +123,13 @@ Day 6, level 2 (`tests/day6.test.ts`, `src/level2.ts`), same model:
 Day 7 (`tests/day7.test.ts`), same model:
 - **Post-win flow:** the next round waits for a hand back at the start
   (no sooner than 3.5 s) or 10 s; until then the "again" card and the
-  ghost stay, and level 2's gaze and card wait for them.
+  ghost stay, and the ghost mug and level 2's card wait for them (since day 7b the gaze is drawn in level 2 only).
 - **Wake hysteresis:** wakes inside 6.3 cm, sleeps again beyond 7 cm; a
   hand jittering ±4 mm around 6.3 cm gives one rising edge in 300 frames
   (without hysteresis, more than 30).
 - **Jittering still hand:** a "stop" hand at the ghost's spot whose joints
   jitter up to ±7 mm at 30 Hz, ten 30 s runs: 0 spots with the creature's
-  0.1 s dwell, 10 without it; never a win.
+  0.1 s dwell, at least one without it (asserted; the test prints both counts); never a win.
 - **Lift-over as a motion:** from the left ghost, up 10 cm in 0.2 s, over
   in 0.4 s, down in 0.2 s, mug on its ghost: home, the keeper never woke,
   either hand (11 mm joints; at the 7 mm floor the hand edges toward the
@@ -139,7 +139,7 @@ Day 7 (`tests/day7.test.ts`), same model:
 ## Mutation table
 
 `python3 tools/mutations.py` applies each edit, runs `npm test`, restores the
-file. Counts below are from `devlog/day6_mutations_output.txt` (earlier:
+file. Counts below are from `devlog/day7_mutations_output.txt` (earlier:
 `devlog/day5_mutations_output.txt`, `devlog/day4_mutations_output.txt`, `devlog/day3_mutations_output.txt`, `devlog/day2_mutations_output.txt`). O3
 and O4 are the two outside mutations that survived day 2. O9 and O10 here
 are helper-level versions of the day-3 flush survivors (they mutate the
@@ -217,7 +217,7 @@ the day-3 mutation itself.
 | 8h level switch keeps every object (pure function) | 1 |
 | 8i fps inView always true (pure function) | 1 |
 
-Day 7: 66 of 67 caught; the other (4d) is equivalent. The rows before 8a
+Day 7: 66 of 67 caught; the other (4d) is equivalent. Day 7b: 8e retargeted and 9a–9e added, each caught (`devlog/day7b_mutations_output.txt`). An outside full re-run on 11 Nov (on `4cc55da`): 71 of 72, 4d again. The rows before 8a
 are the earlier days' counts; on later days some fail one or two more
 tests, see the output files. Output: `devlog/day7_mutations_output.txt`
 (day 6: `devlog/day6_mutations_output.txt`).
@@ -263,7 +263,7 @@ with `dist/` served there; a mutation no unit test catches is built into
 | G11 the win hop not applied to the creature | win-hop-flare |
 | G12 the win flare not applied to the light | win-hop-flare |
 
-Day 7: 33 of 33 caught (`devlog/day7_mutations_output.txt`). R1–R11 are the
+Day 7: 33 of 33 caught (`devlog/day7_mutations_output.txt`); day 7b adds G13–G14, both caught (35 of 35). An outside run of 5 more glue edits on 11 Nov (X1–X5: the object column's material and height, and the post-win hand-back wiring) caught 0; see `devlog/DAY8.md`. R1–R11 are the
 outside run's eleven day-6 glue mutations (its exact edits, at today's call
 sites): on day 6, R3, R7, R9, R10 and R11 survived both stages and R4 and R8
 failed only the flaky hop check; each now fails a check written for it.

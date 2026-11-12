@@ -43,7 +43,7 @@ World.create(document.getElementById('scene-container') as HTMLDivElement, proje
   if (supported && emulator) {
     enter.disabled = false;
     note.textContent =
-      'Desktop emulator: a simulated room and hands. Enter seats you at its desk with hands; then H stands your hand where the ghost hand shows, between the lantern and the path, holding → slides it to lead the creature, L lifts it, C cups the lantern. Level 2 (after a win, or ?level=2): O stands an emulated mug in the keeper\'s gaze, H the hand at the left ghost, R lifts it up, over the gaze and down at the right ghost. On a Quest, open the main link instead.';
+      'Desktop emulator: a simulated room and hands. Enter seats you at its desk with hands; then H stands your hand like \'stop\' where the ghost hand shows, holding → slides it to lead the creature, L lifts it, C cups the lantern. Level 2 (after a win, or ?level=2): O stands an emulated mug in the keeper\'s gaze, H the hand at the left ghost, R lifts it up, over the gaze and down at the right ghost. On a Quest, open the main link instead.';
     installEmuSeat(cover);
   } else if (supported) {
     enter.disabled = false;

@@ -271,3 +271,13 @@ across at 10 cm, down at x 0.08.
 - Everything on a Quest (as above).
 - A phantom registration also gets a depth-only column.
 - The video.
+
+## Corrections (day 8, after the round-6 outside review)
+
+- §4 "ten 30 s runs: 10 spots before, 0 after": the test asserted 0 with the
+  dwell and at least one without it; it did not print the count. Since day 8
+  it prints both: 0 with the dwell and **9** without it (not 10)
+  (`devlog/day8_test_output.txt`). The ±10 mm figures were a
+  scratch run with no output kept.
+- §"Day 7b" and README: after the first win, level 1 shows the ghost mug
+  and the level-2 card, not the gaze (the gaze is level 2 only since 7b).

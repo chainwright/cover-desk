@@ -10,8 +10,7 @@
    front of you until you point at the desk with one finger, tap and hold
    still. (Not yet run on a Quest; see [CLAIMS.md](CLAIMS.md).)
 3. Do what the card and the pale ghost hand show: **stand your hand on the
-   desk like "stop", between the lantern and the path, where the ghost
-   stands.** Your hand's shadow opens a lane a few centimetres wide on the
+   desk like "stop" where the pale ghost hand stands.** Your hand's shadow opens a lane a few centimetres wide on the
    path and the creature dashes into it, then stops at its far edge. (Held
    high, or in the light in front of the path, the hand casts no shadow on
    the path.)
@@ -48,7 +47,8 @@ Open **https://chainwright.github.io/cover-desk/emu/** in desktop Chrome.
 
 1. Press **Enter**. The emulator seats you at its desk, looking down at it,
    with hands instead of controllers, and the board lands on the emulated
-   desk by itself (a few seconds; longer if the machine renders slowly). A
+   desk by itself (a few seconds; up to about 10 s if the machine renders
+   slowly). A
    key list appears at the top.
 2. Press **H**: the right hand stands like "stop" where the ghost hand
    stands. Its shadow opens a lane, the creature dashes into it and stops at
@@ -57,7 +57,9 @@ Open **https://chainwright.github.io/cover-desk/emu/** in desktop Chrome.
 3. Hold **→** to slide the hand along: the creature follows the shadow to its
    trinket (it hops with it, the light flares, a chime, a brass bead pops in
    by the nook; the ghost and a card ask for the hand back at the start and
-   the next round waits for it, or about 10 s: press **H** twice).
+   the next round waits for it: press **H** twice; the next round starts by
+   itself after 10 s. At a low emulator frame rate the 0.9 s hop can fall
+   between frames).
 4. Press **L** to lift the hand while the creature is in the light: the
    keeper's eyes open and a thin line of light stares at the creature; it
    flashes and runs back, and a card says "It saw it!". **H** again takes the
@@ -66,11 +68,11 @@ Open **https://chainwright.github.io/cover-desk/emu/** in desktop Chrome.
    and the creature stays in its nook. **C** again takes the hand away.
 6. **M** hands the emulator back to its own menus and gizmos, if you want to
    pose the hands yourself.
-7. **Level 2** (unlocked by the win in step 3, or open
-   **https://chainwright.github.io/cover-desk/emu/?level=2**): the pale wedge
-   is the keeper's gaze. Without an object the card says "Level 2 needs a
-   real mug or book"; **H** then hold **→**: the hand reaches the gaze, the
-   keeper wakes, no win.
+7. **Level 2:** open **https://chainwright.github.io/cover-desk/emu/?level=2**
+   (after a level-1 win you can also press **O** first: level 2 starts once
+   the creature is home or in its nook). The pale wedge is the keeper's
+   gaze. Without an object the card says "Level 2 needs a real mug or
+   book"; **H** then hold **→**: the keeper wakes, no win.
 8. Press **O**: an emulated 10 cm mug stands on the ghost mug, drawn as a
    pale paper mug (the emulator's room has no real one; it goes through the
    same registration rules). Press **H** (the hand at the left ghost; if it is up, **H** twice):
@@ -96,7 +98,7 @@ checks for the glue an outside run found unguarded (`devlog/DAY7.md`).
 ```sh
 git clone https://github.com/chainwright/cover-desk && cd cover-desk
 npm ci
-npm test           # 103 tests, including the 18-case line-of-sight set, level 2 (tests/day6.test.ts) and the day-7 fixes
+npm test           # 108 tests, including the 18-case line-of-sight set, level 2 (tests/day6.test.ts) and the day-7 fixes
 npx playwright install chromium   # once, for the emulator checks below (Playwright is a dev dependency)
 npm run build      # main build without the emulator, /emu/ with it, then a check of both
 python3 tools/mutations.py unit   # deliberate bugs in the tested code (see devlog/DAY6.md)

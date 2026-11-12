@@ -7,7 +7,7 @@
  * On entering, the emulated headset sits at the emulated desk looking down
  * at it and switches to hands, so the board lands on the desk by itself.
  * The keyboard then moves the right hand:
- *   H        stand the hand like 'stop' between the lantern and the path / take it away
+ *   H        stand the hand like 'stop' where the ghost hand shows / take it away
  *   ← →      hold to slide it along (at a speed the creature can follow)
  *   L        lift it 20 cm (the light passes under it: the creature is spotted)
  *   C        stand it right at the lantern, cupping it (day 5: the keeper wakes)
@@ -136,7 +136,7 @@ export function seatHandPose(x: number, y: number, z: number, boardPoint: (x: nu
 }
 
 const KEYS_HTML =
-  '<b>Emulator seat</b> · <b>H</b> stand your hand like \'stop\' between the lantern and the path, again to take it away' +
+  '<b>Emulator seat</b> · <b>H</b> stand your hand like \'stop\' where the pale hand shows, again to take it away' +
   ' · hold <b>← →</b> to slide it along and lead the creature · <b>L</b> lift it · <b>C</b> cup the lantern (it wakes the keeper)' +
   ' · level 2: <b>O</b> an emulated mug in the gaze, <b>R</b> lift the hand over the gaze to the right-hand ghost · <b>M</b> emulator\'s own controls';
 

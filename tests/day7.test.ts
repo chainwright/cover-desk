@@ -180,6 +180,7 @@ test('a still hand whose tracking jitters ±7 mm at 30 Hz: never spotted with th
   }
   assert.equal(withDwell, 0, `spotted with the dwell: ${withDwell} in 10 runs of 30 s`);
   assert.ok(without > 0, `spotted without the dwell: ${without} (the day-6 creature)`);
+  console.log(`  jitter ±7 mm, ten 30 s runs: ${withDwell} spots with the dwell, ${without} without it`);
 });
 
 test('slide speed with the dwell, joint radii 7–13 mm: 1–9 cm/s leads it home unspotted; 11 cm/s and faster outrun it at every radius', () => {
