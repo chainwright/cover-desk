@@ -36,7 +36,7 @@ import {
   type Object3D,
 } from '@iwsdk/core';
 import { PLACE, TapCalibrator, spotFromTouch, type CalibResult, type PlaceParams } from './calibration.ts';
-import { chime, click, hm, lock, lullaby, setHum, soundCounts, step, stir } from './click-sound.ts';
+import { chime, click, hm, lock, lullaby, setHum, setSpatial, soundCounts, step, stir } from './click-sound.ts';
 import { REGISTER, REGISTER_HOLD, TIP_PAD, distanceToPolyline, judgeRegistration, onKnob } from './contact.ts';
 import { KNOB, MAX_OBJECT_MARKERS, OBJECT_OCCLUDER, PATH_DOTS, buildCover, dressEmulatedMug, ghostHandCapsules, setInstance, type CoverModel } from './cover-model.ts';
 import {
@@ -233,6 +233,7 @@ export class CoverSystem extends createSystem({
   private lightMap = new LightMap();
   /** Chief 12.11: visual-only night/glow/motes around the board (ambience.ts). */
   private amb!: Ambience;
+  private sp = { l: new Vector3(), c: new Vector3(), f: new Vector3(), u: new Vector3(0, 1, 0) };
   private sight: SightResult = { state: DARK, by: BY_NONE };
   private lineState = DARK;
   private lineBy = BY_NONE;
@@ -508,6 +509,14 @@ export class CoverSystem extends createSystem({
       flare: this.fx.flare,
       hands: this.joints.tracked[0] || this.joints.tracked[1],
     });
+    if (placed) {
+      const sp = this.sp;
+      sp.l.set(this.lantern.x, this.lantern.y, this.lantern.z);
+      root.localToWorld(sp.l);
+      this.model.creature.root.getWorldPosition(sp.c);
+      this.player.head.getWorldDirection(sp.f).negate();
+      setSpatial([this.head.x, this.head.y, this.head.z], [sp.f.x, sp.f.y, sp.f.z], [0, 1, 0], [sp.l.x, sp.l.y, sp.l.z], [sp.c.x, sp.c.y, sp.c.z]);
+    }
     this.updateCues();
     this.watchIntro(time);
     this.updateRing();

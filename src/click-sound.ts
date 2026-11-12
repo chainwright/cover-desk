@@ -12,6 +12,34 @@ let ctx: AudioContext | null = null;
 let buffer: AudioBuffer | null = null;
 let humGain: GainNode | null = null;
 let humFilter: BiquadFilterNode | null = null;
+// Chief 12.11 (judges: spatial audio): the keeper's sounds come from the lantern's place on the desk, the
+// creature's from the creature (HRTF panners, positions set every frame by the system).
+let lanternOut: PannerNode | null = null;
+let creatureOut: PannerNode | null = null;
+function panner(c: AudioContext): PannerNode {
+  const p = c.createPanner();
+  p.panningModel = 'HRTF';
+  p.distanceModel = 'inverse';
+  p.refDistance = 0.4;
+  p.rolloffFactor = 0.6;
+  p.connect(c.destination);
+  return p;
+}
+const outL = (): AudioNode => lanternOut ?? ctx!.destination;
+const outC = (): AudioNode => creatureOut ?? ctx!.destination;
+/** World positions (metres): head with its forward/up, the lantern, the creature. */
+export function setSpatial(head: ArrayLike<number>, fwd: ArrayLike<number>, up: ArrayLike<number>, lantern: ArrayLike<number>, creature: ArrayLike<number>): void {
+  if (!ctx || !lanternOut || !creatureOut) return;
+  const L = ctx.listener;
+  const t = ctx.currentTime;
+  if (L.positionX) {
+    L.positionX.setValueAtTime(head[0], t); L.positionY.setValueAtTime(head[1], t); L.positionZ.setValueAtTime(head[2], t);
+    L.forwardX.setValueAtTime(fwd[0], t); L.forwardY.setValueAtTime(fwd[1], t); L.forwardZ.setValueAtTime(fwd[2], t);
+    L.upX.setValueAtTime(up[0], t); L.upY.setValueAtTime(up[1], t); L.upZ.setValueAtTime(up[2], t);
+  }
+  lanternOut.positionX.setValueAtTime(lantern[0], t); lanternOut.positionY.setValueAtTime(lantern[1], t); lanternOut.positionZ.setValueAtTime(lantern[2], t);
+  creatureOut.positionX.setValueAtTime(creature[0], t); creatureOut.positionY.setValueAtTime(creature[1], t); creatureOut.positionZ.setValueAtTime(creature[2], t);
+}
 
 /** How often each event sound was asked for (also when audio is locked): read back by the emulator checks. */
 export const soundCounts = { chime: 0, hm: 0, lock: 0, lullaby: 0, stir: 0 };
@@ -27,6 +55,8 @@ export function unlockAudio(): void {
         const env = Math.exp(-i / (len * 0.12));
         data[i] = (Math.random() * 2 - 1) * env;
       }
+      lanternOut = panner(ctx);
+      creatureOut = panner(ctx);
     }
     if (ctx.state === 'suspended') void ctx.resume();
   } catch {
@@ -46,7 +76,7 @@ export function click(pitch = 1, gain = 0.5): void {
   filter.Q.value = 3;
   const g = ctx.createGain();
   g.gain.value = gain;
-  src.connect(filter).connect(g).connect(ctx.destination);
+  src.connect(filter).connect(g).connect(outC());
   src.start();
 }
 
@@ -73,7 +103,7 @@ function tone(freq: number, delay: number, decay: number, gain: number, type: Os
   g.gain.setValueAtTime(0, t);
   g.gain.linearRampToValueAtTime(gain, t + 0.01);
   g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
-  o.connect(g).connect(ctx.destination);
+  o.connect(g).connect(outL());
   o.start(t);
   o.stop(t + decay + 0.05);
 }
@@ -105,7 +135,7 @@ function glide(f0: number, f1: number, delay: number, dur: number, gain: number)
   g.gain.setValueAtTime(0, t);
   g.gain.linearRampToValueAtTime(gain, t + 0.04);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(ctx.destination);
+  o.connect(g).connect(outL());
   o.start(t);
   o.stop(t + dur + 0.05);
 }
@@ -131,7 +161,7 @@ function snore(delay: number, dur: number, gain: number): void {
   g.gain.setValueAtTime(0, t);
   g.gain.linearRampToValueAtTime(gain, t + dur * 0.45);
   g.gain.linearRampToValueAtTime(0, t + dur);
-  src.connect(f).connect(g).connect(ctx.destination);
+  src.connect(f).connect(g).connect(outL());
   src.start(t);
 }
 
@@ -164,7 +194,7 @@ function ensureHum(): boolean {
   humFilter = ctx.createBiquadFilter();
   humFilter.type = 'lowpass';
   humFilter.frequency.value = 1400;
-  humFilter.connect(humGain).connect(ctx.destination);
+  humFilter.connect(humGain).connect(outL());
   for (const [f, type, amp] of [
     [98, 'triangle', 0.7],
     [147, 'sine', 0.35],
