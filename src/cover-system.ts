@@ -106,7 +106,7 @@ import { placementStep, type PlacementClock, type PlacementState, type Placement
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightResult } from './sightline.ts';
 import { TextCard } from './text-card.ts';
 import { buildAmbience, type Ambience } from './ambience.ts';
-import { STAR_FRACTIONS, STAR_OFFSET, buildStars, loadStars, saveStars, type StarSet } from './stars.ts';
+import { STAR_FRACTIONS, STAR_OFFSET, buildSky, buildStars, loadStars, saveStars, type Sky, type StarSet } from './stars.ts';
 import { HOLD_S, PICK_R, SHELF, loadAnimatedTuck, loadPets, petMaterials, savePet, savedPet, type AnimatedPet, type PetId } from './pets.ts';
 import { LABELS, TesterLogger, analyseLog, boardInView, logSettings, type Label } from './touch-log.ts';
 
@@ -255,6 +255,9 @@ export class CoverSystem extends createSystem({
   private resultAt = -1;
   private resultN = [false, false, false];
   private starBook = loadStars();
+  private sky!: Sky;
+  /** ?sky=N shows N constellation stars (for checks and the video). */
+  private skyTest = (() => { try { const v = new URLSearchParams(location.search).get('sky'); return v ? Number(v) : -1; } catch { return -1; } })();
   private petWaveUntil = 0;
   private sight: SightResult = { state: DARK, by: BY_NONE };
   private lineState = DARK;
@@ -385,6 +388,8 @@ export class CoverSystem extends createSystem({
     this.model.root.add(this.amb.root);
     this.stars = buildStars();
     this.model.root.add(this.stars.root);
+    this.sky = buildSky();
+    this.model.root.add(this.sky.root);
     this.placeStars();
     this.shelf.name = 'pet-shelf';
     this.model.root.add(this.shelf);
@@ -1267,7 +1272,9 @@ export class CoverSystem extends createSystem({
       this.route.at(s, this.at3);
       const dx = this.lantern.x - this.at3[0], dz = this.lantern.z - this.at3[1];
       const d = Math.hypot(dx, dz) || 1;
-      const x = this.at3[0] + (dx / d) * STAR_OFFSET, z = this.at3[1] + (dz / d) * STAR_OFFSET;
+      const night = Math.min(7, this.wins + 1);
+      const off = STAR_OFFSET * (0.8 + 0.12 * night); // stars lie further into the light each night
+      const x = this.at3[0] + (dx / d) * off, z = this.at3[1] + (dz / d) * off;
       this.starPos[i * 3] = x; this.starPos[i * 3 + 2] = z;
       const m = this.stars.fallen[i];
       m.position.set(x, 0.012, z);
@@ -1299,6 +1306,7 @@ export class CoverSystem extends createSystem({
         else { m.scale.setScalar(Math.max(0.01, 1 - k)); m.visible = k < 1; }
       }
     }
+    this.sky.set(this.skyTest >= 0 ? this.skyTest : this.starBook.total, time);
     // the night's result above the trinket: stars light up one by one
     const res = this.stars.result;
     if (this.resultAt >= 0) {
