@@ -112,3 +112,38 @@ export function buildSky(): Sky {
     },
   };
 }
+
+/** Chief 12.11 (judges r2): a small label lying on the desk, tilted to the eye: "Night 3 · ★★☆". */
+import { DoubleSide, MeshBasicMaterial, PlaneGeometry } from '@iwsdk/core';
+export interface NightChip { mesh: Mesh; set(night: number, stars: number): void; }
+export function buildNightChip(): NightChip {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 128;
+  const g = c.getContext('2d')!;
+  const tex = new CanvasTexture(c);
+  const mesh = new Mesh(new PlaneGeometry(0.1, 0.025), new MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, side: DoubleSide }));
+  mesh.name = 'night-chip';
+  mesh.rotation.x = -Math.PI / 2 + 0.55; // lies on the desk, tilted toward the player
+  mesh.renderOrder = 8;
+  let last = '';
+  return {
+    mesh,
+    set(night: number, stars: number) {
+      const key = `${night}/${stars}`;
+      if (key === last) return;
+      last = key;
+      g.clearRect(0, 0, 512, 128);
+      g.fillStyle = 'rgba(10,14,30,0.55)';
+      g.beginPath(); g.roundRect(4, 14, 504, 100, 50); g.fill();
+      g.font = '600 56px "Avenir Next", "Helvetica Neue", sans-serif';
+      g.textBaseline = 'middle';
+      g.fillStyle = '#f4ead8';
+      g.fillText(`Night ${night}`, 40, 66);
+      for (let i = 0; i < 3; i++) {
+        g.fillStyle = i < stars ? '#ffd36b' : 'rgba(244,234,216,0.35)';
+        g.fillText('★', 290 + i * 66, 66);
+      }
+      tex.needsUpdate = true;
+    },
+  };
+}

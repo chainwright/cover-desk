@@ -107,7 +107,7 @@ import { placementStep, type PlacementClock, type PlacementState, type Placement
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightResult } from './sightline.ts';
 import { TextCard } from './text-card.ts';
 import { buildAmbience, type Ambience } from './ambience.ts';
-import { STAR_FRACTIONS, STAR_OFFSET, buildSky, buildStars, loadStars, saveStars, type Sky, type StarSet } from './stars.ts';
+import { STAR_FRACTIONS, STAR_OFFSET, buildNightChip, buildSky, buildStars, loadStars, saveStars, type NightChip, type Sky, type StarSet } from './stars.ts';
 import { HOLD_S, PICK_R, SHELF, loadAnimatedTuck, loadPets, petMaterials, savePet, savedPet, type AnimatedPet, type PetId } from './pets.ts';
 import { LABELS, TesterLogger, analyseLog, boardInView, logSettings, type Label } from './touch-log.ts';
 
@@ -263,6 +263,7 @@ export class CoverSystem extends createSystem({
   private resultN = [false, false, false];
   private starBook = loadStars();
   private sky!: Sky;
+  private chip!: NightChip;
   /** ?sky=N shows N constellation stars (for checks and the video). */
   private skyTest = (() => { try { const v = new URLSearchParams(location.search).get('sky'); return v ? Number(v) : -1; } catch { return -1; } })();
   private petWaveUntil = 0;
@@ -397,6 +398,9 @@ export class CoverSystem extends createSystem({
     this.model.root.add(this.stars.root);
     this.sky = buildSky();
     this.model.root.add(this.sky.root);
+    this.chip = buildNightChip();
+    this.chip.mesh.position.set(0.13, 0.004, 0.11);
+    this.model.root.add(this.chip.mesh);
     this.placeStars();
     this.shelf.name = 'pet-shelf';
     this.model.root.add(this.shelf);
@@ -1392,6 +1396,12 @@ export class CoverSystem extends createSystem({
       }
     }
     this.sky.set(this.skyTest >= 0 ? this.skyTest : this.starBook.total, time);
+    {
+      // this night's stars so far: home only counts once it is home
+      const gathered = this.starState[0] === 1 && this.starState[1] === 1 && this.starState[2] === 1;
+      const n = this.resultAt >= 0 ? this.resultN.filter(Boolean).length : (gathered ? 1 : 0) + (this.stirred ? 0 : 1);
+      this.chip.set(Math.min(7, ((this.wins - (this.resultAt >= 0 ? 1 : 0)) % 7) + 1), this.resultAt >= 0 ? n : Math.min(n, 2));
+    }
     // Night 7 finale: dawn lifts the night, the lantern goes out, the creature climbs into the nearest palm, a heartbeat
     if (this.finaleAt >= 0) {
       const t = time - this.finaleAt;
