@@ -42,7 +42,8 @@ test('the main prompt never carries the move instruction; the teaching copy is "
     assert.ok(!lines.join(' ').toLowerCase().includes('to move it'), lines.join(' '));
   }
   const teach = PROMPT_LINES.teach.join(' ').replace(/!/g, '');
-  assert.equal(teach, "Stand your hand like 'stop' right where the pale hand is");
+  // Chief 12.11 (judges r2: labels of 4 words or fewer): the copy is shorter, the instruction the same
+  assert.equal(teach, "Hand up, like 'stop' on the pale hand");
   assert.ok(!teach.toLowerCase().includes('rest'), 'no "rest your hand"');
 });
 

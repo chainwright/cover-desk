@@ -87,32 +87,32 @@ export interface Cues {
 export const PROMPT_LINES: Record<Exclude<PromptKind, 'none'>, readonly string[]> = {
   'tap-desk': ['Tap your desk with one finger', '!and hold it still'],
   'tap-new-spot': ['Tap the desk where you want it,', '!and hold it still'],
-  waits: ['It waits for your hand.', '!Show me a hand.'],
+  waits: ['It waits', '!show a hand'],
   // Day 3: "Hold your hand up in the light" sent hands into the lit area in
   // front of the path (no shadow on it) or above the sight line (a wrist
   // higher than about 7 cm). The hand must stand low, between lantern and path.
   // Day 7: "between the lantern and the path" sent hands to the middle of the
   // light, where the lane misses the waiting creature; the ghost stands left.
-  teach: ["Stand your hand like 'stop'", '!right where the pale hand is'],
+  teach: ["Hand up, like 'stop'", '!on the pale hand'],
   // Day 4: a standing hand shades a lane, not the whole light, so the
   // creature waits at the lane's far edge until the hand slides along.
-  slide: ['Slide your hand along, slowly:', '!it follows your shadow'],
+  slide: ['Slide your hand along', '!it follows your shade'],
   // Day 5: after a spot the slide card stayed, with no reason and the wrong
   // next step; after a win nothing said where to go.
-  spotted: ['It saw it!', "!Keep your hand in the light's way"],
-  'too-close': ['Too close: the keeper woke up.', '!Keep your hand off the lantern'],
-  again: ['Home! Bring your hand back', '!to the ghost for another round'],
+  spotted: ['It saw it!', "!be in the light's way"],
+  'too-close': ['Too close!', '!hand off the lantern'],
+  again: ['Home!', '!bring your hand back'],
   // Day 6, level 2: a real object is needed. Unlocked by a level-1 win; it
   // starts once an object is registered, and without one the game says so.
   // Day 7b: level 1 no longer draws the gaze, so the card points at the ghost mug.
-  unlocked: ['Level 2: stand a mug or a book', '!on the ghost mug; finger on top'],
-  'need-object': ['Level 2 needs a real mug or book', '!in the gaze; hold a finger on top'],
-  'mug-off': ["The mug must cover the gaze:", '!stand it on the ghost mug'],
-  gaze: ['A hand in its gaze wakes it.', '!Only the mug may stand there'],
-  'l2-teach': ['Hand at the ghost; edge it to', '!the mug, but not into the gaze'],
-  'l2-swap': ['The mug hides it. Lift your hand', '!over to the other ghost'],
+  unlocked: ['Level 2: a real mug or book', '!on the ghost mug, touch its top'],
+  'need-object': ['Level 2 needs a real mug or book', '!touch its top'],
+  'mug-off': ['Mug on the ghost', '!to block its gaze'],
+  gaze: ['Not in its gaze!', '!only the mug'],
+  'l2-teach': ['Hand at the ghost', '!edge to the mug'],
+  'l2-swap': ['Mug holds it', '!lift to the other ghost'],
   // Day 8: level 2's win has its own card (it showed level 1's "Home!").
-  'l2-home': ['Asleep! Your mug held the shade', '!Hand back to the left ghost'],
+  'l2-home': ['Your mug held the shade!', '!hand back left'],
 };
 
 export const KNOB_LINES: readonly string[] = ['tap & hold', '!to move'];
