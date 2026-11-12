@@ -255,6 +255,8 @@ export class CoverSystem extends createSystem({
   private resultAt = -1;
   /** Chief 12.11: Night 7's finale (dawn, the creature climbs into your palm). */
   private finaleAt = -1;
+  /** Chief 12.11 (tester clip: the restored board hung half off the desk): checked once per anchor restore. */
+  private anchorChecked = false;
   private beatAt = 0;
   private resultN = [false, false, false];
   private starBook = loadStars();
@@ -530,6 +532,8 @@ export class CoverSystem extends createSystem({
     this.updateForward();
     this.updatePlacement(time);
     if (this.followAnchor && this.deskAnchor.anchor) this.applyAnchorPose();
+    if (this.placement !== 'anchor') this.anchorChecked = false;
+    else if (!this.anchorChecked && time - this.placedAt > 1.5) { this.anchorChecked = true; this.keepAnchorOnDesk(time); }
 
     // The default mask makes the hand invisible so the real one shows through
     // passthrough. The emulator has no real hand behind it, so there the SDK's
@@ -972,6 +976,29 @@ export class CoverSystem extends createSystem({
     const space = this.xrManager.getReferenceSpace();
     if (!frame || !space) return false;
     return this.deskAnchor.pose(frame, space, this.model.root.position, this.model.root.quaternion);
+  }
+
+  /** Chief 12.11: a board restored from an old anchor may hang off the desk (seen on a real Quest 3): if the desk
+   *  plane under it puts its centre outside the inset area, slide it back onto the desk (and stop following the anchor). */
+  private keepAnchorOnDesk(time: number): void {
+    const r = this.model.root.position;
+    const plane = this.deskPlaneAt(r.x, r.y, r.z);
+    if (!plane) return;
+    this.tmp.set(r.x, plane.y, r.z);
+    plane.obj.worldToLocal(this.tmp);
+    const cx = plane.maxX - plane.minX > 2 * DESK_INSET
+      ? Math.min(plane.maxX - DESK_INSET, Math.max(plane.minX + DESK_INSET, this.tmp.x))
+      : (plane.minX + plane.maxX) / 2;
+    const cz = plane.maxZ - plane.minZ > 2 * DESK_INSET
+      ? Math.min(plane.maxZ - DESK_INSET, Math.max(plane.minZ + DESK_INSET, this.tmp.z))
+      : (plane.minZ + plane.maxZ) / 2;
+    const moveMm = Math.round(Math.hypot(cx - this.tmp.x, cz - this.tmp.z) * 1000);
+    if (moveMm < 5) return;
+    this.tmp.set(cx, 0, cz);
+    plane.obj.localToWorld(this.tmp);
+    const yaw = Math.atan2(this.head.x - this.tmp.x, this.head.z - this.tmp.z);
+    this.logger?.event(time, 'anchor-off-desk', { moveMm, planeLabel: plane.label });
+    this.place(this.tmp.x, plane.y, this.tmp.z, yaw, 'desk', time, { fromAnchor: true, moveMm });
   }
 
   /** A finished desk tap-and-hold: put the board under that hand. False when it was a pause in the air. */
