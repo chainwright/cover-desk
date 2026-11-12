@@ -90,7 +90,7 @@ export interface Creature {
   body: Mesh;
   bodyMat: MeshStandardMaterial;
   /** Chief 12.11: every felt material of the creature with its base colour (dimmed in the dark). */
-  mats: { m: MeshStandardMaterial; base: Color }[];
+  mats: { m: MeshStandardMaterial; base: Color }[]; // replaced by the chosen pet's (pets.ts)
   /** Two small glints in its eyes, shown in the dark ("two eyes under your palm"). */
   glintMat: MeshBasicMaterial;
   /** Eye groups (blink = scale.y) and the head sprout (sways). */

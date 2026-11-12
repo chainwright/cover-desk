@@ -33,6 +33,7 @@ import {
   VisibilityState,
   XRPlane as XRPlaneComponent,
   createSystem,
+  Group,
   type Object3D,
 } from '@iwsdk/core';
 import { PLACE, TapCalibrator, spotFromTouch, type CalibResult, type PlaceParams } from './calibration.ts';
@@ -105,6 +106,7 @@ import { placementStep, type PlacementClock, type PlacementState, type Placement
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightResult } from './sightline.ts';
 import { TextCard } from './text-card.ts';
 import { buildAmbience, type Ambience } from './ambience.ts';
+import { HOLD_S, PICK_R, SHELF, loadPets, petMaterials, savePet, savedPet, type PetId } from './pets.ts';
 import { LABELS, TesterLogger, analyseLog, boardInView, logSettings, type Label } from './touch-log.ts';
 
 /** Inset from desk edges so the whole board stays on the desk, whichever way it is turned. */
@@ -234,6 +236,13 @@ export class CoverSystem extends createSystem({
   /** Chief 12.11: visual-only night/glow/motes around the board (ambience.ts). */
   private amb!: Ambience;
   private sp = { l: new Vector3(), c: new Vector3(), f: new Vector3(), u: new Vector3(0, 1, 0) };
+  /** Chief 12.11: the three creatures (pets.ts), the chosen one, the choice shelf and fingertip hold times. */
+  private pets: Record<PetId, Group> | null = null;
+  private petId: PetId = savedPet();
+  private petOld: Object3D[] = [];
+  private shelf = new Group();
+  private shelfPets: Partial<Record<PetId, Group>> = {};
+  private pickHold = new Float32Array(SHELF.length);
   private sight: SightResult = { state: DARK, by: BY_NONE };
   private lineState = DARK;
   private lineBy = BY_NONE;
@@ -361,6 +370,20 @@ export class CoverSystem extends createSystem({
     this.model = buildCover(this.level, this.lightMap.data);
     this.amb = buildAmbience(this.level.lanterns[0], this.lightMap.data);
     this.model.root.add(this.amb.root);
+    this.shelf.name = 'pet-shelf';
+    this.model.root.add(this.shelf);
+    loadPets().then((p) => {
+      this.pets = p;
+      for (const s of SHELF) {
+        const c = p[s.id].clone();
+        c.position.set(s.x, 0, s.z);
+        c.scale.setScalar(0.8);
+        c.rotation.y = 0.3;
+        this.shelf.add(c);
+        this.shelfPets[s.id] = c;
+      }
+      this.applyPet(this.petId);
+    }).catch((e: unknown) => console.warn('[cover] pets not loaded', e));
     // Day 8: beads and the level-2 unlock carry over to the next visit (localStorage); ?reset=1 forgets them.
     if (flags.reset) forgetProgress();
     else this.restoreProgress();
@@ -500,6 +523,7 @@ export class CoverSystem extends createSystem({
       this.lightMap.update(this.lantern, this.occ, CREATURE_Y);
       this.model.shadowTex.needsUpdate = true;
       this.runGame(Math.min(delta, 0.05), time);
+      this.updateShelf(Math.min(delta, 0.05));
     } else {
       setHum(0, false);
     }
@@ -689,6 +713,45 @@ export class CoverSystem extends createSystem({
   }
 
   /** The horizontal plane at desk height in front of the viewer, within reach (writes `best`). */
+  /** Chief 12.11: makes `id` the creature (visual only). */
+  private applyPet(id: PetId): void {
+    if (!this.pets) return;
+    const cr = this.model.creature;
+    if (!this.petOld.length) for (const ch of cr.root.children) this.petOld.push(ch);
+    for (const o of this.petOld) o.visible = false;
+    for (const pid of Object.keys(this.pets) as PetId[]) cr.root.remove(this.pets[pid]);
+    cr.root.add(this.pets[id]);
+    cr.mats = petMaterials(this.pets[id]);
+    this.petId = id;
+    savePet(id);
+    for (const s of SHELF) { const c = this.shelfPets[s.id]; if (c) c.visible = s.id !== id; }
+    this.logger?.event(this.lastTime, 'pet', { id });
+  }
+
+  /** Chief 12.11: an index fingertip held on a shelf pet picks it. */
+  private updateShelf(dt: number): void {
+    if (!this.pets) return;
+    for (let k = 0; k < SHELF.length; k++) {
+      const s = SHELF[k];
+      let near = false;
+      for (let h = 0; h < 2; h++) {
+        if (!this.joints.tracked[h]) continue;
+        const l = this.local[h];
+        const x = l[INDEX_TIP * 3], y = l[INDEX_TIP * 3 + 1], z = l[INDEX_TIP * 3 + 2];
+        if (y < 0.05 && Math.hypot(x - s.x, z - s.z) < PICK_R) near = true;
+      }
+      this.pickHold[k] = near ? this.pickHold[k] + dt : 0;
+      if (this.pickHold[k] >= HOLD_S && s.id !== this.petId) {
+        this.pickHold.fill(0);
+        this.applyPet(s.id);
+        click(1.2, 0.5);
+      }
+    }
+    // the shelf pets breathe a little
+    const t = this.lastTime;
+    SHELF.forEach((s, i) => { const c = this.shelfPets[s.id]; if (c) c.position.y = Math.max(0, Math.sin(t * 3 + i * 2)) * 0.002; });
+  }
+
   private findDesk(): boolean {
     let bestScore = Number.POSITIVE_INFINITY;
     for (const entity of this.queries.planes.entities) {
