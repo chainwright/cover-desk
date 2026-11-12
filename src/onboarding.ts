@@ -105,8 +105,8 @@ export const PROMPT_LINES: Record<Exclude<PromptKind, 'none'>, readonly string[]
   // Day 6, level 2: a real object is needed. Unlocked by a level-1 win; it
   // starts once an object is registered, and without one the game says so.
   // Day 7b: level 1 no longer draws the gaze, so the card points at the ghost mug.
-  unlocked: ['Level 2: a real mug or book', '!on the ghost mug, touch its top'],
-  'need-object': ['Level 2 needs a real mug or book', '!touch its top'],
+  unlocked: ['Next night: a real mug or book', '!on the ghost mug, touch its top'],
+  'need-object': ['Night needs a real mug or book', '!touch its top'],
   'mug-off': ['Mug on the ghost', '!to block its gaze'],
   gaze: ['Not in its gaze!', '!only the mug'],
   'l2-teach': ['Hand at the ghost', '!edge to the mug'],

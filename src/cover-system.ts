@@ -753,7 +753,7 @@ export class CoverSystem extends createSystem({
   /** Chief 12.11 (judges r2: one art language): the plush keeper, burrow and felt stars replace the primitives (visual only). */
   private loadProps(): void {
     const m = this.model;
-    loadProp('keeper', 0.075, Math.PI).then((g) => {
+    loadProp('keeper', 0.12, Math.PI).then((g) => {
       for (const ch of m.keeper.children) ch.visible = false;
       m.keeper.add(g);
     }).catch((e: unknown) => console.warn('[cover] keeper prop', e));
@@ -764,6 +764,13 @@ export class CoverSystem extends createSystem({
       m.root.add(g);
     }).catch((e: unknown) => console.warn('[cover] nook prop', e));
     loadProp('star', 0.016).then((g) => {
+      // the night's result stars too (judges r3: one kind of star): the felt star shows only when earned
+      for (const r of this.stars.result) {
+        (r.material as import("@iwsdk/core").MeshStandardMaterial).visible = false;
+        const c = g.clone();
+        c.name = 'felt';
+        r.add(c);
+      }
       for (const f of this.stars.fallen) {
         (f.material as import("@iwsdk/core").MeshStandardMaterial).visible = false;
         const c = g.clone();
@@ -1456,6 +1463,8 @@ export class CoverSystem extends createSystem({
         r.visible = t < 5;
         r.position.set(tp.x + (i - 1) * 0.022, 0.07 + Math.sin(time * 2 + i) * 0.002, tp.z);
         const on = this.resultN[i] && t > 0.35 * (i + 1);
+        const felt = r.getObjectByName('felt');
+        if (felt) { felt.visible = true; felt.scale.setScalar(on ? 1 : 0.6); felt.traverse((o) => { const mm = (o as import('@iwsdk/core').Mesh).material as import('@iwsdk/core').MeshStandardMaterial | undefined; if (mm && mm.color) mm.transparent = true, mm.opacity = on ? 1 : 0.3; }); }
         const mat = r.material as import('@iwsdk/core').MeshStandardMaterial;
         mat.emissiveIntensity = on ? 1.2 : 0.05;
         mat.color.setHex(on ? 0xffd36b : 0x4a4a52);
@@ -1604,7 +1613,7 @@ export class CoverSystem extends createSystem({
     {
       const nf = this.amb.night();
       const lit = this.amb.litAt(cr.root.position.x, cr.root.position.z);
-      const k = 1 - nf * (1 - (0.18 + 0.82 * lit));
+      const k = 1 - nf * (1 - (0.6 + 0.4 * lit)); // judges r3: never a dark lump — keeps its colour in shade
       for (const e of cr.mats) e.m.color.copy(e.base).multiplyScalar(k);
       cr.glintMat.opacity = nf * (1 - lit) * (0.75 + 0.25 * Math.sin(time * 2.1));
       // blink every ~3.5 s (a 0.14 s close), sprout sways with its steps
@@ -1661,6 +1670,7 @@ export class CoverSystem extends createSystem({
 
     // Win: a bead per win, the newest pops in; the light's warm side flares.
     m.winBeads.count = pay.beads;
+    m.winBeads.visible = false; // judges r3: the 'Night N ★★☆' label replaces the beads on the desk
     m.setBead(pay.beads - 1, this.fx.bead);
     (m.poolMat.uniforms.uFlare as { value: number }).value = this.fx.flare;
     if (this.ifx.flare) (m.poolMat.uniforms.uFlare as { value: number }).value += this.ifx.flare; // the threat beat

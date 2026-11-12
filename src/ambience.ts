@@ -175,8 +175,8 @@ export function buildAmbience(l: Lantern, map: Uint8Array): Ambience {
     nightMat.opacity = NIGHT_MAX * night01 * (1 - 0.75 * dawn);
     const flick = 0.92 + Math.sin(time * 5.3) * 0.05 + Math.sin(time * 13.1) * 0.03;
     coneMat.uniforms.uI.value = night01 * flick * (s.staring ? 0.5 : 0.32) * (1 + dawn);
-    halo.scale.setScalar((0.06 + 0.01 * flick) * (s.staring ? 1.3 : 1) * (1 + dawn));
-    (halo.material as SpriteMaterial).opacity = 0.35 + 0.65 * night01;
+    halo.scale.setScalar((0.035 + 0.006 * flick) * (s.staring ? 1.3 : 1) * (1 + dawn));
+    (halo.material as SpriteMaterial).opacity = 0.25 + 0.35 * night01; // judges r3: less bloom over the keeper
     moteMat.opacity = 0.85 * night01;
     for (let i = 0; i < MOTES; i++) {
       const k = i * 4;

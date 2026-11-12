@@ -301,7 +301,7 @@ try {
   // Day 6: level 2. The level-1 win unlocked it; with no object the card says what it needs.
   await until(async () => (await S()).creature.mode === 'nook', 10000);
   s = await S();
-  check('l2-unlocked', s.level.id === 1 && s.level.unlocked && s.cue === 'unlocked' && /level 2/i.test(s.promptText) && /ghost mug/i.test(s.promptText) && !s.level.gazeShown && s.level.mugGhostShown, { level: s.level, cue: s.cue, text: s.promptText });
+  check('l2-unlocked', s.level.id === 1 && s.level.unlocked && s.cue === 'unlocked' && /real mug/i.test(s.promptText) && /ghost mug/i.test(s.promptText) && !s.level.gazeShown && s.level.mugGhostShown, { level: s.level, cue: s.cue, text: s.promptText });
   // Day 7 (R7): two objects registered in level 1 before the switch, in one page task (so in the same
   // frame): the O key puts the mug in the gaze, then one more object stands elsewhere. At the switch
   // (the creature is in its nook, a round boundary) level 2 keeps only the newest.
