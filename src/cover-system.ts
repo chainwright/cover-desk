@@ -770,6 +770,9 @@ export class CoverSystem extends createSystem({
   /** Chief 12.11: an index fingertip held on a shelf pet picks it. */
   private updateShelf(dt: number): void {
     if (!this.pets) return;
+    // judges r2 (first five minutes): the choice comes after the first night; before that, Tuck and nothing else
+    this.shelf.visible = this.wins >= 1;
+    if (!this.shelf.visible) return;
     for (let k = 0; k < SHELF.length; k++) {
       const s = SHELF[k];
       let near = false;
