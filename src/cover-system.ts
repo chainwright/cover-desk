@@ -104,6 +104,7 @@ import { seatTrace } from './emu-seat.ts';
 import { placementStep, type PlacementClock, type PlacementState, type PlacementWorld } from './placement.ts';
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightResult } from './sightline.ts';
 import { TextCard } from './text-card.ts';
+import { buildAmbience, type Ambience } from './ambience.ts';
 import { LABELS, TesterLogger, analyseLog, boardInView, logSettings, type Label } from './touch-log.ts';
 
 /** Inset from desk edges so the whole board stays on the desk, whichever way it is turned. */
@@ -230,6 +231,8 @@ export class CoverSystem extends createSystem({
   private objOcc = new Occluders(1, MAX_OBJECT_MARKERS);
   private occ = new Occluders();
   private lightMap = new LightMap();
+  /** Chief 12.11: visual-only night/glow/motes around the board (ambience.ts). */
+  private amb!: Ambience;
   private sight: SightResult = { state: DARK, by: BY_NONE };
   private lineState = DARK;
   private lineBy = BY_NONE;
@@ -355,6 +358,8 @@ export class CoverSystem extends createSystem({
 
   init(): void {
     this.model = buildCover(this.level, this.lightMap.data);
+    this.amb = buildAmbience(this.level.lanterns[0]);
+    this.model.root.add(this.amb.root);
     // Day 8: beads and the level-2 unlock carry over to the next visit (localStorage); ?reset=1 forgets them.
     if (flags.reset) forgetProgress();
     else this.restoreProgress();
@@ -497,6 +502,11 @@ export class CoverSystem extends createSystem({
     } else {
       setHum(0, false);
     }
+    this.amb.update(Math.min(delta, 0.05), time, {
+      placed,
+      staring: this.sight.state === SEEN || this.keeperAwake,
+      flare: this.fx.flare,
+    });
     this.updateCues();
     this.watchIntro(time);
     this.updateRing();
