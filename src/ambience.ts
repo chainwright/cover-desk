@@ -65,7 +65,7 @@ export function buildAmbience(l: Lantern, map: Uint8Array): Ambience {
 
   // ---------------------------------------------------------------- night dome
   const nightMat = new MeshBasicMaterial({
-    color: 0x04060c, transparent: true, opacity: 0, depthWrite: false, side: BackSide,
+    color: 0x0a1630, transparent: true, opacity: 0, depthWrite: false, side: BackSide, // a blue night, not a grey filter (judges r2)
     // not where the lantern's light marked the stencil (cover-model.ts 'light-erase')
     stencilWrite: true, stencilRef: 1, stencilFunc: NotEqualStencilFunc, stencilZPass: KeepStencilOp, stencilWriteMask: 0,
   });

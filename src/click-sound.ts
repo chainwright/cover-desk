@@ -108,12 +108,24 @@ function tone(freq: number, delay: number, decay: number, gain: number, type: Os
   o.stop(t + decay + 0.05);
 }
 
-/** A win: three rising notes (C5, E5, G5), 120 ms apart. */
+/** A win (Chief 12.11, judges: drop the C-E-G chime cliché): the creature's own happy chirp, a quick up-slide twice. */
 export function chime(): void {
   soundCounts.chime++;
-  tone(523.25, 0, 0.35, 0.12, 'triangle');
-  tone(659.25, 0.12, 0.35, 0.12, 'triangle');
-  tone(783.99, 0.24, 0.6, 0.14, 'triangle');
+  if (!ctx || ctx.state !== 'running') return;
+  const t0 = ctx.currentTime;
+  for (const [d, f0, f1] of [[0, 900, 1500], [0.13, 1000, 1800]] as const) {
+    const o = ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(f0, t0 + d);
+    o.frequency.exponentialRampToValueAtTime(f1, t0 + d + 0.09);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t0 + d);
+    g.gain.linearRampToValueAtTime(0.09, t0 + d + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + d + 0.12);
+    o.connect(g).connect(outC());
+    o.start(t0 + d);
+    o.stop(t0 + d + 0.15);
+  }
 }
 
 /** The keeper wakes: a low "hm?", two falling notes. */

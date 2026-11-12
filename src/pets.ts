@@ -13,7 +13,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 export const PET_IDS = ['bobo', 'lumi', 'tuck'] as const;
 export type PetId = (typeof PET_IDS)[number];
 /** Longest side of each model on the desk (m). */
-const SIZE: Record<PetId, number> = { bobo: 0.028, lumi: 0.036, tuck: 0.03 };
+const SIZE: Record<PetId, number> = { bobo: 0.04, lumi: 0.05, tuck: 0.045 }; // judges r2: 1.5× for readability
 const KEY = 'cover-pet';
 
 export function savedPet(): PetId {
