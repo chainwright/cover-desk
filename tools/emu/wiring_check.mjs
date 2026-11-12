@@ -368,7 +368,9 @@ try {
     // X3: the hand back 3.5 cm left of level 2's left ghost (5 cm from level 1's ghost spot) starts the next round
     const at = await standAt(-0.115, 0.02, -0.025);
     const nr2 = await until(async () => { const e = (await events('next-round')).at(-1); return e && e.level === 2 ? e : null; }, 14000, 100);
-    check('l2-hand-back', nr2 && nr2.handBack === true && nr2.afterMs < 9500, { nr2, wrist: at });
+    // handBack is what tells the spots apart (under X3 the hand there doesn't count, and the round starts by the
+    // 10 s fallback with handBack false); the wait itself depends on how long the climax check took
+    check('l2-hand-back', nr2 && nr2.handBack === true, { nr2, wrist: at });
   }
   await shot('day6_03_emu_l2_win');
   // O again: the object is gone; level 2 stays and says so; H + → held never wins (the hand reaches the gaze)

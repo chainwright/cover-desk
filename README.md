@@ -1,5 +1,9 @@
 # Cover
 
+![A hand stands like "stop" in the keeper's lantern light on a wooden desk; its shadow drops a dark lane with a pale edge across the lit, dotted path, and the small felt creature waits inside the lane. A card reads "Slide your hand along, slowly: it follows your shadow"](media/hero.jpg)
+
+**Your hand is its shadow, your mug holds the shade: sneak a tiny felt creature past a sleeping keeper across your real desk.**
+
 A tiny felt creature has to cross your real desk to reach its trinket, past a
 sleepy lantern-keeper. You never move it. You protect it: stand your hand on
 the desk like "stop" where the pale hand shows, and the creature dashes
@@ -19,20 +23,15 @@ Built with the Immersive Web SDK (WebXR on Three.js).
 
 Judges: the five-minute path is in [JUDGES.md](JUDGES.md); what is proven and
 how is in [CLAIMS.md](CLAIMS.md); the evidence per criterion, with what is
-still unproven, is in [EVIDENCE.md](EVIDENCE.md).
+still unproven, is in [EVIDENCE.md](EVIDENCE.md); test and mutation counts
+are under "Checked so far" below.
 
-Checked so far: line-of-sight case set **18/18** for the sight-line function
-on synthetic 25-joint hands (9 cover cases, 9 negative controls; since day 7
-every cover pose stands outside the keeper's wake radius (checked by a
-test), so the wake rule cannot override the case set's verdict; the cases
-are not run through the game loop, and not yet on real tracked hands) ·
-108/108 unit tests (organiser's clean clone, 11 Nov) · mutation checks:
-unit stage 66 of 67 caught on day 7 (4d is equivalent), day 7b's six new
-or retargeted mutations each caught, and an outside full re-run on 11 Nov
-71 of 72 (4d again); glue stage 35 of the author's 35 caught (33 on day 7,
-G13–G14 on day 7b). An outside run of 5 more glue edits on 11 Nov caught
-0 (the post-win hand-back wiring and the object column; see
-`devlog/DAY8.md`) · frame rate on a Quest: **not measured yet**.
+The picture above is a frame from the desktop emulator build (`/emu/`) in
+desktop Chrome with a GPU, at 60 fps: the white outline is the emulator's
+hand, posed by the H key, and the room is simulated; no headset was
+involved. The page itself, before Enter, shows the same lesson: the pale
+ghost hand's own shadow, computed by the game's sight test, with the
+creature waiting inside it.
 
 ## How it plays (level 1)
 
@@ -48,6 +47,11 @@ G13–G14 on day 7b). An outside run of 5 more glue edits on 11 Nov caught
 - **The light.** The keeper's lantern lights a fan of your desk, warm on the
   wood. The creature creeps out of its felt nook to the edge of the light and
   waits.
+- **First seconds (day 8).** On a first run the keeper stirs before anything
+  else: for 2 s its eyes half open, it looks along the path, the lantern
+  brightens and a sleepy "hm?" rises; the creature shrinks back into its
+  nook. Then the ghost hand and the first card show. Nothing in the game
+  changes during it; it shows the danger before the instruction.
 - **Your hand is cover.** Stand a hand on the desk like "stop" where the
   pale hand shows, and its shadow appears on the desk.
   A pale ghost hand shows the pose and the place on your first run, 8 cm in
@@ -65,7 +69,8 @@ G13–G14 on day 7b). An outside run of 5 more glue edits on 11 Nov caught
   its edge, a fist. A flat hand lying low only shades what is right behind
   it, as real light would.
 - **The lane.** Where the ghost stands, a standing hand shades a lane a few
-  centimetres wide on the path (in the `/emu/` run the creature dashes from
+  centimetres wide on the path (since day 8 the shade is near black and its
+  edge drawn as a pale line; drawing only, the verdict is unchanged) (in the `/emu/` run the creature dashes from
   the light's edge at 3.3 cm to 10.4 cm along the path and waits there). The
   creature dashes into it and stops at its far edge; a still "stop" hand
   there never gets it home. Slide the hand toward the trinket and the
@@ -81,10 +86,16 @@ G13–G14 on day 7b). An outside run of 5 more glue edits on 11 Nov caught
   the light and get spotted (in the model, ±7 mm jitter, ten 30 s runs:
   0 spots with the dwell, at least one without it; the test asserts that
   and prints both counts).
-- **The keeper wakes.** A hand within 6.3 cm of the lantern (any joint, in
-  the model) wakes the keeper: its eyes open, a low "hm?" sounds, a card
-  says "Too close: the keeper woke up", and it sees the whole path, so the
-  creature stays home. This closes the day-4 shortcut of cupping the lantern
+- **The keeper wakes.** A hand that stays within 6.3 cm of the lantern for
+  a quarter second (any joint, in the model) wakes the keeper: its eyes
+  open, a low "hm?" sounds, a card says "Too close: the keeper woke up",
+  and it sees the whole path, so the creature can't cross (if it stepped
+  out of its nook in that quarter second, it is spotted and runs back).
+  Day 8: the quarter second is for tracking error, not for players: in the
+  model a still hand 1 cm in front of the ghost's spot whose tracking
+  jitters ±5 mm at 30 Hz woke an instant rule 1564 times in ten 30 s runs
+  and this one never (`tests/day8.test.ts`); at ±1 cm jitter it still
+  wakes it a few times in five minutes (scratch run, about 3). This closes the day-4 shortcut of cupping the lantern
   (one hand there shaded nearly the whole light). The radius was chosen by
   bisection: the farthest still hand that crossed without a slide had its
   nearest joint between 5.5 and 6.2 cm from the lantern (test bound, one
@@ -104,8 +115,9 @@ G13–G14 on day 7b). An outside run of 5 more glue edits on 11 Nov caught
   sees it counts as lifting it.
 - **A win.** At the trinket the creature hops twice with it (4 cm, then
   less), the light's warm side flares, a three-note chime plays, and a brass
-  bead pops into the row along the near edge, one per win (up to ten, this
-  session only). The creature carries the trinket on its back until the next
+  bead pops into the row along the near edge, one per win (up to ten; since
+  day 8 kept for your next visit in this browser, with the level-2 unlock;
+  `?reset=1` forgets them). The creature carries the trinket on its back until the next
   round. Then the ghost hand comes back with a card, "Home! Bring your hand
   back to the ghost for another round", and both stay until a hand stands
   there again (or about 10 s pass); then the next round starts. After the
@@ -118,7 +130,7 @@ G13–G14 on day 7b). An outside run of 5 more glue edits on 11 Nov caught
   shades nothing on it.) A depth-only column of that size is drawn where
   the object stands, so the real object should hide the virtual light and
   keeper behind it (day 7; not yet checked on a headset; in `/emu/`, where
-  there is no real object, the column is drawn as a pale paper mug).
+  there is no real object, it is drawn as an opaque paper mug).
 - **If the headset loses the hand that was shading the creature in the last
   0.3 s, it waits** (also when it loses both hands). Nothing moves and nothing
   is judged until that hand is back, or another hand or object shades it.
@@ -161,6 +173,11 @@ mid-air registers one too.
   lowest that works, either hand) or 10 cm wakes nothing, and a 1 cm lift
   wakes the keeper (`tests/day7.test.ts`); `/emu/`'s R key plays that same
   motion (up 10 cm, across, down).
+- **Level 2's win is its own (day 8).** The creature hops, then tosses the
+  trinket up onto the top of the object that held the shade; the keeper
+  nods off, eyes shut, and the lantern dims to a glow until the next round;
+  a soft falling lullaby and two snores play instead of level 1's chime,
+  and the card says "Asleep! Your mug held the shade".
 - **Level 2 counts one object**; a new registration replaces it. (In the
   model two objects can shade the whole path between them and replace the
   hand.)
@@ -177,6 +194,30 @@ hand.
 All of this is the geometry model and the emulator; no real mug has been
 played with on a Quest yet.
 
+## Checked so far
+
+All of this is the model and the desktop emulator; frame rate on a Quest:
+**not measured yet**.
+
+- **Line-of-sight case set: 18/18** for the sight-line function on
+  synthetic 25-joint hands (9 cover cases, 9 negative controls). Since day
+  7 every cover pose stands outside the keeper's wake radius (checked by a
+  test), so the wake rule cannot override the case set's verdict; the cases
+  are not run through the game loop, and not on real tracked hands.
+- **Unit tests: 117/117** (day 8, `devlog/day8_test_output.txt`; the
+  organiser's clean clone of day 7b ran 108/108).
+- **Mutations in the tested code: 78 of 79** make a test fail on day 8; the
+  79th (4d) is equivalent (`devlog/day8_mutations_unit_output.txt`; the
+  first pass missed 10f, a test was added, see `devlog/DAY8.md`).
+- **Glue mutations** (code only the emulator or the build can reach): on
+  day 8 the five an outside run made on 11 Nov, which all survived then
+  (X1–X5), were recreated; X1, X3, X4 and X5 now fail a check written for
+  them, X2 (the object column flattened) still needs a headset. With the
+  day-8 glue (G15–G22), 12 of 12 caught. The 35 earlier ones were caught on
+  days 7 and 7b and not all re-run since.
+- **Emulator wiring check** on the built `/emu/`: 47/47, twice
+  (`devlog/day8_emu_wiring_local_run*.json`).
+
 ## URL options
 
 | Option | What it does |
@@ -186,7 +227,7 @@ played with on a Quest yet.
 | `?proxy=1` | Shows the hand's cover proxy, one dot per joint |
 | `?hands=outline` / `?hands=off` | The SDK's hand outline, or no hand at all (default: an invisible mask, meant to let your real hand show over the board; not yet checked on a headset) |
 | `?occlude=depth` | Also asks for depth sensing to soften virtual things behind real objects (more GPU work) |
-| `?reset=1` | Forgets the saved desk spot |
+| `?reset=1` | Forgets the saved desk spot, and the beads and level-2 unlock kept from earlier visits |
 | `?level=2` | Starts on level 2 (no level-1 win needed), for judges and testers |
 
 ## How the shadow works
@@ -225,7 +266,9 @@ creature outside the light). No case set on real tracked hands exists yet.
 
 `?test=1` records, at 30 Hz per hand during a session (positions while the board is placed; lost-hand rows always), the wrist and index-fingertip positions,
 fingertip height and pose class, plus events: sight-line blocked/cleared (and
-by what), dashes, spotted, home, pauses and their reason, object
+by what), dashes, spotted, home, the next round (how long after the win,
+and whether a hand was back; day 8), the keeper waking (why, and how long
+the hand stayed at the lantern first), pauses and their reason, object
 registrations, the joint-reading path, the chosen plane label, the anchor's
 time to localise, and once a second the frame rate, the worst frame, dropped
 frames against the display rate and the 95th percentile of the app's own
@@ -282,7 +325,9 @@ holding **→** slides it along to lead the creature home, **L** lifts it
 emulator its own controls back. For level 2 (after a win, or with
 `?level=2`): **O** puts an emulated 10 cm mug on the ghost mug (registered
 through the same rules as a fingertip registration; the emulator's room has
-no real mug; it is drawn as a pale paper mug), **H** stands the hand at
+no real mug; it is drawn as an opaque paper mug with a handle, and only the
+`/emu/` build contains that drawing: `npm run build` fails if it turns up
+in the main build, where a registered object gets the depth-only column), **H** stands the hand at
 level 2's left ghost, and **R** lifts it up 10 cm, over the gaze and down
 at the right ghost, as one motion (the motion the model checks). **H** alone,
 without sliding, gets the creature only to the far edge of the lane. If the
@@ -320,7 +365,8 @@ src/hand-mask.ts      meant to let the real hand show over virtual things (not y
 src/cover-model.ts    keeper, lantern, light pool, creature, nook, trinket
 src/touch-log.ts      tester log format, recorder and analyser
 src/log-store.ts      keeps the tester log on the headset; chunking, flush timer, retry (3 tries) and LogKeeper tested
-src/feedback.ts       the keeper's wake rule, the cards' round state, the win's hop/flare/bead, the payoff (pure, tested)
+src/feedback.ts       the keeper's wake rule, the cards' round state, the win's hop/flare/bead, level 2's climax, the first-run threat beat (pure, tested)
+src/progress-store.ts beads and the level-2 unlock kept in localStorage (pure parsing, tested)
 src/emu-seat.ts       runs only in /emu/: seated start with hands, keys to move the hand
 src/click-sound.ts    synthesized sounds (no audio files)
 tests/                unit tests and the line-of-sight case set

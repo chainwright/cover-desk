@@ -194,6 +194,7 @@ test('level 2\'s climax: the same hops as level 1, then the lantern dims to a gl
   for (const t of [0, 0.2, 0.5, 0.8]) assert.ok(Math.abs(l2WinFx(t).hop - winFx(t).hop) < 1e-9, `hop at ${t}`);
   assert.ok(l2WinFx(0.25).flare > 0.15, 'a warm flash first');
   assert.ok(Math.abs(l2WinFx(L2_WIN.dimEndS).flare - L2_WIN.dim) < 1e-9 && Math.abs(l2WinFx(8).flare - L2_WIN.dim) < 1e-9, 'then dim, held');
+  assert.ok(l2WinFx(8).flare <= -0.5, `the lantern dims to a glow (light at ${(1 + l2WinFx(8).flare).toFixed(2)} of normal)`);
   assert.ok(winFx(3).flare === 0, 'level 1 returns to normal light');
   assert.equal(l2WinFx(L2_WIN.arcStartS - 0.01).arc, 0);
   assert.equal(l2WinFx(L2_WIN.arcStartS + L2_WIN.arcS).arc, 1);

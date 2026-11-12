@@ -35,7 +35,7 @@ M=[
  ('D4 no "seen for 0.15 s" debounce','src/creature.ts','c.seenFor >= p.spot','c.seenFor >= 0'),
  ('D5 light-map distance cull too aggressive','src/light-map.ts','if (this.dMin[i] > d) continue;','if (this.dMin[i] > d * 0.5) continue;'),
  # day-2 mutations
- ('2a ghost needs !listening again (day-1 bug)','src/onboarding.ts','cues.ghost = i.placed && (!i.everDashed || !!i.again);','cues.ghost = i.placed && (!i.everDashed || !!i.again) && !i.listening;'),
+ ('2a ghost needs !listening again (day-1 bug)','src/onboarding.ts','cues.ghost = i.placed && (!i.everDashed || !!i.again) && !i.intro;','cues.ghost = i.placed && (!i.everDashed || !!i.again) && !i.intro && !i.listening;'),
  ('2b registration blocked while listening on a plane placement','src/onboarding.ts',"(!i.listening || i.placement === 'desk')",'!i.listening'),
  ('2c teaching prompt replaced by the old move prompt while listening','src/onboarding.ts',"if (i.moveRequested) cues.prompt = 'tap-new-spot';","if (i.moveRequested || i.listening) cues.prompt = 'tap-new-spot';"),
  ('2d knob label hidden on the first run','src/onboarding.ts','cues.knobLabel = onDesk && !i.everDashed && !i.moveRequested;','cues.knobLabel = false;'),
@@ -72,7 +72,7 @@ M=[
  ('6f log keeper writes to a store that gave up','src/log-store.ts','if (!log || !this.kept) return','if (!log) return'),
  ('6g spotted card never shown','src/onboarding.ts',"  else if (i.spotted) cues.prompt = 'spotted';\n",''),
  ('6h "again" card never shown','src/onboarding.ts',"  else if (i.again) cues.prompt = 'again';\n",''),
- ('6i ghost not back after a win','src/onboarding.ts','cues.ghost = i.placed && (!i.everDashed || !!i.again);','cues.ghost = i.placed && !i.everDashed;'),
+ ('6i ghost not back after a win','src/onboarding.ts','cues.ghost = i.placed && (!i.everDashed || !!i.again) && !i.intro;','cues.ghost = i.placed && !i.everDashed && !i.intro;'),
  ('6j "again" cleared while the creature is still at home','src/feedback.ts','if (this.again && mode !== MODE_HOME && handBackAtStart)','if (this.again && handBackAtStart)'),
  ('6k no win hop','src/feedback.ts','    out.hop = f.hop * k * Math.sin((Math.PI * (t % f.hopS)) / f.hopS);','    out.hop = 0;'),
  ('6l eyes stay shut when a hand is at the lantern','src/feedback.ts','out.eyes = spotted || awake ? EYES_OPEN : 1;','out.eyes = spotted ? EYES_OPEN : 1;'),
@@ -89,7 +89,7 @@ M=[
  ('7h level 2 starts without an object','src/level2.ts','this.level === 1 && this.unlocked && objects > 0 && atBoundary','this.level === 1 && this.unlocked && atBoundary'),
  ('7i "needs a real mug" card never shown','src/onboarding.ts',"  else if (!i.objects) cues.prompt = 'need-object';\n",''),
  ('7j ghost never moves to the right-hand spot','src/onboarding.ts',"    cues.ghostSpot = 'right';","    cues.ghostSpot = 'left';"),
- ('7k unlock card replaces the day-5 "again" card','src/onboarding.ts',"if (i.unlocked && !i.objects && cues.prompt === 'none')","if (i.unlocked && !i.objects && (cues.prompt === 'none' || cues.prompt === 'again'))"),
+ ('7k unlock card replaces the day-5 "again" card','src/onboarding.ts',"if (i.unlocked && !i.objects && cues.prompt === 'none' && !i.intro)","if (i.unlocked && !i.objects && (cues.prompt === 'none' || cues.prompt === 'again') && !i.intro)"),
  ('7l level-2 ghosts back at 6 cm (too near the gaze)','src/level2.ts','export const L2_LEFT = { x: -0.08, z: -0.025 } as const;','export const L2_LEFT = { x: -0.06, z: -0.025 } as const;'),
  ('7m ghost mug off the gaze','src/level2.ts','export const MUG_SPOT = { x: 0, z: -0.03 } as const;','export const MUG_SPOT = { x: 0.05, z: -0.03 } as const;'),
  # day-7 code
@@ -142,7 +142,7 @@ OUT=[
  ('G9 /emu/ R key uses the left spot','src/emu-seat.ts',"  if (level === 2) return key === 'r' ? L2_RIGHT.x : L2_LEFT.x;","  if (level === 2) return L2_LEFT.x;"),
  # day 7: the outside run's eleven day-6 glue mutations (judges_impl_d5, ORGANISER_CHECKS section 5), at today's call sites
  ('R1 an awake keeper no longer sees the whole path','src/cover-system.ts','seen: (s: number) => this.keeperAwake || this.seenAt(s),','seen: (s: number) => this.seenAt(s),'),
- ('R2 lantern wake not wired at the call site (updateWake)','src/cover-system.ts','const h = placed ? this.lanternWake.update(this.local, this.joints.tracked, this.lantern) : -1;','const h = -1;'),
+ ('R2 lantern wake not wired at the call site (updateWake)','src/cover-system.ts','const h = placed ? this.lanternWake.update(this.local, this.joints.tracked, this.lantern, dt) : -1;','const h = -1;'),
  ('R3 move knob: pointing gate removed at the call site','src/cover-system.ts','const on = onKnob(this.pointing[h], lx, ly, lz, KNOB);','const on = onKnob(true, lx, ly, lz, KNOB);'),
  ('R4 registration call site: any hand counts as pointing','src/cover-system.ts','      pointing: this.pointing[h],\n','      pointing: true,\n'),
  ('R5 desk tap: pointing gate removed','src/cover-system.ts','const blocked = !this.pointing[h] ||','const blocked = false ||'),

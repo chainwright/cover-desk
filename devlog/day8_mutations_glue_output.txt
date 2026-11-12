@@ -1,0 +1,15 @@
+G15 the wake dwell gets a whole second per frame at the call site (instant wake): exit 0, 0 failing:  | emu: CAUGHT (checks failing: woke-reason-lantern)
+X1 the main build draws the /emu/ paper mug over a real object (no occluder): exit 0, 0 failing:  | dist: CAUGHT (FAIL the /emu/ paper mug (cover-emu-paper-mug) found in the main build: a real object would get a drawn mug, not the occluder: dist/assets/index-C01K122P.js)
+X3 level 2 looks for the hand back at level 1's ghost spot: exit 0, 0 failing:  | emu: CAUGHT (checks failing: l2-hand-back)
+X4 the next round ignores the hand (always the 10 s fallback): exit 0, 0 failing:  | emu: CAUGHT (checks failing: next-round-hand, l2-hand-back)
+X5 the "again" card never cleared by the hand coming back: exit 0, 0 failing:  | emu: CAUGHT (checks failing: next-round-hand)
+G16 level 2's climax light not applied (level 1's flare): exit 0, 0 failing:  | emu: CAUGHT (checks failing: l2-climax, l2-hand-back)
+G17 level 2 plays the tutorial chime again: exit 0, 0 failing:  | emu: CAUGHT (checks failing: l2-climax)
+G18 progress not saved after a win: exit 0, 0 failing:  | emu: CAUGHT (checks failing: progress-saved, progress-restored)
+G19 kept progress not restored at load: exit 0, 0 failing:  | emu: CAUGHT (checks failing: progress-restored)
+G20 the threat beat not passed to the cues: exit 0, 0 failing:  | emu: CAUGHT (checks failing: intro)
+G21 the trinket never flies to the mug: exit 0, 0 failing:  | emu: CAUGHT (checks failing: l2-climax, l2-hand-back)
+G22 the page preview not staged (the creature in full light again): exit 0, 0 failing:  | emu: CAUGHT (checks failing: preview-lane, progress-restored)
+
+# X3 re-run after l2-hand-back was keyed on handBack alone (the wait depended on load):
+X3 level 2 looks for the hand back at level 1's ghost spot: exit 0, 0 failing:  | emu: CAUGHT (checks failing: l2-hand-back)

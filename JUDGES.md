@@ -9,17 +9,19 @@
    in its nook on the left, its trinket on the right. Otherwise it floats in
    front of you until you point at the desk with one finger, tap and hold
    still. (Not yet run on a Quest; see [CLAIMS.md](CLAIMS.md).)
-3. Do what the card and the pale ghost hand show: **stand your hand on the
+3. On a first run the keeper stirs for 2 s (it shows the danger first). Then
+   do what the card and the pale ghost hand show: **stand your hand on the
    desk like "stop" where the pale ghost hand stands.** Your hand's shadow opens a lane a few centimetres wide on the
    path and the creature dashes into it, then stops at its far edge. (Held
    high, or in the light in front of the path, the hand casts no shadow on
    the path.)
 4. Slide your hand toward the trinket, about a hand's width every 2 seconds.
    The creature follows your shadow home: it hops with the trinket, the
-   light flares, a chime, a bead pops in; then the ghost and a card show
+   light flares, a chime, a bead pops in (beads are kept for your next
+   visit); then the ghost and a card show
    where to put your hand, and the next round waits for it (or about 10 s). Lift your hand while it is in the light and
    the keeper wakes and spots it (a card says why). Cup the lantern and the
-   keeper wakes too: that shortcut is closed.
+   keeper wakes too, a quarter second later: that shortcut is closed.
 5. Point down onto the middle of the top of a mug (a book or a closed box
    is easier) standing between the lantern and the path and hold still for
    a second: it becomes cover too and throws its own shadow.
@@ -31,8 +33,9 @@
    can't cross the gaze (a hand there wakes the keeper); the object alone
    leaves both ends lit. Hand at the left ghost, edge it to the object;
    when the creature waits in its shadow, lift your hand well up, about a
-   hand's length, and over to the right ghost. (`?level=2` starts here
-   directly.)
+   hand's length, and over to the right ghost. The creature gets home and
+   level 2 ends its own way: the trinket goes onto your mug, the keeper
+   falls asleep, the lantern dims. (`?level=2` starts here directly.)
 
 To leave the immersive view: look at your **left** palm at eye level and
 pinch thumb and index until the menu icon fills.
@@ -48,8 +51,9 @@ Open **https://chainwright.github.io/cover-desk/emu/** in desktop Chrome.
 1. Press **Enter**. The emulator seats you at its desk, looking down at it,
    with hands instead of controllers, and the board lands on the emulated
    desk by itself (a few seconds; up to about 10 s if the machine renders
-   slowly). A
-   key list appears at the top.
+   slowly). A key list appears at the top. For 2 s the keeper stirs (its
+   eyes half open, it looks along the path, a sleepy "hm?"); then the pale
+   ghost hand and the first card show.
 2. Press **H**: the right hand stands like "stop" where the ghost hand
    stands. Its shadow opens a lane, the creature dashes into it and stops at
    its far edge; with the hand still it goes no further (a card says "Slide
@@ -64,8 +68,10 @@ Open **https://chainwright.github.io/cover-desk/emu/** in desktop Chrome.
    keeper's eyes open and a thin line of light stares at the creature; it
    flashes and runs back, and a card says "It saw it!". **H** again takes the
    hand away; **H** once more stands it back at the ghost's spot.
-5. Press **C** to cup the lantern: the keeper wakes, a card says "Too close",
-   and the creature stays in its nook. **C** again takes the hand away.
+5. Press **C** to cup the lantern: a quarter second later the keeper wakes,
+   a card says "Too close", and the creature can't cross (if it stepped out
+   in that quarter second, it is spotted and runs back). **C** again takes
+   the hand away.
 6. **M** hands the emulator back to its own menus and gizmos, if you want to
    pose the hands yourself.
 7. **Level 2:** open **https://chainwright.github.io/cover-desk/emu/?level=2**
@@ -73,12 +79,15 @@ Open **https://chainwright.github.io/cover-desk/emu/** in desktop Chrome.
    the creature is home or in its nook). The pale wedge is the keeper's
    gaze. Without an object the card says "Level 2 needs a real mug or
    book"; **H** then hold **→**: the keeper wakes, no win.
-8. Press **O**: an emulated 10 cm mug stands on the ghost mug, drawn as a
-   pale paper mug (the emulator's room has no real one; it goes through the
-   same registration rules). Press **H** (the hand at the left ghost; if it is up, **H** twice):
-   the creature runs through your shadow into the mug's and waits past the
-   gaze, and the ghost moves right. Press **R**: the hand lifts up, goes
-   over the gaze and comes down at the right ghost, and the creature gets home.
+8. Press **O**: an emulated 10 cm mug stands on the ghost mug, drawn as an
+   opaque paper mug (the emulator's room has no real one; it goes through
+   the same registration rules). Press **H** (the hand at the left ghost; if
+   it is up, **H** twice): the creature runs through your shadow into the
+   mug's and waits past the gaze, and the ghost moves right. Press **R**:
+   the hand lifts up, goes over the gaze and comes down at the right ghost,
+   and the creature gets home. Level 2's own ending follows: it tosses the
+   trinket onto the mug, the keeper nods off and the lantern dims, a soft
+   lullaby and a snore, and the card "Asleep! Your mug held the shade".
 
 Even if the board floats in the air instead (no desk found), it is playable
 where it floats; the game is the same. The room is the emulator's simulated
@@ -98,7 +107,7 @@ checks for the glue an outside run found unguarded (`devlog/DAY7.md`).
 ```sh
 git clone https://github.com/chainwright/cover-desk && cd cover-desk
 npm ci
-npm test           # 108 tests, including the 18-case line-of-sight set, level 2 (tests/day6.test.ts) and the day-7 fixes
+npm test           # 117 tests, including the 18-case line-of-sight set, level 2 (tests/day6.test.ts) and the day-7 and day-8 fixes
 npx playwright install chromium   # once, for the emulator checks below (Playwright is a dev dependency)
 npm run build      # main build without the emulator, /emu/ with it, then a check of both
 python3 tools/mutations.py unit   # deliberate bugs in the tested code (see devlog/DAY6.md)

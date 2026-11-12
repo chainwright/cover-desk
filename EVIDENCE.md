@@ -1,6 +1,6 @@
 # Evidence: what is shown, how, and what is not
 
-Day 7b, 11 Nov 2026. No Meta Quest has run this build yet. Every number below
+Day 8, 11 Nov 2026. No Meta Quest has run this build yet. Every number below
 comes from Node unit tests, the Immersive Web Emulator, or the author's
 scripted runs, and says which. [CLAIMS.md](CLAIMS.md) lists each claim with
 its proof level; this page holds the evidence itself.
@@ -136,6 +136,28 @@ Day 7 (`tests/day7.test.ts`), same model:
   mug, comes down just past the gaze and slides on). A 1 cm lift wakes the
   keeper; the lowest lift that wakes nothing, both hands, is 5 cm.
 
+Day 8 (`tests/day8.test.ts`), same model:
+- **The keeper's wait:** a hand must stay inside 6.3 cm of the lantern for
+  0.25 s without a break before the keeper wakes (the radius and the 7 cm
+  hysteresis are unchanged). A still "stop" hand 1 cm in front of the
+  ghost's spot (its nearest joint about 6.5 cm from the lantern) whose
+  tracking jitters ±5 mm at 30 Hz, ten 30 s runs: 0 wakes; an instant rule
+  at the same radius: 1564 rising edges (printed). At ±1 cm the same hand
+  still wakes it now and then (scratch run, 3 times in 300 s; output not
+  kept). The cupped lantern at five spots: the keeper wakes, the creature
+  never gets past 4 cm; every still hand inside the radius that would win
+  with no rule (the bisection's region; the test asserts at least 20 such
+  hands) still loses.
+- **Level 2's climax** (`l2WinFx`): the same hops as level 1, a warm flash,
+  then the light dims to 40 % and stays dim; the trinket flies to the
+  object's top between 0.9 and 1.8 s; the keeper's eyes shut and its head
+  nods by 1.4 s. Its own card.
+- **Threat beat** (`introActive`, `introFx`): 2 s from placement on a first
+  run, no teach card and no ghost during it.
+- **Kept progress** (`progress-store.ts`): wins and the unlock round-trip
+  through localStorage; malformed text, another version or storage that
+  throws all count as none.
+
 ## Mutation table
 
 `python3 tools/mutations.py` applies each edit, runs `npm test`, restores the
@@ -216,8 +238,20 @@ the day-3 mutation itself.
 | 8g knob: pointing gate removed (pure function) | 1 |
 | 8h level switch keeps every object (pure function) | 1 |
 | 8i fps inView always true (pure function) | 1 |
+| 9a gaze drawn in level 1 after the unlock again | 3 |
+| 9b lift-over crosses low | 5 |
+| 9c lift-over jumps | 1 |
+| 9d level-1 card points at the gaze again | 1 |
+| 9e debug handle on window in every build | 1 |
+| 10a no wake dwell (wakes on the first frame inside) | 3 |
+| 10b wake dwell not reset when the hand leaves | 2 |
+| 10c teach card shown during the threat beat | 1 |
+| 10d level 2's own card never shown | 1 |
+| 10e kept progress of any version accepted | 1 |
+| 10f the level-2 lantern does not dim | 0 in the first pass (the test compared it with its own constant); 1 after a test of the actual dim was added |
+| 10g threat beat on every visit | 1 |
 
-Day 7: 66 of 67 caught; the other (4d) is equivalent. Day 7b: 8e retargeted and 9a–9e added, each caught (`devlog/day7b_mutations_output.txt`). An outside full re-run on 11 Nov (on `4cc55da`): 71 of 72, 4d again. The rows before 8a
+Day 8, full run (`devlog/day8_mutations_unit_output.txt`, counts above for 9a–10g): 78 of 79 caught, 4d equivalent. Day 7: 66 of 67 caught; the other (4d) is equivalent. Day 7b: 8e retargeted and 9a–9e added, each caught (`devlog/day7b_mutations_output.txt`). An outside full re-run on 11 Nov (on `4cc55da`): 71 of 72, 4d again. The rows before 8a
 are the earlier days' counts; on later days some fail one or two more
 tests, see the output files. Output: `devlog/day7_mutations_output.txt`
 (day 6: `devlog/day6_mutations_output.txt`).
@@ -262,6 +296,21 @@ with `dist/` served there; a mutation no unit test catches is built into
 | G10 the next round starts 3.5 s after a win again | again-waits |
 | G11 the win hop not applied to the creature | win-hop-flare |
 | G12 the win flare not applied to the light | win-hop-flare |
+| G13 `/emu/` R jumps again (day 7b) | l2-r-motion |
+| G14 `/emu/` R motion not applied to the hand height (day 7b) | l2-r-motion |
+| X1 the main build draws the `/emu/` paper mug over a real object (outside run, 11 Nov) | `npm run build` (`tools/check-dist.mjs`: the paper mug's material in the main bundle) |
+| X2 the object column flattened (outside run) | **not covered** |
+| X3 level 2 looks for the hand back at level 1's spot (outside run) | l2-hand-back |
+| X4 the next round ignores the hand (outside run) | next-round-hand (and l2-hand-back) |
+| X5 the "again" card never cleared by the hand (outside run) | next-round-hand (againStuck) |
+| G15 the wake dwell gets a whole second per frame at the call site | woke-reason-lantern (afterMs) |
+| G16 level 2's climax light not applied | l2-climax |
+| G17 level 2 plays the tutorial chime | l2-climax |
+| G18 progress not saved after a win | progress-saved, progress-restored |
+| G19 kept progress not restored at load | progress-restored |
+| G20 the threat beat not passed to the cards | intro |
+| G21 the trinket never flies to the mug | l2-climax |
+| G22 the page preview not staged | preview-lane |
 
 Day 7: 33 of 33 caught (`devlog/day7_mutations_output.txt`); day 7b adds G13–G14, both caught (35 of 35). An outside run of 5 more glue edits on 11 Nov (X1–X5: the object column's material and height, and the post-win hand-back wiring) caught 0; see `devlog/DAY8.md`. R1–R11 are the
 outside run's eleven day-6 glue mutations (its exact edits, at today's call
@@ -310,6 +359,12 @@ build's wiring check, run after the network came back, had none.
 - Day 7, the wiring check with the post-win wait and the checks for the
   outside run's surviving glue mutations, run twice on the clean build;
   details and outputs in `devlog/DAY7.md`.
+- Day 8, the wiring check with the day-8 phases (preview, threat beat,
+  next round by hand, kept progress, level 2's ending, the hand back in
+  level 2): 47/47 twice on the clean build
+  (`devlog/day8_emu_wiring_local_run*.json`). The video draft was recorded
+  in a headed Chromium on the GPU at 60 fps (`tools/emu/record.mjs`,
+  `devlog/DAY8.md`).
 
 ## Not shown yet (needs a Quest)
 

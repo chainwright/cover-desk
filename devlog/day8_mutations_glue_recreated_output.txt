@@ -1,0 +1,2 @@
+O17 win chime not played: exit 0, 0 failing:  | emu: CAUGHT (checks failing: win-chime)
+R2 lantern wake not wired at the call site (updateWake): exit 0, 0 failing:  | emu: CAUGHT (checks failing: wake, wake-holds, woke-reason-lantern, l2-unlocked)
