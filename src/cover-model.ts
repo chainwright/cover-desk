@@ -35,12 +35,13 @@ import {
   SphereGeometry,
   UnsignedByteType,
   BoxGeometry,
+  TorusGeometry,
 } from '@iwsdk/core';
 import { BOARD, TEACH_SPOT, type Level } from './level.ts';
 import { MAP_COLS, MAP_MIN_D, MAP_ROWS } from './light-map.ts';
 import { REGISTER } from './contact.ts';
 import { GAZE_HALF, MUG_SPOT } from './level2.ts';
-import type { Lantern } from './sightline.ts';
+import type { Lantern, Occluders } from './sightline.ts';
 
 export const PATH_DOTS = 26;
 export const MAX_OBJECT_MARKERS = 4;
@@ -48,8 +49,30 @@ export const MAX_OBJECT_MARKERS = 4;
 const OBJECT_COLUMN = new CylinderGeometry(REGISTER.radius, REGISTER.radius, 1, 32).translate(0, 0.5, 0);
 /** Writes depth only: virtual things behind a registered real object are not drawn (passthrough shows the object). */
 export const OBJECT_OCCLUDER = new MeshBasicMaterial({ colorWrite: false });
-/** /emu/ has no real object: the emulated one is drawn as a pale paper mug instead. */
-export const OBJECT_EMULATED = new MeshBasicMaterial({ color: 0xe9dfcc, transparent: true, opacity: 0.6, depthWrite: false });
+/**
+ * /emu/ has no real object: the emulated one is drawn as an opaque paper mug with a handle instead (day 8:
+ * it was a 60 % pale column that read as a glass). Built on first use and only reached when the build is
+ * the /emu/ one (`__COVER_EMU__`) and the emulator runs, so the main build carries none of it: the build's
+ * dist check fails if the material's name turns up in the main bundle (an outside run made the main build
+ * draw the paper mug over a real one and nothing noticed).
+ */
+export const EMU_MUG_NAME = 'cover-emu-paper-mug';
+let emuMugMat: MeshStandardMaterial | null = null;
+export function dressEmulatedMug(marker: Group, top: number): void {
+  emuMugMat ??= Object.assign(new MeshStandardMaterial({ color: 0xf1e4c8, roughness: 0.85, metalness: 0 }), { name: EMU_MUG_NAME });
+  const column = marker.getObjectByName('occluder') as Mesh;
+  column.material = emuMugMat;
+  let handle = marker.getObjectByName('emu-mug-handle') as Mesh | undefined;
+  if (!handle) {
+    handle = new Mesh(new TorusGeometry(0.02, 0.0055, 10, 24, Math.PI), emuMugMat);
+    handle.name = 'emu-mug-handle';
+    handle.rotation.z = -Math.PI / 2; // a half ring standing on the mug's right side
+    handle.position.x = REGISTER.radius - 0.002;
+    marker.add(handle);
+  }
+  handle.position.y = top * 0.55;
+  handle.visible = true;
+}
 export { WIN_BEADS } from './feedback.ts';
 import { WIN_BEADS } from './feedback.ts';
 export { KNOB } from './level.ts';
@@ -115,7 +138,10 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
       uMinD: { value: MAP_MIN_D },
       uRange: { value: lantern.range },
       uWarm: { value: new Color(0xffc46b) },
-      uShade: { value: new Color(0x1b2140) },
+      // Day 8 (outside review: the lane read weakly): the shade goes nearly black and is drawn denser, and
+      // the shadow's edge gets a pale line. Visual only: the light map and the sight test are unchanged.
+      uShade: { value: new Color(0x06070d) },
+      uRim: { value: new Color(0xfff0d0) },
       uFlicker: { value: 1 },
       uFlare: { value: 0 },
     },
@@ -129,7 +155,7 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
       uniform sampler2D tMap;
       uniform vec2 uL;
       uniform float uYaw, uHalf, uMinD, uRange, uFlicker, uFlare;
-      uniform vec3 uWarm, uShade;
+      uniform vec3 uWarm, uShade, uRim;
       varying vec2 vPos;
       void main() {
         vec2 r = vPos - uL;
@@ -139,11 +165,16 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
         float u = (az + uHalf) / (2.0 * uHalf);
         float v = (d - uMinD) / (uRange - uMinD);
         if (u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0) discard;
-        float lit = texture2D(tMap, vec2(u, v)).r;
+        float raw = texture2D(tMap, vec2(u, v)).r;
+        float lit = smoothstep(0.3, 0.7, raw);
         float edge = smoothstep(1.0, 0.8, abs(az) / uHalf) * smoothstep(1.0, 0.72, v) * smoothstep(0.0, 0.08, v);
         float fall = clamp(0.16 / (0.1 + d), 0.0, 1.0);
         vec3 col = mix(uShade, uWarm * (1.0 + uFlare), lit);
-        float a = edge * mix(0.5, min(1.0, 0.55 * fall * uFlicker * (1.0 + uFlare)), lit);
+        float a = edge * mix(0.9, min(1.0, 0.62 * fall * uFlicker * (1.0 + uFlare)), lit);
+        // the lane's edge: a pale line where the light map crosses from lit to shade
+        float rim = (1.0 - smoothstep(0.12, 0.3, abs(raw - 0.5))) * edge * clamp(1.0 + uFlare, 0.3, 1.0);
+        col = mix(col, uRim, rim);
+        a = max(a, rim * 0.95);
         gl_FragColor = vec4(col, a);
       }`,
     transparent: true,
@@ -367,20 +398,39 @@ function buildCreature(): Creature {
   return { root, body, bodyMat };
 }
 
+/** The ghost hand's shape (board frame, wrist at x, z on the desk): palm, four fingers, thumb. */
+const GHOST = {
+  palm: { w: 0.075, h: 0.08, d: 0.018, y: 0.06 },
+  fingers: [[-0.027, 0.062], [-0.009, 0.072], [0.009, 0.07], [0.027, 0.058]] as const,
+  fingerR: 0.0085,
+};
+
+/**
+ * Day 8: the page's preview (before Enter) shows the lane the ghost hand casts, with the creature waiting
+ * in it. These capsules follow the ghost hand's own meshes (palm as four upright capsules, fingers, thumb),
+ * so the light map computes the shadow of exactly what is drawn, with the game's sight test.
+ */
+export function ghostHandCapsules(occ: Occluders, x: number, z: number, owner: number): void {
+  const p = GHOST.palm;
+  const y0 = p.y - p.h / 2 + 0.006, y1 = p.y + p.h / 2 - 0.006;
+  for (const [fx, len] of GHOST.fingers) {
+    occ.addCapsule(x + fx, y0, z, x + fx, y1, z, p.d / 2 + 0.001, owner);
+    occ.addCapsule(x + fx, 0.1, z, x + fx, 0.1 + len - GHOST.fingerR, z, GHOST.fingerR, owner);
+  }
+  occ.addCapsule(x - 0.038, 0.045, z, x - 0.062, 0.079, z, 0.009, owner);
+}
+
 function buildGhostHand(mat: MeshBasicMaterial): Group {
   // An upright open right hand seen from behind, palm toward the lantern (−z),
   // wrist on the desk: its thumb is on the left (−x). (Day 4: the thumb was on
   // the right, a left hand, while the docs and the /emu/ seat use the right.)
   const g = new Group();
   g.name = 'ghost-hand';
-  const palm = new Mesh(new BoxGeometry(0.075, 0.08, 0.018), mat);
-  palm.position.y = 0.06;
+  const palm = new Mesh(new BoxGeometry(GHOST.palm.w, GHOST.palm.h, GHOST.palm.d), mat);
+  palm.position.y = GHOST.palm.y;
   g.add(palm);
-  const fingers = [
-    [-0.027, 0.062], [-0.009, 0.072], [0.009, 0.07], [0.027, 0.058],
-  ];
-  for (const [x, len] of fingers) {
-    const f = new Mesh(new CapsuleGeometry(0.0085, len - 0.017, 4, 10), mat);
+  for (const [x, len] of GHOST.fingers) {
+    const f = new Mesh(new CapsuleGeometry(GHOST.fingerR, len - 2 * GHOST.fingerR, 4, 10), mat);
     f.position.set(x, 0.1 + len / 2, 0);
     g.add(f);
   }

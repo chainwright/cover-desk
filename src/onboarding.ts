@@ -55,10 +55,14 @@ export interface CueInput {
   pastGaze?: boolean;
   /** Day 6, level 2: won at least once. */
   l2Won?: boolean;
+  /** Day 8: the 2 s threat beat before the first lesson (feedback.ts introActive): no card, no ghost yet. */
+  intro?: boolean;
+  /** Day 8: the win showing is a level-2 win (its own card). */
+  l2Home?: boolean;
 }
 
 export type PromptKind = 'none' | 'tap-desk' | 'tap-new-spot' | 'waits' | 'teach' | 'slide' | 'spotted' | 'too-close' | 'again'
-  | 'unlocked' | 'need-object' | 'mug-off' | 'gaze' | 'l2-teach' | 'l2-swap';
+  | 'unlocked' | 'need-object' | 'mug-off' | 'gaze' | 'l2-teach' | 'l2-swap' | 'l2-home';
 
 /** Where the ghost hand stands: level 1's spot, or level 2's left or right of the gaze. */
 export type GhostSpot = 'teach' | 'left' | 'right';
@@ -107,6 +111,8 @@ export const PROMPT_LINES: Record<Exclude<PromptKind, 'none'>, readonly string[]
   gaze: ['A hand in its gaze wakes it.', '!Only the mug may stand there'],
   'l2-teach': ['Hand at the ghost; edge it to', '!the mug, but not into the gaze'],
   'l2-swap': ['The mug hides it. Lift your hand', '!over to the other ghost'],
+  // Day 8: level 2's win has its own card (it showed level 1's "Home!").
+  'l2-home': ['Asleep! Your mug held the shade', '!Hand back to the left ghost'],
 };
 
 export const KNOB_LINES: readonly string[] = ['tap & hold', '!to move'];
@@ -118,7 +124,8 @@ export function newCues(): Cues {
 /** Writes the cues for this frame into `cues` (no allocation) and returns it. */
 export function firstRunCues(i: CueInput, cues: Cues = newCues()): Cues {
   const onDesk = i.placed && i.placement !== 'fallback';
-  cues.ghost = i.placed && (!i.everDashed || !!i.again);
+  // Day 8: during the threat beat the keeper stirs first; the ghost and the teach card come right after.
+  cues.ghost = i.placed && (!i.everDashed || !!i.again) && !i.intro;
   cues.prompt = 'none';
   cues.promptOnBoard = true;
   cues.knobLabel = onDesk && !i.everDashed && !i.moveRequested;
@@ -144,11 +151,11 @@ export function firstRunCues(i: CueInput, cues: Cues = newCues()): Cues {
   else if (i.paused) cues.prompt = 'waits';
   else if (i.awake) cues.prompt = 'too-close';
   else if (i.spotted) cues.prompt = 'spotted';
-  else if (!i.everDashed) cues.prompt = 'teach';
+  else if (!i.everDashed) cues.prompt = i.intro ? 'none' : 'teach';
   else if (i.again) cues.prompt = 'again';
   else if (i.leading) cues.prompt = 'slide';
   // Level 1 after its first win (once the "again" card is done), no object yet: say what level 2 needs; level 1 plays on meanwhile.
-  if (i.unlocked && !i.objects && cues.prompt === 'none') cues.prompt = 'unlocked';
+  if (i.unlocked && !i.objects && cues.prompt === 'none' && !i.intro) cues.prompt = 'unlocked';
   return cues;
 }
 
@@ -167,7 +174,7 @@ function level2Cues(i: CueInput, cues: Cues): Cues {
   else if (i.spotted) {
     cues.prompt = 'spotted';
   } else if (i.again) {
-    cues.prompt = 'again';
+    cues.prompt = i.l2Home ? 'l2-home' : 'again';
     cues.ghost = true;
     cues.ghostSpot = 'left';
   } else if (i.pastGaze) {

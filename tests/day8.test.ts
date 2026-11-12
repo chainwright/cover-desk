@@ -3,13 +3,32 @@
  *  - the keeper's lantern wake waits WAKE_DWELL_S (0.25 s) inside the radius
  *    before it wakes: a frame or two of tracking flicker wakes nothing, a
  *    cupped lantern still does;
+ *  - level 2's own climax (the trinket tossed onto the mug, the keeper asleep,
+ *    the lantern dimmed, its own card), the 2 s threat beat before the first
+ *    lesson, and the beads and the unlock kept for the next visit.
  * Same geometry model as the other tests (synthetic 25-joint hands).
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { MODE_HOME, MODE_WAIT, newCreature, stepCreature, type CreatureWorld } from '../src/creature.ts';
 import { CUP } from '../src/emu-seat.ts';
-import { LanternWake, WAKE_DWELL_S, WAKE_RADIUS, handAtLantern, nearestJointToLantern } from '../src/feedback.ts';
+import {
+  INTRO,
+  L2_WIN,
+  LanternWake,
+  WAKE_DWELL_S,
+  WAKE_RADIUS,
+  WIN_BEADS,
+  arcPoint,
+  handAtLantern,
+  introActive,
+  introFx,
+  l2WinFx,
+  nearestJointToLantern,
+  winFx,
+} from '../src/feedback.ts';
+import { PROMPT_LINES, firstRunCues, type CueInput } from '../src/onboarding.ts';
+import { PROGRESS_KEY, beadsFor, formatProgress, loadProgress, parseProgress, saveProgress } from '../src/progress-store.ts';
 import { addHandCapsules } from '../src/hand-proxy.ts';
 import { CREATURE_Y, LEVEL_1, Route, TEACH_SPOT } from '../src/level.ts';
 import { BY_NONE, DARK, Occluders, SEEN, look } from '../src/sightline.ts';
@@ -167,4 +186,74 @@ test('every still hand inside the wake radius that would win without the rule (t
     }
   }
   assert.ok(checked >= 20, `hands checked: ${checked}`);
+});
+
+// ------------------------------------------------- level 2's own climax
+
+test('level 2\'s climax: the same hops as level 1, then the lantern dims to a glow and stays dim, the trinket flies to the mug, the keeper falls asleep', () => {
+  for (const t of [0, 0.2, 0.5, 0.8]) assert.ok(Math.abs(l2WinFx(t).hop - winFx(t).hop) < 1e-9, `hop at ${t}`);
+  assert.ok(l2WinFx(0.25).flare > 0.15, 'a warm flash first');
+  assert.ok(Math.abs(l2WinFx(L2_WIN.dimEndS).flare - L2_WIN.dim) < 1e-9 && Math.abs(l2WinFx(8).flare - L2_WIN.dim) < 1e-9, 'then dim, held');
+  assert.ok(winFx(3).flare === 0, 'level 1 returns to normal light');
+  assert.equal(l2WinFx(L2_WIN.arcStartS - 0.01).arc, 0);
+  assert.equal(l2WinFx(L2_WIN.arcStartS + L2_WIN.arcS).arc, 1);
+  const late = l2WinFx(5);
+  assert.ok(late.eyes < 0.2 && late.nod > 0.2, `asleep: eyes ${late.eyes}, nod ${late.nod}`);
+  assert.deepEqual([l2WinFx(-1).flare, l2WinFx(-1).arc, l2WinFx(-1).eyes], [0, 0, 1], 'no win showing');
+  const out = new Float32Array(3);
+  assert.deepEqual(Array.from(arcPoint(0, 0.19, 0.02, 0.06, 0, 0.104, -0.03, 0.07, out)).map((v) => +v.toFixed(4)), [0.19, 0.02, 0.06]);
+  assert.deepEqual(Array.from(arcPoint(1, 0.19, 0.02, 0.06, 0, 0.104, -0.03, 0.07, out)).map((v) => +v.toFixed(4)), [0, 0.104, -0.03]);
+  assert.ok(arcPoint(0.5, 0.19, 0.02, 0.06, 0, 0.104, -0.03, 0.07, out)[1] > 0.13, 'an arc over the board, not a slide');
+});
+
+test('level 2\'s win has its own card; level 1\'s stays "Home!"', () => {
+  const l2: CueInput = { placement: 'desk', placed: true, listening: false, moveRequested: false, everDashed: true, paused: false, leading: false, unlocked: true, level: 2, objects: 1, mugCovers: true, again: true, l2Won: true };
+  const c = firstRunCues({ ...l2, l2Home: true });
+  assert.deepEqual([c.prompt, c.ghost, c.ghostSpot], ['l2-home', true, 'left']);
+  assert.match(PROMPT_LINES['l2-home'].join(' '), /mug held the shade/);
+  assert.equal(firstRunCues({ ...l2, level: 1, objects: 0, l2Home: false }).prompt, 'again');
+});
+
+// ------------------------------------------------- the threat beat before the first lesson
+
+test('threat beat: 2 s after the board lands on a first run, no teach card and no ghost yet; the keeper half wakes and looks, the creature flinches', () => {
+  assert.equal(INTRO.s, 2);
+  assert.equal(introActive(true, false, 0.5), true);
+  assert.equal(introActive(true, false, 2.01), false);
+  assert.equal(introActive(true, true, 0.5), false, 'not once the lesson is learned');
+  assert.equal(introActive(false, false, 0.5), false);
+  const base: CueInput = { placement: 'desk', placed: true, listening: true, moveRequested: false, everDashed: false, paused: false, leading: false };
+  const during = firstRunCues({ ...base, intro: true });
+  assert.deepEqual([during.prompt, during.ghost], ['none', false]);
+  assert.equal(firstRunCues({ ...base, intro: true, unlocked: true }).prompt, 'none', 'a kept unlock does not jump the beat');
+  const after = firstRunCues({ ...base, intro: false });
+  assert.deepEqual([after.prompt, after.ghost], ['teach', true]);
+  const mid = introFx(1);
+  assert.ok(mid.eyes > 2 && mid.flinch > 0.008 && mid.flare > 0.1, JSON.stringify(mid));
+  let looked = 0;
+  for (let t = 0; t < 2; t += 0.05) looked = Math.max(looked, Math.abs(introFx(t).look));
+  assert.ok(looked > 0.3, `the keeper looks along the path: ${looked.toFixed(2)} rad`);
+  assert.deepEqual(introFx(2.5), { eyes: 1, look: 0, flare: 0, flinch: 0 });
+});
+
+// ------------------------------------------------- beads and the unlock kept for the next visit
+
+test('progress kept in localStorage: wins and the unlock round-trip; malformed or other versions count as none; beads cap at 10', () => {
+  const mem = new Map<string, string>();
+  const s = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v), removeItem: (k: string) => void mem.delete(k) };
+  assert.deepEqual(loadProgress(s), { wins: 0, unlocked: false });
+  assert.equal(saveProgress({ wins: 3, unlocked: true }, s), true);
+  assert.equal(mem.get(PROGRESS_KEY), formatProgress({ wins: 3, unlocked: true }));
+  assert.deepEqual(loadProgress(s), { wins: 3, unlocked: true });
+  for (const bad of ['', 'nope', '{"wins":5}', '{"v":2,"wins":5,"unlocked":true}', 'null', '{"v":1,"wins":"7"}']) {
+    const p = parseProgress(bad);
+    assert.ok(p.wins === 0 && p.unlocked === false, `${bad} → ${JSON.stringify(p)}`);
+  }
+  assert.deepEqual(parseProgress('{"v":1,"wins":1e9}'), { wins: 999, unlocked: true });
+  assert.deepEqual(parseProgress('{"v":1,"wins":2,"unlocked":false}'), { wins: 2, unlocked: true }, 'a win always unlocks level 2');
+  const broken = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); }, removeItem: () => undefined };
+  assert.deepEqual(loadProgress(broken), { wins: 0, unlocked: false });
+  assert.equal(saveProgress({ wins: 1, unlocked: true }, broken), false);
+  assert.equal(beadsFor(4), 4);
+  assert.equal(beadsFor(40), WIN_BEADS);
 });

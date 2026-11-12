@@ -261,3 +261,109 @@ export function winFx(t: number, out: WinFx = newWinFx()): WinFx {
   if (t < f.beadS) out.bead = f.beadPop - (f.beadPop - 1) * (t / f.beadS);
   return out;
 }
+
+/**
+ * Day 8 (outside review: the level-2 win, the hardest and most mixed-reality moment, ran the same handler,
+ * card and chime as the tutorial): level 2's own climax. The creature hops as in level 1, then tosses the
+ * trinket up onto the top of the registered object (the mug that held the shade), while the keeper nods
+ * off into real sleep (eyes shut, head down) and the lantern dims to a glow until the next round. Its own
+ * sound (click-sound.ts lullaby), its own card.
+ */
+export const L2_WIN = {
+  /** The win's first warm flash, then the lantern dims to `dim` (a negative flare) by `dimEndS`, and stays. */
+  flash: 0.25,
+  flashS: 0.3,
+  dim: -0.6,
+  dimEndS: 1.6,
+  /** The trinket's flight from the creature's back to the object's top. */
+  arcStartS: 0.9,
+  arcS: 0.9,
+  arcH: 0.07,
+  /** The keeper's eyes shut tight (1 = its usual sleepy slit) and its head nods forward (rad), by `sleepS`. */
+  eyes: 0.15,
+  nod: 0.22,
+  sleepS: 1.4,
+} as const;
+
+export interface L2WinFx extends WinFx {
+  /** The trinket's flight, 0 on the creature's back … 1 on the object's top. */
+  arc: number;
+  eyes: number;
+  nod: number;
+}
+
+export function newL2WinFx(): L2WinFx {
+  return { hop: 0, flare: 0, bead: 1, arc: 0, eyes: 1, nod: 0 };
+}
+
+/** Level 2's win effects `t` s after the creature got home (t < 0: none). The hop and bead as in level 1. */
+export function l2WinFx(t: number, out: L2WinFx = newL2WinFx()): L2WinFx {
+  winFx(t, out);
+  out.arc = 0;
+  out.eyes = 1;
+  out.nod = 0;
+  if (!(t >= 0)) return out;
+  const w = L2_WIN;
+  if (t < w.flashS) {
+    const u = t / w.flashS;
+    out.flare = w.flash * (1 - (1 - u) * (1 - u));
+  } else {
+    const u = Math.min(1, (t - w.flashS) / (w.dimEndS - w.flashS));
+    out.flare = w.flash + (w.dim - w.flash) * u * u * (3 - 2 * u); // smooth fall to the glow, held
+  }
+  out.arc = Math.min(1, Math.max(0, (t - w.arcStartS) / w.arcS));
+  const s = Math.min(1, t / w.sleepS);
+  const e = s * s * (3 - 2 * s);
+  out.eyes = 1 + (w.eyes - 1) * e;
+  out.nod = w.nod * e;
+  return out;
+}
+
+/** Where the trinket flies during the level-2 climax: from (a) on the creature's back to (b) the object's top, in an arc. */
+export function arcPoint(p: number, ax: number, ay: number, az: number, bx: number, by: number, bz: number, h: number, out: Float32Array): Float32Array {
+  out[0] = ax + (bx - ax) * p;
+  out[1] = ay + (by - ay) * p + 4 * h * p * (1 - p);
+  out[2] = az + (bz - az) * p;
+  return out;
+}
+
+/**
+ * Day 8 (outside review: the first frames were static; nothing showed the danger before the instruction):
+ * a 2 s threat beat on a first run, before the teach card and the ghost hand. The keeper stirs: its eyes
+ * half open, its head turns to look along the path and back, the lantern brightens, a sleepy "hm?"; the
+ * creature flinches back into its nook. Visual and sound only: the game itself runs as always.
+ */
+export const INTRO = { s: 2, eyes: 2.6, look: 0.45, flare: 0.35, flinch: 0.012 } as const;
+
+export interface IntroFx {
+  eyes: number;
+  /** The keeper's head turn, rad. */
+  look: number;
+  flare: number;
+  /** How far the creature shrinks back into its nook, m. */
+  flinch: number;
+}
+
+export function newIntroFx(): IntroFx {
+  return { eyes: 1, look: 0, flare: 0, flinch: 0 };
+}
+
+/** Is the threat beat showing? On a first run (no shadow yet), for INTRO.s after the board is placed. */
+export function introActive(placed: boolean, everDashed: boolean, sincePlaced: number): boolean {
+  return placed && !everDashed && sincePlaced >= 0 && sincePlaced < INTRO.s;
+}
+
+/** The threat beat `t` s in (outside 0…INTRO.s: nothing). */
+export function introFx(t: number, out: IntroFx = newIntroFx()): IntroFx {
+  out.eyes = 1;
+  out.look = 0;
+  out.flare = 0;
+  out.flinch = 0;
+  if (!(t >= 0 && t < INTRO.s)) return out;
+  const bump = (a: number, b: number) => (t <= a || t >= b ? 0 : Math.sin((Math.PI * (t - a)) / (b - a)));
+  out.eyes = 1 + (INTRO.eyes - 1) * bump(0.25, 1.75);
+  out.look = INTRO.look * Math.sin((2 * Math.PI * Math.max(0, t - 0.35)) / 1.3) * bump(0.35, 1.65);
+  out.flare = INTRO.flare * bump(0.2, 1.4);
+  out.flinch = INTRO.flinch * bump(0.3, 1.9);
+  return out;
+}

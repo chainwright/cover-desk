@@ -36,9 +36,9 @@ import {
   type Object3D,
 } from '@iwsdk/core';
 import { PLACE, TapCalibrator, spotFromTouch, type CalibResult, type PlaceParams } from './calibration.ts';
-import { chime, click, hm, lock, setHum, soundCounts, step } from './click-sound.ts';
+import { chime, click, hm, lock, lullaby, setHum, soundCounts, step, stir } from './click-sound.ts';
 import { REGISTER, REGISTER_HOLD, TIP_PAD, distanceToPolyline, judgeRegistration, onKnob } from './contact.ts';
-import { KNOB, MAX_OBJECT_MARKERS, OBJECT_EMULATED, OBJECT_OCCLUDER, PATH_DOTS, buildCover, setInstance, type CoverModel } from './cover-model.ts';
+import { KNOB, MAX_OBJECT_MARKERS, OBJECT_OCCLUDER, PATH_DOTS, buildCover, dressEmulatedMug, ghostHandCapsules, setInstance, type CoverModel } from './cover-model.ts';
 import {
   CREATURE,
   CoverWatch,
@@ -62,7 +62,25 @@ import {
   type CreatureWorld,
 } from './creature.ts';
 import { DeskAnchor } from './desk-anchor.ts';
-import { LanternWake, RoundCues, handAtTeachSpot, newPayoff, newWinFx, nearestJointToLantern, nextRoundDue, payoffFor, winFx } from './feedback.ts';
+import {
+  L2_WIN,
+  LanternWake,
+  RoundCues,
+  arcPoint,
+  handAtTeachSpot,
+  introActive,
+  introFx,
+  l2WinFx,
+  nearestJointToLantern,
+  newIntroFx,
+  newL2WinFx,
+  newPayoff,
+  newWinFx,
+  nextRoundDue,
+  payoffFor,
+  winFx,
+} from './feedback.ts';
+import { beadsFor, forgetProgress, loadProgress, saveProgress } from './progress-store.ts';
 import { flags } from './flags.ts';
 import { HandJoints } from './hand-joints.ts';
 import { HAND_SIDES, HandMask } from './hand-mask.ts';
@@ -135,9 +153,15 @@ export interface CoverDebug {
    * Win and spotted feedback: keeper eye opening (1 closed), stare line, trinket on the creature's back, win beads shown;
    * day 5: keeper awake (a hand at the lantern), the win's hop (m), flare and newest bead's scale, and how often each sound played.
    */
-  payoff: { eyes: number; stare: boolean; trinketCarried: boolean; beads: number; awake: boolean; hop: number; flare: number; bead: number; sounds: Record<string, number>; winTrace: [number, number, number][] };
+  payoff: { eyes: number; stare: boolean; trinketCarried: boolean; beads: number; awake: boolean; hop: number; flare: number; bead: number; sounds: Record<string, number>; winTrace: [number, number, number][]; trinketOnMug: boolean; keeperNod: number; l2Climax: boolean };
   /** Day 7: the win effects the pure code gives `t` seconds after a win (the wiring check compares the applied ones with it). */
   winFxAt(t: number): { hop: number; flare: number; bead: number };
+  /** Day 8: the same for level 2's climax. */
+  l2WinFxAt(t: number): { hop: number; flare: number; bead: number; arc: number; eyes: number; nod: number };
+  /** Day 8: the threat beat: frames it showed, frames in it that showed the teach card or the ghost (must be 0), showing now. */
+  intro: { frames: number; teachDuring: number; active: boolean };
+  /** Day 8: frames whose "again" card stayed up after the next round started with the hand back (must be 0). */
+  againStuck: number;
   /** True when the Immersive Web Emulator replaced WebXR in this page. */
   emulator: boolean;
   /** Tester mode: the log's storage ('off' outside tester mode) and how many sessions the log holds. */
@@ -226,6 +250,16 @@ export class CoverSystem extends createSystem({
   private winTraceN = 0;
   private pay = newPayoff();
   private fx = newWinFx();
+  /** Day 8: the win showing is a level-2 win (its own climax, sound and card). */
+  private l2Climax = false;
+  private l2fx = newL2WinFx();
+  private ifx = newIntroFx();
+  /** The placement whose threat beat has played its sound (placedAt). */
+  private stirFor = -1;
+  private introFrames = 0;
+  private teachDuringIntro = 0;
+  private againStuck = 0;
+  private arcAt = new Float32Array(3);
   private coverWatch = new CoverWatch();
   private moveRequested = false;
   private cues = newCues();
@@ -321,6 +355,9 @@ export class CoverSystem extends createSystem({
 
   init(): void {
     this.model = buildCover(this.level, this.lightMap.data);
+    // Day 8: beads and the level-2 unlock carry over to the next visit (localStorage); ?reset=1 forgets them.
+    if (flags.reset) forgetProgress();
+    else this.restoreProgress();
     this.trinketHome.copy(this.model.trinket.position);
     const entity = this.world.createTransformEntity(this.model.root, { persistent: true });
     if (flags.depth) entity.addComponent(DepthOccludable);
@@ -461,6 +498,7 @@ export class CoverSystem extends createSystem({
       setHum(0, false);
     }
     this.updateCues();
+    this.watchIntro(time);
     this.updateRing();
     this.updatePrompt();
     if (this.panel) this.updateTester(time);
@@ -479,6 +517,8 @@ export class CoverSystem extends createSystem({
     // the "again" card and ghost from a win until a hand is back at the start.
     this.handBack = handAtTeachSpot(this.local, this.joints.tracked, undefined, this.level.needsObject ? L2_LEFT : TEACH_SPOT);
     this.round.frame(this.creature.mode, this.lineState === SHADOW && this.lineBy < OBJECT_OWNER, this.handBack);
+    // Day 8: the round's own rule, checked where the glue feeds it (an outside run cut the hand-back here unnoticed).
+    if (this.round.again && this.creature.mode !== MODE_HOME && this.handBack) this.againStuck++;
     i.leading = this.round.leading(this.wins);
     i.spotted = this.round.spotted;
     i.awake = this.keeperAwake;
@@ -490,6 +530,8 @@ export class CoverSystem extends createSystem({
     i.gazeWake = this.gazeWake;
     i.pastGaze = this.creature.s >= this.gaze.s0 && this.creature.mode !== MODE_HOME;
     i.l2Won = this.l2Won;
+    i.intro = introActive(i.placed, this.everDashed, this.lastTime - this.placedAt);
+    i.l2Home = this.l2Climax;
     firstRunCues(i, this.cues);
   }
 
@@ -750,6 +792,67 @@ export class CoverSystem extends createSystem({
     this.prompt.mesh.visible = false;
     this.knobCard.mesh.visible = false;
     if (this.panel) this.panel.mesh.visible = false;
+    this.stagePreview();
+  }
+
+  /**
+   * Day 8 (outside review: the page's preview showed the creature in full light, so the picture
+   * contradicted the sentence under it): before Enter the board shows the lesson. The pale ghost hand
+   * stands at its spot, the light map is computed from the ghost's own shape with the game's sight test,
+   * and the creature is played forward with the game's rules (no keeper wake: the hand is far from the
+   * lantern) until it waits at the far edge of the lane, inside the shadow.
+   */
+  private previewOcc = new Occluders(12, 1);
+  private stagePreview(): void {
+    const m = this.model;
+    const occ = this.previewOcc;
+    occ.clear();
+    ghostHandCapsules(occ, TEACH_SPOT.x, TEACH_SPOT.z, 1);
+    this.lightMap.update(this.lantern, occ, CREATURE_Y, true);
+    m.shadowTex.needsUpdate = true;
+    const at = [0, 0, 0];
+    const c = newCreature();
+    const w: CreatureWorld = {
+      routeLength: this.route.length,
+      handPresent: true,
+      seen: (s) => (this.route.at(s, at), look(this.lantern, occ, at[0], CREATURE_Y, at[1], { state: DARK, by: BY_NONE }).state === SEEN),
+    };
+    for (let t = 0; t < 6 && c.mode !== MODE_HOME; t += 1 / 60) stepCreature(c, 1 / 60, w);
+    this.route.at(c.s, this.at3);
+    m.creature.root.position.set(this.at3[0], 0, this.at3[1]);
+    m.creature.root.rotation.y = this.at3[2];
+    m.creature.root.scale.set(1, 1, 1);
+    m.ghostHand.position.set(TEACH_SPOT.x, 0, TEACH_SPOT.z);
+    m.ghostHand.visible = true;
+    m.ghostMat.opacity = 0.34;
+    m.gaze.visible = false;
+    m.mugGhost.visible = false;
+    m.winBeads.count = beadsFor(this.wins);
+    for (let i = 0; i < PATH_DOTS; i++) {
+      this.route.at((i / (PATH_DOTS - 1)) * this.route.length, this.at3);
+      const st = look(this.lantern, occ, this.at3[0], CREATURE_Y, this.at3[1], this.sight).state;
+      m.pathDots.setColorAt(i, st === SEEN ? this.colLit : st === SHADOW ? this.colShadow : this.colDark);
+    }
+    if (m.pathDots.instanceColor) m.pathDots.instanceColor.needsUpdate = true;
+  }
+
+  /** Day 8: progress kept from an earlier visit (beads, the level-2 unlock). */
+  private restoreProgress(): void {
+    const p = loadProgress();
+    this.wins = p.wins;
+    if (p.unlocked) this.progress.unlocked = true;
+  }
+
+  /** Day 8: the threat beat's sound, once per placement, and the frames it showed (read by the wiring check). */
+  private watchIntro(time: number): void {
+    if (!this.cueIn.intro) return;
+    if (this.stirFor !== this.placedAt) {
+      this.stirFor = this.placedAt;
+      stir();
+    }
+    this.introFrames++;
+    if (this.cues.prompt === 'teach' || this.cues.ghost) this.teachDuringIntro++;
+    void time;
   }
 
   private applyAnchorPose(): boolean {
@@ -971,7 +1074,9 @@ export class CoverSystem extends createSystem({
       g.getObjectByName('top')!.position.y = this.objects[i * 3 + 2] + 0.002;
       const column = g.getObjectByName('occluder') as Mesh;
       column.scale.y = Math.max(0.001, this.objects[i * 3 + 2]);
-      column.material = this.emulator ? OBJECT_EMULATED : OBJECT_OCCLUDER;
+      // Day 8: the /emu/ paper mug exists only in the /emu/ build (its dist check guards the main build).
+      if (__COVER_EMU__ && this.emulator) dressEmulatedMug(g, this.objects[i * 3 + 2]);
+      else column.material = OBJECT_OCCLUDER;
     }
   }
 
@@ -1041,6 +1146,7 @@ export class CoverSystem extends createSystem({
     this.creature.spottedCount = keep.spottedCount;
     this.creature.dashes = keep.dashes;
     this.homeAt = -1;
+    this.l2Climax = false;
     this.coverWatch.reset();
   }
 
@@ -1064,7 +1170,11 @@ export class CoverSystem extends createSystem({
     }
 
     // Day 7: the next round waits for a hand back at the start (or NEXT_ROUND_MAX_S), so the ghost and the "again" card stay until then.
-    if (c.mode === MODE_HOME && this.homeAt >= 0 && nextRoundDue(time - this.homeAt, this.handBack)) this.restart();
+    if (c.mode === MODE_HOME && this.homeAt >= 0 && nextRoundDue(time - this.homeAt, this.handBack)) {
+      // Day 8: logged with the wait and whether the hand was back (the 10 s fallback and the hand-back look alike otherwise).
+      this.logger?.event(time, 'next-round', { afterMs: Math.round((time - this.homeAt) * 1000), handBack: this.handBack, level: this.level.id });
+      this.restart();
+    }
 
     const ev = stepCreature(c, dt, this.cw);
     this.round.onEvent(ev);
@@ -1088,10 +1198,13 @@ export class CoverSystem extends createSystem({
         this.homeAt = time;
         this.winTraceN = 0;
         if (this.level.needsObject) this.l2Won = true;
+        this.l2Climax = this.level.needsObject;
         this.progress.onWin();
+        saveProgress({ wins: this.wins, unlocked: this.progress.unlocked });
         this.logger?.event(time, 'home', { wins: this.wins, spotted: c.spottedCount, level: this.level.id, objects: this.objectCount });
         lock();
-        chime();
+        if (this.l2Climax) lullaby();
+        else chime();
         break;
       case EV_PAUSE:
         this.logger?.event(time, 'pause', { reason: this.coverWatch.waitingFor >= 0 ? 'cover-hand-lost' : 'no-hands' });
@@ -1108,6 +1221,9 @@ export class CoverSystem extends createSystem({
 
     // The win's hop, flare and bead pop, timed from the moment it got home.
     winFx(c.mode === MODE_HOME && this.homeAt >= 0 ? time - this.homeAt : -1, this.fx);
+    // Day 8: level 2's climax: the same hop, then the lantern dims to a glow (its own flare curve) and more, below.
+    if (this.l2Climax) this.fx.flare = l2WinFx(c.mode === MODE_HOME && this.homeAt >= 0 ? time - this.homeAt : -1, this.l2fx).flare;
+    introFx(this.cueIn.intro ? time - this.placedAt : -1, this.ifx);
 
     // The creature's own sight line, for the log and the hum.
     this.route.at(s, this.at3);
@@ -1124,7 +1240,7 @@ export class CoverSystem extends createSystem({
       this.lineState = this.sight.state;
       this.lineBy = this.sight.by;
     }
-    setHum(c.mode === MODE_HOME ? 0.3 : 1, this.sight.state === SHADOW);
+    setHum(c.mode === MODE_HOME ? (this.l2Climax ? 0.12 : 0.3) : 1, this.sight.state === SHADOW);
     // The first time it stands in a hand's shadow inside the light, the lesson is learned.
     if (!this.everDashed && this.sight.state === SHADOW && this.sight.by < OBJECT_OWNER) {
       this.everDashed = true;
@@ -1133,7 +1249,8 @@ export class CoverSystem extends createSystem({
 
     // Creature pose and look.
     const cr = m.creature;
-    cr.root.position.set(cx, 0, cz);
+    // the threat beat: it shrinks back toward its nook (ifx.flinch is 0 outside it)
+    cr.root.position.set(cx - Math.sin(heading) * this.ifx.flinch, 0, cz - Math.cos(heading) * this.ifx.flinch);
     cr.root.rotation.y = c.mode === MODE_RETREAT ? heading + Math.PI : heading;
     let bob = 0;
     let squash = 1;
@@ -1163,6 +1280,12 @@ export class CoverSystem extends createSystem({
     if (pay.trinketOnBack) {
       m.trinket.position.set(cx, 0.021 + bob, cz);
       m.trinket.scale.setScalar(0.7);
+      // Day 8, level 2: the creature tosses the trinket up onto the top of the object that held the shade.
+      if (this.l2Climax && this.l2fx.arc > 0 && this.objectCount > 0) {
+        arcPoint(this.l2fx.arc, cx, 0.021 + bob, cz, this.objects[0], this.objects[2] + 0.004, this.objects[1], L2_WIN.arcH, this.arcAt);
+        m.trinket.position.set(this.arcAt[0], this.arcAt[1], this.arcAt[2]);
+        m.trinket.scale.setScalar(0.7 + 0.2 * this.l2fx.arc);
+      }
     } else {
       m.trinket.position.copy(this.trinketHome);
       m.trinket.scale.setScalar(1);
@@ -1172,7 +1295,10 @@ export class CoverSystem extends createSystem({
     // lantern: its eyes open, and while the creature freezes a thin line of
     // light stares at it; they close again once it is back in its nook.
     this.eyeOpen += (pay.eyes - this.eyeOpen) * Math.min(1, dt * 20);
-    for (const eye of m.keeperEyes) eye.scale.y = this.eyeOpen;
+    // Day 8: during level 2's climax the keeper falls asleep for real; in the threat beat it half wakes.
+    const eyeShown = this.l2Climax && c.mode === MODE_HOME ? this.l2fx.eyes : Math.max(this.eyeOpen, this.ifx.eyes);
+    for (const eye of m.keeperEyes) eye.scale.y = eyeShown;
+    m.keeper.rotation.set(this.l2Climax && c.mode === MODE_HOME ? this.l2fx.nod : 0, this.ifx.look, 0);
     m.beam.visible = pay.stare;
     if (m.beam.visible) {
       const l = this.lantern;
@@ -1186,6 +1312,7 @@ export class CoverSystem extends createSystem({
     m.winBeads.count = pay.beads;
     m.setBead(pay.beads - 1, this.fx.bead);
     (m.poolMat.uniforms.uFlare as { value: number }).value = this.fx.flare;
+    if (this.ifx.flare) (m.poolMat.uniforms.uFlare as { value: number }).value += this.ifx.flare; // the threat beat
     if (c.mode === MODE_HOME && this.homeAt >= 0 && this.winTraceN < 64) {
       const k = this.winTraceN++ * 3;
       this.winTrace[k] = time - this.homeAt;
@@ -1516,6 +1643,9 @@ export class CoverSystem extends createSystem({
           flare: +((m.poolMat.uniforms.uFlare as { value: number }).value).toFixed(3),
           bead: +self.fx.bead.toFixed(3),
           sounds: { ...soundCounts },
+          trinketOnMug: self.l2Climax && self.l2fx.arc >= 1 && m.trinket.position.y > 0.05,
+          keeperNod: +m.keeper.rotation.x.toFixed(3),
+          l2Climax: self.l2Climax,
         };
       },
       get emulator() {
@@ -1531,6 +1661,13 @@ export class CoverSystem extends createSystem({
       },
       flushLog: () => self.flushLog(),
       winFxAt: (t: number) => ({ ...winFx(t) }),
+      l2WinFxAt: (t: number) => ({ ...l2WinFx(t) }),
+      get intro() {
+        return { frames: self.introFrames, teachDuring: self.teachDuringIntro, active: !!self.cueIn.intro };
+      },
+      get againStuck() {
+        return self.againStuck;
+      },
       resetLog: () => self.resetLog(),
       armGuide() {
         self.guideArmed = true;

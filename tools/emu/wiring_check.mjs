@@ -36,6 +36,18 @@
 //                    in place, crosses only at full height (10 cm), comes down at the right ghost; the
 //                    keeper never wakes between R and the win
 //   fps-inview       with the head turned away the 'fps' log says inView false, looking at the board true (R9)
+//   day 8:
+//   preview-lane     before Enter the page's board shows the ghost hand's lane (litFraction between 0.3 and 0.97) (G22)
+//   intro            after the board lands: the 2 s threat beat (frames counted, the keeper's stir once), no teach card
+//                    or ghost during it, then the teach card (G20)
+//   next-round-hand  H H after the level-1 win: the next round starts because the hand is back, well before 10 s, and
+//                    the "again" card is gone the frame it starts (X4, X5)
+//   progress-saved   after the first win localStorage keeps 1 win and the unlock (G18)
+//   l2-climax        level 2's win: the lullaby (no chime), the light dims along l2WinFx(t) frame by frame, the trinket
+//                    lands on the mug, the keeper nods off, its own card (G16, G17, G21)
+//   l2-hand-back     after the level-2 win a hand 3.5 cm left of level 2's left ghost (5 cm from level 1's spot)
+//                    starts the next round before 10 s (X3)
+//   progress-restored a new page load (no ?reset) shows the kept wins as beads and level 2 unlocked (G19)
 //   errors     no console errors
 import { chromium } from 'playwright';
 
@@ -102,6 +114,34 @@ const chunks = () => page.evaluate(() => new Promise((res) => {
   };
   r.onerror = () => res(-3);
 }));
+/**
+ * Stands the emulator's right hand like 'stop' (fingers up, palm toward the lantern) with its wrist on board point
+ * (x, y, z): the seat's own pose (emu-seat.ts seatHandPose), then corrected by reading the wrist back a few times.
+ */
+async function standAt(x, y, z) {
+  for (let i = 0; i < 4; i++) {
+    await page.evaluate(({ x, y, z, first }) => {
+      const d = window.IWER_DEVICE, f = window.__cover, r = d.hands.right;
+      const o = f.boardPoint(0, 0, 0), ax = f.boardPoint(1, 0, 0);
+      const yaw = Math.atan2(ax[2] - o[2], ax[0] - o[0]);
+      const a = Math.PI / 4, b = -yaw / 2;
+      const qx = [Math.sin(a), 0, 0, Math.cos(a)], qy = [0, Math.sin(b), 0, Math.cos(b)];
+      const q = [qy[3] * qx[0], qy[1] * qx[3], -qy[1] * qx[0], qy[3] * qx[3]]; // qy * qx
+      r.poseId = 'flat';
+      r.quaternion.set(q[0], q[1], q[2], q[3]);
+      if (first) {
+        const p = f.boardPoint(x - 0.049, z - 0.002, y + 0.117);
+        r.position.set(p[0], p[1], p[2]);
+      } else {
+        const j = f.joints(1), t = f.boardPoint(x, z, y);
+        if (j) r.position.set(r.position.x + t[0] - j[0], r.position.y + t[1] - j[1], r.position.z + t[2] - j[2]);
+      }
+      d.notifyStateChange?.();
+    }, { x, y, z, first: i === 0 });
+    await sleep(400);
+  }
+  return page.evaluate(() => { const j = window.__cover.joints(1); return j ? window.__cover.toBoard(j[0], j[1], j[2]).map((v) => +v.toFixed(4)) : null; });
+}
 async function until(fn, ms, step = 100) {
   const t0 = Date.now();
   while (Date.now() - t0 < ms) {
@@ -121,6 +161,9 @@ try {
     const orig = xr.requestSession.bind(xr);
     xr.requestSession = (mode, init) => { window.__sessionInit = { mode, init: JSON.parse(JSON.stringify(init ?? {})) }; return orig(mode, init); };
   });
+  // Day 8: the page's preview shows the lesson: the ghost hand's lane on the light (G22)
+  const lit0 = await page.evaluate(() => window.__cover.litFraction);
+  check('preview-lane', lit0 > 0.3 && lit0 < 0.97, { litFraction: lit0 });
   const before = await chunks();
   await page.click('#enter');
   const tEnter = Date.now();
@@ -129,6 +172,12 @@ try {
   const req = init?.init?.requiredFeatures ?? [];
   const opt = init?.init?.optionalFeatures ?? [];
   check('session', init && req.length === 0 && ['hand-tracking', 'anchors', 'plane-detection'].every((f) => opt.includes(f)), init);
+
+  // Day 8: the threat beat before the lesson (G20): counted frames, the stir once, no teach card or ghost meanwhile
+  const introDone = await until(async () => { const x = await page.evaluate(() => window.__cover.intro); return x.frames > 0 && !x.active ? x : null; }, 15000, 50);
+  const afterIntro = await until(async () => { const x = await S(); return x.cue === 'teach' ? x : null; }, 6000, 100);
+  const stirN = await page.evaluate(() => window.__cover.payoff.sounds.stir);
+  check('intro', introDone && introDone.teachDuring === 0 && stirN === 1 && afterIntro && afterIntro.ghost, { intro: introDone, stir: stirN, after: afterIntro ? { cue: afterIntro.cue, ghost: afterIntro.ghost } : null });
 
   // O15: the 5 s timer writes the log (no session end, no page hide yet)
   const firstWrite = await until(async () => ((await chunks()) > 0 ? Date.now() : null), 15000);
@@ -173,7 +222,10 @@ try {
   check('win', !!won, { afterS: won ? (won - tSlide) / 1000 : null, spotted: s.creature.spotted });
   check('win-trinket', carried, null);
   check('win-bead', s.payoff.beads === 1, s.payoff.beads);
-  check('win-chime', s.payoff.sounds.chime === chime0 + 1, s.payoff.sounds);
+  check('win-chime', s.payoff.sounds.chime === chime0 + 1 && s.payoff.sounds.lullaby === 0, s.payoff.sounds);
+  // Day 8 (G18): the win is kept for the next visit
+  const kept = await page.evaluate(() => JSON.parse(localStorage.getItem('cover-progress-v1') ?? 'null'));
+  check('progress-saved', kept && kept.wins === 1 && kept.unlocked === true, kept);
   // Every frame the game recorded during the win: the hop it applied to the creature and the flare it
   // applied to the light equal the pure winFx(t) at that frame's t; at least one frame fell inside the hop.
   const trace = s.payoff.winTrace;
@@ -189,7 +241,7 @@ try {
 
   // Day 7: the next round waits for the hand. 6 s after the win (day 6 restarted at 3.5 s and the card and
   // ghost were gone), the hand still at the end of its slide: still home, the card and the ghost, no gaze yet.
-  await sleep(Math.max(0, 6000 - (Date.now() - won)));
+  await sleep(Math.max(0, 5000 - (Date.now() - won)));
   s = await S();
   check('again-waits', s.creature.mode === 'home' && s.cue === 'again' && s.ghost && !s.level.gazeShown && !s.level.mugGhostShown, { mode: s.creature.mode, cue: s.cue, ghost: s.ghost, gaze: s.level.gazeShown, sinceWinS: (Date.now() - won) / 1000 });
   // next round: H away, H at the ghost's spot → the round starts and the "again" card goes
@@ -199,6 +251,11 @@ try {
   let cleared = await until(async () => { const x = await S(); return x.cue !== 'again' ? x : null; }, 6000);
   if (cleared) { await sleep(400); cleared = await S(); } // the ghost follows the cue on the next frame
   check('again-cleared', cleared && cleared.cue !== 'again' && !cleared.ghost && cleared.creature.mode !== 'home', cleared ? { cue: cleared.cue, ghost: cleared.ghost, mode: cleared.creature.mode } : null);
+  // Day 8 (X4, X5): that round started because the hand was back, well before the 10 s fallback, and the "again"
+  // card went the frame it started (the game counts frames where it stayed up with the hand back and the creature out)
+  const nr1 = (await events('next-round')).at(-1);
+  const stuck1 = await page.evaluate(() => window.__cover.againStuck);
+  check('next-round-hand', nr1 && nr1.handBack === true && nr1.afterMs < 9500 && nr1.level === 1 && stuck1 === 0, { nr1, againStuck: stuck1 });
 
   // lead it into the path, then L: spotted
   await until(async () => (await S()).creature.s > 0.06, 15000);
@@ -231,7 +288,9 @@ try {
     await sleep(200);
   }
   s = await S();
-  check('wake-holds', s.payoff.awake && s.payoff.eyes > 2 && maxS < 0.04 && s.creature.wins === 1 && s.payoff.sounds.hm === hm1 + 1, { maxS, wins: s.creature.wins, eyes: s.payoff.eyes, hm: s.payoff.sounds.hm });
+  // day 8: the keeper wakes 0.25 s after the hand gets there, so the creature may step out of its nook first and be
+  // spotted (a second "hm?"); it still never gets past the light's near edge
+  check('wake-holds', s.payoff.awake && s.payoff.eyes > 2 && maxS < 0.04 && s.creature.wins === 1 && s.payoff.sounds.hm >= hm1 + 1 && s.payoff.sounds.hm <= hm1 + 2, { maxS, wins: s.creature.wins, eyes: s.payoff.eyes, hm: s.payoff.sounds.hm, hm1 });
   await page.keyboard.press('c');
   const asleep = await until(async () => { const x = await S(); return !x.payoff.awake ? x : null; }, 5000);
   check('wake-ends', !!asleep, null);
@@ -294,9 +353,26 @@ try {
   }
   check('l2-win', won2 && won2.level.id === 2 && won2.creature.spotted === s.creature.spotted, won2 ? { creature: won2.creature } : null);
   check('l2-won-flag', won2 && won2.level.l2Won === true, won2?.level);
+  {
+    // Day 8 (G16, G17, G21): level 2's own climax
+    const lul0 = s.payoff.sounds.lullaby, ch0 = s.payoff.sounds.chime;
+    const onMug = await until(async () => { const x = await S(); return x.payoff.trinketOnMug ? x : null; }, 8000, 50);
+    const x = onMug ?? (await S());
+    const tr = x.payoff.winTrace;
+    const ex = await page.evaluate((ts) => ts.map((t) => window.__cover.l2WinFxAt(t)), tr.map((r) => r[0]));
+    const off = tr.filter((r, i) => Math.abs(r[1] - ex[i].hop) > 2e-4 || Math.abs(r[2] - ex[i].flare) > 2e-3);
+    const dimmed = tr.filter((r) => r[2] < -0.2).length;
+    check('l2-climax', !!onMug && x.payoff.sounds.lullaby === lul0 + 1 && x.payoff.sounds.chime === ch0 && tr.length > 0 && off.length === 0 && (dimmed > 0 || tr.at(-1)[0] < 0.9) && x.payoff.keeperNod > 0.05 && x.cue === 'l2-home' && /mug held the shade/i.test(x.promptText),
+      { onMug: !!onMug, sounds: x.payoff.sounds, frames: tr.length, dimmed, off: off.slice(0, 3), nod: x.payoff.keeperNod, cue: x.cue });
+    await shot('day8_01_emu_l2_climax');
+    // X3: the hand back 3.5 cm left of level 2's left ghost (5 cm from level 1's ghost spot) starts the next round
+    const at = await standAt(-0.115, 0.02, -0.025);
+    const nr2 = await until(async () => { const e = (await events('next-round')).at(-1); return e && e.level === 2 ? e : null; }, 14000, 100);
+    check('l2-hand-back', nr2 && nr2.handBack === true && nr2.afterMs < 9500, { nr2, wrist: at });
+  }
   await shot('day6_03_emu_l2_win');
   // O again: the object is gone; level 2 stays and says so; H + → held never wins (the hand reaches the gaze)
-  await page.keyboard.press('h'); // hand away (it is not back at the start, so the next round starts after 10 s)
+  await page.keyboard.press('h'); // the seat's hand away (it still stood at the right ghost after R)
   await until(async () => (await S()).creature.mode === 'nook', 16000);
   await page.keyboard.press('o');
   const none = await until(async () => { const x = await S(); return x.objects === 0 && x.cue === 'need-object' ? x : null; }, 5000, 50);
@@ -357,6 +433,14 @@ try {
   const away = fpsEv.filter((e) => e.viewDeg > 60);
   const seen = fpsEv.filter((e) => e.viewDeg < 30);
   check('fps-inview', away.length > 0 && away.every((e) => e.inView === false) && seen.length > 0 && seen.every((e) => e.inView === true), fpsEv.map((e) => [e.viewDeg, e.inView]));
+
+  // Day 8 (G19): a new page load without ?reset keeps the wins (as beads) and the unlock
+  const keptN = await page.evaluate(() => JSON.parse(localStorage.getItem('cover-progress-v1') ?? 'null'));
+  await page.goto(BASE + 'emu/?test=1');
+  await page.waitForFunction(() => !!window.__cover, null, { timeout: 40000 });
+  await sleep(500);
+  const back = await page.evaluate(() => ({ wins: window.__cover.creature.wins, unlocked: window.__cover.level.unlocked, beads: window.__cover.payoff.beads }));
+  check('progress-restored', keptN && keptN.wins >= 2 && back.wins === keptN.wins && back.unlocked === true && back.beads === Math.min(10, keptN.wins), { kept: keptN, back });
 } catch (e) {
   check('ran', false, String(e));
 }

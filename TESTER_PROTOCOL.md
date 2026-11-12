@@ -39,7 +39,8 @@ to send back"); it is public, so no video there.
 - Start casting the headset view to a phone or computer and record it.
 - Open this URL in Quest Browser:
   **https://chainwright.github.io/cover-desk/?test=1&reset=1**
-  (`reset=1` only forgets a saved desk spot; it never deletes the log).
+  (`reset=1` forgets a saved desk spot and the beads kept from earlier
+  visits; it never deletes the log).
 - If the page says "Log: … sessions" from someone else's run, press
   **Start a new log** first.
 
@@ -63,15 +64,21 @@ Press **Enter** (not "Enter: guided poses"; those come later, step 7).
 
 ## Minutes 10–25: measurements
 
+Please run them **in the order of the table** (11 and 11b come first; the
+step numbers stay as they were so your notes match ours). Steps 11 and 11b
+need level 1, and from step 7 on every object you register switches the game
+to level 2 (after your first win, the first registration starts level 2 at
+the next quiet moment).
+
 | # | Step | What you do | We look for |
 |---|---|---|---|
+| 11 | Low light (2 min) | Dim the room to about 50 lux, repeat step 4 twice | It is not spotted because tracking dropped (still level 1: no object registered yet) |
+| 11b | Cupped lantern (1 min, optional) | Once: cup your hand right around the lantern and hold it there | Write what happened (we expect the keeper to wake up about a quarter second after your hand gets there, and the creature not to cross) |
 | 7 | Guided poses (1.5 min) | Leave the immersive view and press **Enter: guided poses** (they never start by themselves, so steps 1–6 are not mislabelled). Follow the panel: a "stop" hand between the lantern and the path, a hand on its edge like a wall, a flat hand (measurement only), then pointing down onto the box | Tracked share, pose match and flicker per step (from the log) |
 | 8 | Box (3 min) | Stand the box between the lantern and the dotted path (not on the path; on your side of the path it would shade nothing). Point down at the **middle** of its top and hold still, three times. Then, with nothing under your finger, point down and pause in mid-air **beside the path**: 6–12 cm from the dotted path on your side of it (still over the board's near edge or just past it), 5–20 cm above the desk; lower the finger a few cm and stop for a second. Five times | Box height in the log within ±10 mm of your ruler, 3 of 3. Mid-air pauses that wrongly register an object (a ring appears; the panel's `objects` count goes up): count them (we expect some; not fixed yet) |
-| 8b | Level 2 (3 min, optional) | Once level 2 is unlocked (a ghost mug; the pale wedge, the keeper's gaze, shows once the box is registered and level 2 starts): first point in mid-air above the ghost mug with nothing there, hold a second (does a ring appear?); then stand the box on the ghost mug and register it. Hand at the left ghost, edge it toward the box; when the creature waits in the box's shadow, **lift your hand high, about a hand's length**, move it over the wedge to the right ghost and put it down. Once, slide the hand straight into the wedge | Mid-air registered yes/no; box registered on which try; a level-2 win yes/no; did the keeper wake during the lift-over; the wedge slide wakes it (expected) |
+| 8b | Level 2 (3 min, optional) | After step 8 the game is already in level 2: the pale wedge (the keeper's gaze) shows, and the card may say "The mug must cover the gaze", because the box you registered stands beside the ghost mug. Take the box away, then point in mid-air above the ghost mug with nothing there and hold a second (does a ring appear?); then stand the box on the ghost mug and **register it again**. Hand at the left ghost, edge it toward the box; when the creature waits in the box's shadow, **lift your hand high, about a hand's length**, move it over the wedge to the right ghost and put it down. Once, slide the hand straight into the wedge | Mid-air registered yes/no; box registered on which try; a level-2 win yes/no; did the keeper wake during the lift-over; the wedge slide wakes it (expected) |
 | 9 | Anchor (3 min) | Put a small tape mark at a board corner. Leave the immersive view, move 1 m to the side, enter again | Board back on the same spot within 4 s; how far it is from the tape mark |
-| 10 | Restart (5 min) | Optional belt and braces: press **Download log** and keep the file. Power the headset off and on, open **https://chainwright.github.io/cover-desk/?test=1** (without `reset`), check the page still says "Log: … sessions", enter | Board back on the same spot within 8 s (the app waits up to 8 s for the saved spot, then searches for the desk again), or note what happened |
-| 11 | Low light (2 min) | Dim the room to about 50 lux, repeat step 4 twice | It is not spotted because tracking dropped |
-| 11b | Cupped lantern (1 min, optional) | Once: cup your hand right around the lantern and hold it there | Write what happened (we expect the keeper to wake up and the creature not to cross) |
+| 10 | Restart (5 min) | Optional belt and braces: press **Download log** and keep the file. Power the headset off and on, open **https://chainwright.github.io/cover-desk/?test=1** (without `reset`), check the page still says "Log: … sessions", enter | Board back on the same spot within 8 s (the app waits up to 8 s for the saved spot, then searches for the desk again), or note what happened. The brass beads from your earlier wins should still be on the board's near edge (kept since day 8) |
 | 12 | No room scan (3 min, **optional**) | Only if you don't mind redoing your Space Setup afterwards: clear Space Setup, reload the page, enter | The board floats in front of you, a tap on the desk places it, no error |
 | 13 | Hand look (1 min) | Open **https://chainwright.github.io/cover-desk/** (without `?test=1`; this session is not logged), take a headset screenshot with your hand over the board. Then go back to the `?test=1` link | Your real hand shows over the board, offset about 2 cm or less |
 | 14 | Export (1 min) | Right after leaving the immersive view (look at your **left** palm at eye level, pinch thumb and index and hold until the menu icon fills, then let go; the same pinch on the right hand opens the Meta menu instead), on the `?test=1` page press **Download log** (it holds every session above), then **Copy summary** | The file is saved; the page says how many sessions it holds. If the page or the panel ever said **NOT kept**, write it down |

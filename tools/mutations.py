@@ -19,7 +19,11 @@ the glue). R1-R11 are the outside run's eleven day-6 glue mutations (judges_impl
 ORGANISER_CHECKS section 5), recreated at today's call sites; G10-G12 the day-7 glue.
 
 Day 7b: 9a-9e the gaze only in level 2, the /emu/ R lift-over (pure), the debug handle
-gate; G13-G14 the R motion's glue (wiring check l2-r-motion)."""
+gate; G13-G14 the R motion's glue (wiring check l2-r-motion).
+
+Day 8: 10a-10g the wake dwell, the threat beat, level 2's card and light, kept progress;
+X1, X3-X5 the outside run's day-7 glue survivors (judges_impl_d6), X1 through a main build
+and tools/check-dist.mjs (stage 'dist'); G15-G22 the day-8 glue."""
 import subprocess, shutil, re, sys
 import os
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -107,6 +111,11 @@ M=[
  # day-8 code
  ('10a no wake dwell (the keeper wakes on the first frame inside)','src/feedback.ts','export const WAKE_DWELL_S = 0.25;','export const WAKE_DWELL_S = 0;'),
  ('10b the wake dwell is not reset when the hand leaves (brushes add up)','src/feedback.ts','this.inside = h >= 0 ? this.inside + dt : 0;','this.inside = this.inside + (h >= 0 ? dt : 0);'),
+ ('10c teach card shown during the threat beat','src/onboarding.ts',"cues.prompt = i.intro ? 'none' : 'teach';","cues.prompt = 'teach';"),
+ ('10d level 2\'s own card never shown','src/onboarding.ts',"cues.prompt = i.l2Home ? 'l2-home' : 'again';","cues.prompt = 'again';"),
+ ('10e kept progress of any version accepted','src/progress-store.ts','v.v !== 1) return none;','false) return none;'),
+ ('10f the level-2 lantern does not dim','src/feedback.ts','  dim: -0.6,','  dim: 0,'),
+ ('10g threat beat on every visit (ignores a learned lesson)','src/feedback.ts','return placed && !everDashed && sincePlaced >= 0','return placed && sincePlaced >= 0'),
 ]
 # The outside run's ten day-4 glue mutations, recreated at today's call sites
 # (marked 'emu': if no unit test catches them, the emulator wiring check is tried).
@@ -115,7 +124,7 @@ OUT=[
  ('O14 /emu/ grip-to-wrist offset ignored','src/emu-seat.ts','boardPoint(x - GRIP_TO_WRIST.x, z - GRIP_TO_WRIST.z, y - GRIP_TO_WRIST.y)','boardPoint(x, z, y)'),
  ('O15 frame-loop log flush call removed (cover-system)','src/cover-system.ts','    this.logKeeper?.frame(time);\n',''),
  ('O16 page-hide flush wiring removed (index.ts)','src/index.ts','  flushOnPageHide(window, document, () => void cover()?.flushLog());\n',''),
- ('O17 win chime not played','src/cover-system.ts','        lock();\n        chime();\n','        lock();\n'),
+ ('O17 win chime not played','src/cover-system.ts','        else chime();\n',''),
  ('O18 bead row not updated','src/cover-system.ts','    m.winBeads.count = pay.beads;\n',''),
  ('O19 trinket not carried after a win','src/cover-system.ts','    if (pay.trinketOnBack) {','    if (false) {'),
  ('O20 keeper eyes never open','src/cover-system.ts','    this.eyeOpen += (pay.eyes - this.eyeOpen) * Math.min(1, dt * 20);','    this.eyeOpen += (1 - this.eyeOpen) * Math.min(1, dt * 20);'),
@@ -152,10 +161,28 @@ OUT=[
  ('G14 /emu/ R motion not applied to the hand height','src/emu-seat.ts','    const y = STOP.y + (over ? dy : lifted ? STOP.lift : 0);','    const y = STOP.y + (lifted ? STOP.lift : 0);'),
  # day-8 glue
  ('G15 the wake dwell gets a whole second per frame at the call site (instant wake)','src/cover-system.ts','this.lanternWake.update(this.local, this.joints.tracked, this.lantern, dt)','this.lanternWake.update(this.local, this.joints.tracked, this.lantern, 1)'),
+ # the outside run's five day-7 glue survivors (judges_impl_d6/ORGANISER_MUTATIONS.md), at today's call sites
+ ('X1 the main build draws the /emu/ paper mug over a real object (no occluder)','src/cover-system.ts','      if (__COVER_EMU__ && this.emulator) dressEmulatedMug(','      if (true) dressEmulatedMug(','dist'),
+ ('X3 level 2 looks for the hand back at level 1\'s ghost spot','src/cover-system.ts','this.level.needsObject ? L2_LEFT : TEACH_SPOT','TEACH_SPOT'),
+ ('X4 the next round ignores the hand (always the 10 s fallback)','src/cover-system.ts','nextRoundDue(time - this.homeAt, this.handBack)','nextRoundDue(time - this.homeAt, false)'),
+ ('X5 the "again" card never cleared by the hand coming back','src/cover-system.ts','this.lineState === SHADOW && this.lineBy < OBJECT_OWNER, this.handBack);','this.lineState === SHADOW && this.lineBy < OBJECT_OWNER, false);'),
+ # day-8 glue
+ ('G16 level 2\'s climax light not applied (level 1\'s flare)','src/cover-system.ts','    if (this.l2Climax) this.fx.flare = l2WinFx(','    if (false) this.fx.flare = l2WinFx('),
+ ('G17 level 2 plays the tutorial chime again','src/cover-system.ts','        if (this.l2Climax) lullaby();','        if (this.l2Climax) chime();'),
+ ('G18 progress not saved after a win','src/cover-system.ts','        saveProgress({ wins: this.wins, unlocked: this.progress.unlocked });\n',''),
+ ('G19 kept progress not restored at load','src/cover-system.ts','    else this.restoreProgress();','    else void 0;'),
+ ('G20 the threat beat not passed to the cues','src/cover-system.ts','    i.intro = introActive(i.placed, this.everDashed, this.lastTime - this.placedAt);','    i.intro = false;'),
+ ('G21 the trinket never flies to the mug','src/cover-system.ts','      if (this.l2Climax && this.l2fx.arc > 0 && this.objectCount > 0) {','      if (false) {'),
+ ('G22 the page preview not staged (the creature in full light again)','src/cover-system.ts','    this.stagePreview();\n',''),
 ]
 EMU=os.environ.get('COVER_EMU_BASE')
 ONLY=sys.argv[1] if len(sys.argv)>1 else None  # 'unit' or 'outside'
 PICK=sys.argv[2:]  # day 7: optional mutation ids to run (e.g. R1 R2 G10), so long glue runs can be split
+def dist_stage():
+    # day 8 (X1): the main build plus tools/check-dist.mjs (npm run build), for what only the main bundle shows
+    b=subprocess.run(['npm','run','build'],cwd=ROOT,capture_output=True,text=True)
+    fails=[l for l in (b.stdout+b.stderr).splitlines() if l.startswith('FAIL')]
+    return f'dist: CAUGHT ({"; ".join(fails)[:200]})' if b.returncode else 'dist: survived'
 def emu_stage():
     b=subprocess.run(['node','tools/build-emu.mjs'],cwd=ROOT,capture_output=True,text=True)
     if b.returncode: return 'emu build failed'
@@ -166,7 +193,9 @@ def emu_stage():
 
 todo=[(m,False) for m in M]*(ONLY!='outside') + [(m,True) for m in OUT]*(ONLY!='unit')
 if PICK: todo=[(m,o) for m,o in todo if m[0].split(' ')[0] in PICK]
-for (name, f, a, b), outside in todo:
+for m, outside in todo:
+    name, f, a, b = m[:4]
+    stage = m[4] if len(m) > 4 else 'emu'
     p=f'{ROOT}/{f}'; src=open(p).read()
     assert src.count(a)==1, (name, src.count(a))
     open(p,'w').write(src.replace(a,b))
@@ -177,7 +206,7 @@ for (name, f, a, b), outside in todo:
         fails=[x for x in dict.fromkeys(fails) if not x.startswith('tests/')]
         line=f'{name}: exit {r.returncode}, {len(fails)} failing: ' + '; '.join(fails)
         if outside and r.returncode==0:
-            line+=' | '+(emu_stage() if EMU else 'emu: not run (set COVER_EMU_BASE)')
+            line+=' | '+(dist_stage() if stage=='dist' else emu_stage() if EMU else 'emu: not run (set COVER_EMU_BASE)')
         print(line, flush=True)
     finally:
         open(p,'w').write(src)
