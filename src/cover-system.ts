@@ -106,6 +106,7 @@ import { placementStep, type PlacementClock, type PlacementState, type Placement
 import { BY_NONE, DARK, Occluders, SEEN, SHADOW, look, type Lantern, type SightResult } from './sightline.ts';
 import { TextCard } from './text-card.ts';
 import { buildAmbience, type Ambience } from './ambience.ts';
+import { STAR_FRACTIONS, STAR_OFFSET, buildStars, loadStars, saveStars, type StarSet } from './stars.ts';
 import { HOLD_S, PICK_R, SHELF, loadAnimatedTuck, loadPets, petMaterials, savePet, savedPet, type AnimatedPet, type PetId } from './pets.ts';
 import { LABELS, TesterLogger, analyseLog, boardInView, logSettings, type Label } from './touch-log.ts';
 
@@ -244,6 +245,16 @@ export class CoverSystem extends createSystem({
   private shelfPets: Partial<Record<PetId, Group>> = {};
   private pickHold = new Float32Array(SHELF.length);
   private tuckAnim: AnimatedPet | null = null;
+  /** Chief 12.11: the night's three stars (stars.ts). */
+  private stars!: StarSet;
+  private starPos = new Float32Array(9);
+  private starS = new Float32Array(3);
+  private starState = new Int8Array(3); // 0 waiting, 1 gathered, -1 lost (passed in the light)
+  private starAt = new Float32Array(3);
+  private stirred = false;
+  private resultAt = -1;
+  private resultN = [false, false, false];
+  private starBook = loadStars();
   private petWaveUntil = 0;
   private sight: SightResult = { state: DARK, by: BY_NONE };
   private lineState = DARK;
@@ -372,6 +383,9 @@ export class CoverSystem extends createSystem({
     this.model = buildCover(this.level, this.lightMap.data);
     this.amb = buildAmbience(this.level.lanterns[0], this.lightMap.data);
     this.model.root.add(this.amb.root);
+    this.stars = buildStars();
+    this.model.root.add(this.stars.root);
+    this.placeStars();
     this.shelf.name = 'pet-shelf';
     this.model.root.add(this.shelf);
     loadPets().then((p) => {
@@ -527,6 +541,7 @@ export class CoverSystem extends createSystem({
       this.model.shadowTex.needsUpdate = true;
       this.runGame(Math.min(delta, 0.05), time);
       this.updateShelf(Math.min(delta, 0.05));
+      this.updateStars(time, Math.min(delta, 0.05));
     } else {
       setHum(0, false);
     }
@@ -1237,6 +1252,72 @@ export class CoverSystem extends createSystem({
     this.homeAt = -1;
     this.l2Climax = false;
     this.coverWatch.reset();
+    this.starState.fill(0);
+    this.stirred = false;
+    this.placeStars();
+  }
+
+  /** Chief 12.11: the fallen stars at their spots along the route, a little toward the lantern. */
+  private placeStars(): void {
+    if (!this.stars) return;
+    const L = this.route.length;
+    for (let i = 0; i < 3; i++) {
+      const s = STAR_FRACTIONS[i] * L;
+      this.starS[i] = s;
+      this.route.at(s, this.at3);
+      const dx = this.lantern.x - this.at3[0], dz = this.lantern.z - this.at3[1];
+      const d = Math.hypot(dx, dz) || 1;
+      const x = this.at3[0] + (dx / d) * STAR_OFFSET, z = this.at3[1] + (dz / d) * STAR_OFFSET;
+      this.starPos[i * 3] = x; this.starPos[i * 3 + 2] = z;
+      const m = this.stars.fallen[i];
+      m.position.set(x, 0.012, z);
+      m.visible = true;
+      m.scale.setScalar(1);
+    }
+  }
+
+  /** Chief 12.11: gather or lose fallen stars as the creature passes them; spin; show the night's result. */
+  private updateStars(time: number, dt: number): void {
+    if (!this.stars) return;
+    const c = this.creature;
+    if (this.keeperAwake || c.mode === MODE_SPOTTED) this.stirred = true;
+    for (let i = 0; i < 3; i++) {
+      const m = this.stars.fallen[i];
+      if (this.starState[i] === 0) {
+        m.rotation.y = time * 1.6 + i;
+        m.position.y = 0.012 + Math.sin(time * 2 + i) * 0.0015;
+        if (c.s >= this.starS[i] && (c.mode === MODE_DASH || c.mode === MODE_WAIT)) {
+          const st = look(this.lantern, this.occ, this.starPos[i * 3], CREATURE_Y, this.starPos[i * 3 + 2], { state: DARK, by: BY_NONE }).state;
+          this.starState[i] = st === SEEN ? -1 : 1;
+          this.starAt[i] = time;
+          if (this.starState[i] === 1) click(1.6 + i * 0.15, 0.45);
+          this.logger?.event(time, 'star', { i, gathered: this.starState[i] === 1 });
+        }
+      } else {
+        const k = Math.min(1, (time - this.starAt[i]) / 0.5);
+        if (this.starState[i] === 1) { m.position.y = 0.012 + k * 0.05; m.scale.setScalar(1 + k * 0.6); m.visible = k < 1; }
+        else { m.scale.setScalar(Math.max(0.01, 1 - k)); m.visible = k < 1; }
+      }
+    }
+    // the night's result above the trinket: stars light up one by one
+    const res = this.stars.result;
+    if (this.resultAt >= 0) {
+      const t = time - this.resultAt;
+      const tp = this.model.trinket.position;
+      for (let i = 0; i < 3; i++) {
+        const r = res[i];
+        r.visible = t < 5;
+        r.position.set(tp.x + (i - 1) * 0.022, 0.07 + Math.sin(time * 2 + i) * 0.002, tp.z);
+        const on = this.resultN[i] && t > 0.35 * (i + 1);
+        const mat = r.material as import('@iwsdk/core').MeshStandardMaterial;
+        mat.emissiveIntensity = on ? 1.2 : 0.05;
+        mat.color.setHex(on ? 0xffd36b : 0x4a4a52);
+        const pop = on ? Math.max(0, 1 - (t - 0.35 * (i + 1)) * 4) : 0;
+        r.scale.setScalar(1.6 + pop * 0.8);
+        r.rotation.y = Math.sin(time * 1.5 + i) * 0.4;
+      }
+      if (t > 5) this.resultAt = -1;
+    } else for (const r of res) r.visible = false;
   }
 
   /** Where the trinket waits on the board (it is carried after a win). */
@@ -1291,6 +1372,17 @@ export class CoverSystem extends createSystem({
         this.progress.onWin();
         saveProgress({ wins: this.wins, unlocked: this.progress.unlocked });
         this.logger?.event(time, 'home', { wins: this.wins, spotted: c.spottedCount, level: this.level.id, objects: this.objectCount });
+        {
+          const all = this.starState[0] === 1 && this.starState[1] === 1 && this.starState[2] === 1;
+          this.resultN = [true, all, !this.stirred];
+          this.resultAt = time;
+          const n = this.resultN.filter(Boolean).length;
+          const key = String(this.level.id);
+          this.starBook.best[key] = Math.max(this.starBook.best[key] ?? 0, n);
+          this.starBook.total += this.starState.reduce((a, v) => a + (v === 1 ? 1 : 0), 0);
+          saveStars(this.starBook);
+          this.logger?.event(time, 'night-stars', { n, all, calm: !this.stirred, total: this.starBook.total });
+        }
         lock();
         if (this.l2Climax) lullaby();
         else chime();
