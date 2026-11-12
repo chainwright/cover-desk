@@ -29,6 +29,7 @@ import {
   Matrix4,
   Mesh,
   MeshBasicMaterial,
+  MeshPhysicalMaterial,
   MeshStandardMaterial,
   Object3D,
   RGBAFormat,
@@ -92,6 +93,9 @@ export interface Creature {
   mats: { m: MeshStandardMaterial; base: Color }[];
   /** Two small glints in its eyes, shown in the dark ("two eyes under your palm"). */
   glintMat: MeshBasicMaterial;
+  /** Eye groups (blink = scale.y) and the head sprout (sways). */
+  eyes: Group[];
+  sprout: Group;
 }
 
 export interface CoverModel {
@@ -420,35 +424,77 @@ export function buildCover(level: Level, mapData: Uint8Array): CoverModel {
 }
 
 function buildCreature(): Creature {
+  // Chief 12.11 (Roma: "make the creature beautiful"): a round velvet critter with big glossy eyes, blush,
+  // rounded ears and a little sprout on its head. Fabric look from MeshPhysicalMaterial's sheen (cheap, no textures).
   const root = new Group();
   root.name = 'creature';
-  const bodyMat = FELT(0xd2764b);
-  const body = new Mesh(new SphereGeometry(0.0115, 24, 16), bodyMat);
-  body.scale.set(1, 0.9, 1.15);
-  body.position.y = 0.012;
-  const belly = new Mesh(new SphereGeometry(0.0072, 16, 10), FELT(0xf0d2b0));
-  belly.position.set(0, 0.0105, 0.0072);
-  const earMat = FELT(0xa8553a);
+  const VELVET = (color: number, sheen: number) =>
+    new MeshPhysicalMaterial({ color, roughness: 0.85, metalness: 0, sheen: 1, sheenColor: new Color(sheen), sheenRoughness: 0.45 });
+  const bodyMat = VELVET(0xe07a45, 0xffd6b0);
+  const body = new Mesh(new SphereGeometry(0.0125, 32, 20), bodyMat);
+  body.scale.set(1.05, 0.92, 1);
+  body.position.y = 0.0118;
+  const creamMat = VELVET(0xf6dcc0, 0xffffff);
+  const belly = new Mesh(new SphereGeometry(0.0078, 20, 12), creamMat);
+  belly.scale.set(1, 0.95, 0.6);
+  belly.position.set(0, 0.0095, 0.0085);
+  const earMat = VELVET(0xc4602f, 0xffc9a0);
+  const innerMat = new MeshStandardMaterial({ color: 0xf2a7a0, roughness: 0.9 });
+  const eyeMat = new MeshPhysicalMaterial({ color: 0x120c08, roughness: 0.08, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.05 });
+  const shineMat = new MeshBasicMaterial({ color: 0xffffff });
+  const blushMat = new MeshBasicMaterial({ color: 0xff7a6e, transparent: true, opacity: 0.45, depthWrite: false });
+  const eyes: Group[] = [];
   for (const sx of [-1, 1]) {
-    const ear = new Mesh(new ConeGeometry(0.004, 0.009, 12), earMat);
-    ear.position.set(sx * 0.0055, 0.0235, -0.001);
-    ear.rotation.z = -sx * 0.35;
+    const ear = new Mesh(new SphereGeometry(0.0042, 16, 10), earMat);
+    ear.scale.set(0.8, 1.15, 0.45);
+    ear.position.set(sx * 0.0072, 0.0215, -0.0015);
+    ear.rotation.z = -sx * 0.45;
+    const inner = new Mesh(new SphereGeometry(0.0026, 12, 8), innerMat);
+    inner.scale.set(0.8, 1.1, 0.3);
+    inner.position.set(0, 0, 0.0016);
+    ear.add(inner);
     root.add(ear);
-    const eye = new Mesh(new SphereGeometry(0.0017, 10, 6), new MeshBasicMaterial({ color: 0x1a120c }));
-    eye.position.set(sx * 0.0045, 0.0155, 0.0115);
+    const eye = new Group();
+    eye.position.set(sx * 0.0047, 0.0142, 0.0108);
+    const ball = new Mesh(new SphereGeometry(0.0029, 16, 12), eyeMat);
+    ball.scale.set(0.85, 1.1, 0.6);
+    const shine = new Mesh(new SphereGeometry(0.0008, 8, 6), shineMat);
+    shine.position.set(-0.0008 * sx + 0.0004, 0.0012, 0.0016);
+    const shine2 = new Mesh(new SphereGeometry(0.00045, 6, 4), shineMat);
+    shine2.position.set(0.0007, -0.0009, 0.0017);
+    eye.add(ball, shine, shine2);
     root.add(eye);
-    const foot = new Mesh(new SphereGeometry(0.0032, 10, 6), earMat);
-    foot.position.set(sx * 0.005, 0.0022, 0.003);
-    foot.scale.set(1, 0.6, 1.3);
+    eyes.push(eye);
+    const blush = new Mesh(new CircleGeometry(0.0019, 16), blushMat);
+    blush.position.set(sx * 0.0083, 0.0108, 0.0098);
+    blush.rotation.y = sx * 0.75;
+    root.add(blush);
+    const foot = new Mesh(new SphereGeometry(0.0032, 12, 8), earMat);
+    foot.position.set(sx * 0.0055, 0.0022, 0.0035);
+    foot.scale.set(1, 0.55, 1.35);
     root.add(foot);
   }
-  const tail = new Mesh(new SphereGeometry(0.0035, 10, 6), FELT(0xf0d2b0));
-  tail.position.set(0, 0.011, -0.0125);
-  root.add(body, belly, tail);
+  const tail = new Mesh(new SphereGeometry(0.0042, 14, 10), creamMat);
+  tail.position.set(0, 0.0105, -0.0128);
+  // a little sprout on top: stem + two leaves (sways a little; it is the creature's silhouette at desk scale)
+  const sprout = new Group();
+  sprout.position.set(0.001, 0.0225, -0.001);
+  const leafMat = new MeshStandardMaterial({ color: 0x7fc46a, roughness: 0.6, emissive: 0x1d3a12, emissiveIntensity: 0.4 });
+  const stem = new Mesh(new CylinderGeometry(0.0004, 0.0005, 0.005, 6), leafMat);
+  stem.position.y = 0.0025;
+  sprout.add(stem);
+  for (const sx of [-1, 1]) {
+    const leaf = new Mesh(new SphereGeometry(0.0022, 10, 6), leafMat);
+    leaf.scale.set(1.2, 0.25, 0.6);
+    leaf.position.set(sx * 0.0018, 0.0052, 0);
+    leaf.rotation.z = sx * 0.5;
+    sprout.add(leaf);
+  }
+  root.add(body, belly, tail, sprout);
   const glintMat = new MeshBasicMaterial({ color: 0xfff1c8, transparent: true, opacity: 0, depthWrite: false });
   for (const sx of [-1, 1]) {
-    const g = new Mesh(new SphereGeometry(0.0014, 8, 6), glintMat);
-    g.position.set(sx * 0.0045 + 0.0006, 0.0162, 0.0128);
+    const g = new Mesh(new SphereGeometry(0.0016, 8, 6), glintMat);
+    g.position.set(sx * 0.0047 + 0.0005, 0.0152, 0.0128);
     root.add(g);
   }
   const mats: { m: MeshStandardMaterial; base: Color }[] = [];
@@ -456,7 +502,7 @@ function buildCreature(): Creature {
     const m = (o as Mesh).material as MeshStandardMaterial | undefined;
     if (m && (m as MeshStandardMaterial).isMeshStandardMaterial && !mats.some((e) => e.m === m)) mats.push({ m, base: m.color.clone() });
   });
-  return { root, body, bodyMat, mats, glintMat };
+  return { root, body, bodyMat, mats, glintMat, eyes, sprout };
 }
 
 /** The ghost hand's shape (board frame, wrist at x, z on the desk): palm, four fingers, thumb. */

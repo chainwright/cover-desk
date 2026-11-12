@@ -1298,6 +1298,11 @@ export class CoverSystem extends createSystem({
       const k = 1 - nf * (1 - (0.18 + 0.82 * lit));
       for (const e of cr.mats) e.m.color.copy(e.base).multiplyScalar(k);
       cr.glintMat.opacity = nf * (1 - lit) * (0.75 + 0.25 * Math.sin(time * 2.1));
+      // blink every ~3.5 s (a 0.14 s close), sprout sways with its steps
+      const bt = time % 3.7;
+      const lid = bt < 0.14 ? Math.max(0.08, Math.abs(bt / 0.07 - 1)) : 1;
+      for (const e of cr.eyes) e.scale.y = lid;
+      cr.sprout.rotation.z = Math.sin(time * 2.4) * 0.12 + bob * 30;
     }
 
     // Trinket: turns slowly in its spot; after a win the creature carries it

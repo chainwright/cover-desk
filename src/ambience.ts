@@ -187,6 +187,7 @@ export function buildAmbience(l: Lantern, map: Uint8Array): Ambience {
       pos[i * 3 + 1] = seed[k + 2] + Math.sin(time * 0.6 + ph) * 0.006;
       pos[i * 3 + 2] = l.z + Math.cos(a) * d;
       const lit = litAt(pos[i * 3], pos[i * 3 + 2]);
+      if (lit < 0.05) pos[i * 3 + 1] = -10; // out of the light: hidden (additive black still drew dark dots)
       const tw = 0.6 + 0.4 * Math.sin(time * 3.1 + ph * 5);
       col[i * 3] = lit * tw; col[i * 3 + 1] = lit * tw * 0.85; col[i * 3 + 2] = lit * tw * 0.6;
     }
