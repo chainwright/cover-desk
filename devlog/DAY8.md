@@ -143,7 +143,20 @@ uploaded or submitted.
 
 ## 7. Deploy
 
-(filled in below once deployed)
+`dist/` built from `8fcec1c` (stamp `8fcec1c37f68`, `GITHUB_SHA` set; dist
+check 0), synced into a gh-pages worktree with `rsync --checksum --delete`
+(read back: `diff -r` identical), pushed as `e9b49a6`, fast-forward
+(`2ec6d6d..e9b49a6`; `main` `4cc55da..8fcec1c`). gitleaks 8.30.1 on both
+ranges before the push: no leaks, exit 0 (`day8_gitleaks_output.txt`).
+GitHub records the deploy at 2026-11-12 04:09:36 UTC (PROVENANCE.md).
+
+Public URL: `public_check.mjs` (`day8_public_check.json`): `/` and `/emu/`
+200, stamp `8fcec1c37f68` on both, no emulator and no `__cover` in the main
+bundle, both in `/emu/`, the tagline on the page, no console errors.
+`replay.mjs` on the live URL (`day8_live_replay.json`): 13 of 13, no console
+errors (level 1: 30 s still no win, a slide wins in 10.8 s unspotted, 6.1 s
+later still home with the "again" card; level 2: no object no win, O + H →
+waits in the mug's shadow, R → home, R a 16-frame motion).
 
 ## Still open
 

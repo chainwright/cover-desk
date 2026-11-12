@@ -1,0 +1,200 @@
+{
+ "base": "https://chainwright.github.io/cover-desk/",
+ "steps": [
+  {
+   "name": "l1-open",
+   "pass": true,
+   "info": {
+    "status": 200
+   }
+  },
+  {
+   "name": "l1-still-30s-no-win",
+   "pass": true,
+   "info": {
+    "afterH": {
+     "lit": 0.826,
+     "cue": "slide"
+    },
+    "after30s": {
+     "s": 0.104,
+     "mode": "wait",
+     "spotted": 0,
+     "dashes": 1,
+     "wins": 0,
+     "length": 0.38019222021102905
+    }
+   }
+  },
+  {
+   "name": "l1-slide-wins",
+   "pass": true,
+   "info": {
+    "afterS": 10.821,
+    "spotted": 0,
+    "unlocked": true
+   }
+  },
+  {
+   "name": "l1-home-card-waits",
+   "pass": true,
+   "info": {
+    "afterWinS": 6.105,
+    "mode": "home",
+    "cue": "again",
+    "ghost": true,
+    "gaze": false
+   }
+  },
+  {
+   "name": "l1-hand-back-next-round",
+   "pass": true,
+   "info": {
+    "mode": "nook",
+    "cue": "unlocked",
+    "gaze": false
+   }
+  },
+  {
+   "name": "l1-no-gaze-after-unlock",
+   "pass": true,
+   "info": {
+    "gazeSeen": false,
+    "mugGhostSeen": true,
+    "unlockedCue": true
+   }
+  },
+  {
+   "name": "l2-open",
+   "pass": true,
+   "info": {
+    "status": 200,
+    "level": {
+     "id": 2,
+     "unlocked": true,
+     "gazeWake": false,
+     "mugCovers": false,
+     "ghostSpot": "teach",
+     "gazeShown": true,
+     "mugGhostShown": true,
+     "ghostAt": [
+      -0.065,
+      -0.025
+     ],
+     "l2Won": false
+    },
+    "cue": "need-object"
+   }
+  },
+  {
+   "name": "l2-no-object-no-win",
+   "pass": true,
+   "info": {
+    "creature": {
+     "s": 0.0325,
+     "mode": "wait",
+     "spotted": 1,
+     "dashes": 7,
+     "wins": 0,
+     "length": 0.38019222021102905
+    },
+    "gazeWoke": true
+   }
+  },
+  {
+   "name": "l2-o-registers",
+   "pass": true,
+   "info": {
+    "cue": "l2-teach",
+    "level": {
+     "id": 2,
+     "unlocked": true,
+     "gazeWake": false,
+     "mugCovers": true,
+     "ghostSpot": "left",
+     "gazeShown": true,
+     "mugGhostShown": false,
+     "ghostAt": [
+      -0.08,
+      -0.025
+     ],
+     "l2Won": false
+    }
+   }
+  },
+  {
+   "name": "l2-waits-in-mug-shadow",
+   "pass": true,
+   "info": {
+    "s": 0.2665,
+    "mode": "wait",
+    "spotted": 1,
+    "dashes": 8,
+    "wins": 0,
+    "length": 0.38019222021102905
+   }
+  },
+  {
+   "name": "l2-mug-plus-hand-wins",
+   "pass": true,
+   "info": {
+    "creature": {
+     "s": 0.3802,
+     "mode": "home",
+     "spotted": 1,
+     "dashes": 9,
+     "wins": 1,
+     "length": 0.38019222021102905
+    },
+    "level": 2
+   }
+  },
+  {
+   "name": "l2-r-is-a-motion",
+   "pass": true,
+   "info": {
+    "frames": 16,
+    "acrossFrames": 7,
+    "maxHeightM": 0.1,
+    "first": [
+     0.05,
+     -0.08,
+     0.025
+    ],
+    "last": [
+     0.8,
+     0.08,
+     0
+    ],
+    "sample": [
+     [
+      0.05,
+      -0.08,
+      0.025
+     ],
+     [
+      0.25,
+      -0.06,
+      0.1
+     ],
+     [
+      0.45,
+      0.02,
+      0.1
+     ],
+     [
+      0.65,
+      0.08,
+      0.075
+     ]
+    ]
+   }
+  },
+  {
+   "name": "no-console-errors",
+   "pass": true,
+   "info": []
+  }
+ ],
+ "failed": []
+}
